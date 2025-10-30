@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
 import fs from "fs";
+import ConnectionRequest from "../models/connections.model.js";
+import Post from "../models/posts.model.js";
 
 const convertUserDataTOPDF = async (userData) => {
     const doc = new PDFDocument();
@@ -160,4 +162,102 @@ export const downloadProfile = async (req, res) => {
     );
     let outputPath = await convertUserDataTOPDF(userProfile);
     return res.json({ message: outputPath });
+};
+export const sendConnectionRequest = async (req, res) => {
+    const { token, connectionId } = req.body;
+    try {
+        const user = await User.findOne({ token: token });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const connectionUser = await User.findOne({ _id: connectionId });
+        if (!connectionUser)
+            return res
+                .status(404)
+                .json({ message: "Connection User not found" });
+        const existingRequest = await ConnectionRequest.findOne({
+            userId: user._id,
+            connectionId: connectionUser._id,
+        });
+        if (existingRequest) {
+            return res.status(400).json({ message: "Request already sent" });
+        }
+        const request = new ConnectionRequest({
+            userId: user._id,
+            connectionId: connectionUser._id,
+        });
+        await request.save();
+        return res.json({ message: "Request Sent" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+export const getMyConnectionsRequests = async (req, res) => {
+    const { token } = req.body;
+    try {
+        const user = await User.findOne({ token: token });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const connections = await ConnectionRequest.find({
+            userId: user._id,
+        }).populate("connectionId", "name username email profilePicture");
+        return res.json({ connections });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+export const whatAreMyConnections = async (req, res) => {
+    const { token } = req.body;
+    try {
+        const user = await User.findOne({ token: token });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const connections = await ConnectionRequest.find({
+            connectionId: user._id,
+        }).populate("userId", "name username email profilePicture");
+        return res.json(connections);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+export const acceptConnectionRequest = async (req, res) => {
+    const { token, requestId, action_type } = req.body;
+    try {
+        const user = await User.findOne({ token: token });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const connection = await ConnectionRequest.find({
+            _id: requestId,
+        });
+        if (!connection) {
+            return res.status(404).json({ message: "Connection not found" });
+        }
+        if (action_type === "accept") {
+            connection.status_accepted = true;
+        } else {
+            connection.status_accepted = false;
+        }
+        await connection.save();
+        return res.json({ message: "Request Updated" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const commentPost = async (req, res) => {
+    const { token, post_id, commentBody } = req.body;
+    try {
+        const user = await User.findOne({ token: token }).select("_id");
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const post = await Post.findOne({
+            _id: post_id,
+        });
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+        const comment = new Comment({
+            userId: user._id,
+            postId: post_id,
+            comment: commentBody,
+        });
+        await comment.save();
+        return res.status(200).json({ message: "comment Added" });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 };
