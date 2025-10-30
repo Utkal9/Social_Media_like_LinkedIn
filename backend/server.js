@@ -10,10 +10,9 @@ const PORT = process.env.PORT;
 const URL = process.env.MONGO_URL;
 app.use(cors());
 app.use(express.json());
+app.use(express.static("uploads"));
 app.use(postRoutes);
 app.use(userRoutes);
-app.use(express.static("uploads"));
-
 const start = async () => {
     try {
         await mongoose.connect(URL);
