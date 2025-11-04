@@ -115,14 +115,16 @@ export const updateUserProfile = async (req, res) => {
 };
 export const getUserAndProfile = async (req, res) => {
     try {
-        const { token } = req.body;
+        const { token } = req.query;
         const user = await User.findOne({ token: token });
         if (!user) return res.status(404).json({ message: "User not found" });
-        const userProfile = await Profile.findOne({
+        const profile = await Profile.findOne({
             userId: user._id,
         }).populate("userId", "name email username profilePicture");
-        await user.save();
-        return res.json(userProfile);
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found" });
+        }
+        return res.json({ profile });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -238,7 +240,6 @@ export const acceptConnectionRequest = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
-
 export const commentPost = async (req, res) => {
     const { token, post_id, commentBody } = req.body;
     try {
