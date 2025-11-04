@@ -8,7 +8,7 @@ function NavbarComponent() {
         <div className={styles.container}>
             <nav className={styles.navbar}>
                 <h1
-                    className={{ cursor: "pointer" }}
+                    style={{ cursor: "pointer" }}
                     onClick={() => {
                         router.push("/");
                     }}
