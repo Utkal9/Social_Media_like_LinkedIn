@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import clientServer from "../../../index";
+import clientServer from "../../../index.jsx";
 
 export const loginUser = createAsyncThunk(
     "user/login",
@@ -32,6 +32,23 @@ export const registerUser = createAsyncThunk(
                 username: user.username,
                 email: user.email,
                 password: user.password,
+            });
+
+            return thunkAPI.fulfillWithValue(response.data);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response.data);
+        }
+    }
+);
+
+export const getAboutUser = createAsyncThunk(
+    "user/getAboutUser",
+    async (user, thunkAPI) => {
+        try {
+            const response = await clientServer.get("/get_user_and_profile", {
+                params: {
+                    token: user.token,
+                },
             });
 
             return thunkAPI.fulfillWithValue(response.data);
