@@ -4,3 +4,4 @@ backend/node_modules
 backend/.env
 backend/api.http
 backend/uploads
+.vscode
