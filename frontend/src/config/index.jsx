@@ -1,7 +1,8 @@
-import axios from "axios"; // ✅ no curly braces
+import axios from "axios";
+export const BASE_URL = "http://localhost:9090";
 
 const clientServer = axios.create({
-    baseURL: "http://localhost:9090",
+    baseURL: BASE_URL,
 });
 
 export default clientServer;

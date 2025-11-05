@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import clientServer from "../../../index.jsx";
+import { headers } from "next/headers.js";
 
 export const loginUser = createAsyncThunk(
     "user/login",
