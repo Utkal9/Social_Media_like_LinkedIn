@@ -10,7 +10,7 @@ const CommentSchema = new mongoose.Schema({
         ref: "Post",
     },
     body: {
-        type: stringAt,
+        type: String,
         required: true,
     },
 });
