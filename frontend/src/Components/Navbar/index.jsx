@@ -29,6 +29,9 @@ function NavbarComponent() {
                                         fontWeight: "bold",
                                         cursor: "pointer",
                                     }}
+                                    onClick={() => {
+                                        router.push("/profile");
+                                    }}
                                 >
                                     Profile
                                 </p>
