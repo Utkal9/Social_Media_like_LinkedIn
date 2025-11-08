@@ -86,10 +86,10 @@ export default function DashboardLayout({ children }) {
                             <p>My Connections</p>
                         </div>
                     </div>
-                    <div className="homeContainer__feedContainer">
+                    <div className={styles.homeContainer__feedContainer}>
                         {children}
                     </div>
-                    <div className="homeContainer__extraContainer">
+                    <div className={styles.homeContainer__extraContainer}>
                         <h3>Top Profiles</h3>
                         {authState.all_profiles_fetched &&
                             authState.all_users.map((profile) => {
