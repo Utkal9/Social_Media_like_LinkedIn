@@ -1,7 +1,6 @@
 import clientServer, { BASE_URL } from "@/config";
-import DashboardLayout from "@/layout/DashboardLayout";
-import UserLayout from "@/layout/UserLayout";
-import { useSearchParams } from "next/navigation";
+import DashboardLayout from "@/layout/DashboardLayout"; // Import
+import UserLayout from "@/layout/UserLayout"; // Import
 import React, { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
@@ -13,6 +12,25 @@ import {
     sendConnectionRequest,
 } from "@/config/redux/action/authAction";
 
+// --- Icons ---
+const DownloadIcon = () => (
+    <svg
+        style={{ width: "1.2em" }}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+        />
+    </svg>
+);
+// --- End Icons ---
+
 export default function ViewProfilePage({ userProfile }) {
     const router = useRouter();
     const postReducer = useSelector((state) => state.postReducer);
@@ -20,229 +38,199 @@ export default function ViewProfilePage({ userProfile }) {
     const authState = useSelector((state) => state.auth);
 
     const [userPosts, setUserPosts] = useState([]);
-    const [isCurrentUserInConnection, setIsCurrentUserInConnection] =
-        useState(false);
-    const [isConnectionNull, setIsConnectionNull] = useState(true);
+
+    // State to hold the connection status
+    const [connectStatus, setConnectStatus] = useState("Connect"); // 'Connect', 'Pending', 'Connected'
 
     const getUsersPost = async () => {
         await dispatch(getAllPosts());
-        await dispatch(
-            getConnectionsRequest({ token: localStorage.getItem("token") })
-        );
-        await dispatch(
-            getMyConnectionRequests({ token: localStorage.getItem("token") })
-        );
+        const token = localStorage.getItem("token");
+        if (token) {
+            await dispatch(getConnectionsRequest({ token }));
+            await dispatch(getMyConnectionRequests({ token }));
+        }
     };
 
+    // Filter posts for this user
     useEffect(() => {
         let post = postReducer.posts.filter((post) => {
             return post.userId.username === router.query.username;
         });
         setUserPosts(post);
-    }, [postReducer.posts]);
+    }, [postReducer.posts, router.query.username]);
 
+    // Determine connection status
     useEffect(() => {
-        console.log(authState.connections, userProfile.userId);
-        if (
-            authState.connections.some(
-                (user) => user.connectionId._id === userProfile.userId._id
-            )
-        ) {
-            setIsCurrentUserInConnection(true);
-            if (
-                authState.connections.find(
-                    (user) => user.connectionId._id === userProfile.userId._id
-                ).status_accepted === true
-            ) {
-                setIsConnectionNull(false);
-            }
+        // 1. Check if they are in my network (I received request and accepted)
+        const isConnected = authState.connectionRequest.some(
+            (req) =>
+                req.userId._id === userProfile.userId._id &&
+                req.status_accepted === true
+        );
+        if (isConnected) {
+            setConnectStatus("Connected");
+            return;
         }
 
-        if (
-            authState.connectionRequest.some(
-                (user) => user.userId._id === userProfile.userId._id
-            )
-        ) {
-            setIsCurrentUserInConnection(true);
-            if (
-                authState.connectionRequest.find(
-                    (user) => user.userId._id === userProfile.userId._id
-                ).status_accepted === true
-            ) {
-                setIsConnectionNull(false);
-            }
+        // 2. Check if I sent a request that is pending
+        const isPending = authState.connections.some(
+            (req) =>
+                req.connectionId._id === userProfile.userId._id &&
+                req.status_accepted === null
+        );
+        if (isPending) {
+            setConnectStatus("Pending");
+            return;
         }
-    }, [authState.connections, authState.connectionRequest]);
 
+        // 3. Check if they sent me a request (I just need to accept)
+        const hasRequested = authState.connectionRequest.some(
+            (req) =>
+                req.userId._id === userProfile.userId._id &&
+                req.status_accepted === null
+        );
+        if (hasRequested) {
+            setConnectStatus("Pending"); // Or "Accept"
+            return;
+        }
+
+        setConnectStatus("Connect");
+    }, [
+        authState.connections,
+        authState.connectionRequest,
+        userProfile.userId._id,
+    ]);
+
+    // Fetch all posts and connection data on load
     useEffect(() => {
         getUsersPost();
-    }, []);
+    }, [dispatch]); // Added dispatch
 
-    const searchParams = useSearchParams();
-    useEffect(() => {
-        console.log("From View: View Profile");
-    });
+    // Handle sending a connection request
+    const handleConnect = () => {
+        dispatch(
+            sendConnectionRequest({
+                token: localStorage.getItem("token"),
+                user_id: userProfile.userId._id,
+            })
+        );
+        setConnectStatus("Pending"); // Optimistically update UI
+    };
+
+    // Handle resume download
+    const handleDownloadResume = async () => {
+        const response = await clientServer.get(
+            `/user/download_resume?id=${userProfile.userId._id}`
+        );
+        window.open(`${BASE_URL}/${response.data.message}`, "_blank");
+    };
+
+    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
     return (
-        <UserLayout>
-            <DashboardLayout>
-                <div className={styles.container}>
-                    <div className={styles.backDropContainer}>
-                        <img
-                            className={styles.backDrop}
-                            src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
-                            alt="backDrop"
-                        />
+        <div className={styles.container}>
+            {/* --- 1. Profile Header Card --- */}
+            <div className={styles.profileHeaderCard}>
+                <div className={styles.backDropContainer}>
+                    <img
+                        src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
+                        alt="backDrop"
+                        className={styles.profilePic}
+                    />
+                </div>
+                <div className={styles.profileHeaderContent}>
+                    <div className={styles.profileHeaderActions}>
+                        <button
+                            className={styles.downloadButton}
+                            onClick={handleDownloadResume}
+                        >
+                            <DownloadIcon />
+                            <span>Download Resume</span>
+                        </button>
+                        <button
+                            onClick={handleConnect}
+                            className={
+                                connectStatus === "Connect"
+                                    ? styles.connectBtn
+                                    : styles.connectedButton
+                            }
+                            disabled={connectStatus !== "Connect"}
+                        >
+                            {connectStatus}
+                        </button>
                     </div>
-                    <div className={styles.profileContainer__details}>
-                        <div style={{ display: "flex", gap: "0.7rem" }}>
-                            <div style={{ flex: "0.8" }}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        width: "fit-content",
-                                        alignItems: "center",
-                                        gap: "1.2rem",
-                                    }}
-                                >
-                                    <h2>{userProfile.userId.name}</h2>
-                                    <p style={{ color: "grey" }}>
-                                        @{userProfile.userId.username}
+
+                    <h2 className={styles.nameDisplay}>
+                        {userProfile.userId.name}
+                    </h2>
+                    <p className={styles.usernameDisplay}>
+                        @{userProfile.userId.username}
+                    </p>
+                    <p className={styles.bioDisplay}>{userProfile.bio}</p>
+                </div>
+            </div>
+
+            {/* --- 2. Work History Card --- */}
+            <div className={styles.profileSectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Work History</h4>
+                </div>
+                <div className={styles.workHistoryContainer}>
+                    {userProfile.pastWork.length > 0 ? (
+                        userProfile.pastWork.map((work, index) => (
+                            <div key={index} className={styles.workHistoryCard}>
+                                <div className={styles.workInfo}>
+                                    <p className={styles.workPosition}>
+                                        {work.position}
+                                    </p>
+                                    <p className={styles.workCompany}>
+                                        {work.company}
+                                    </p>
+                                    <p className={styles.workYears}>
+                                        {work.years} years
                                     </p>
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "1.2rem",
-                                    }}
-                                >
-                                    {isCurrentUserInConnection ? (
-                                        <button
-                                            className={styles.connectedButton}
-                                        >
-                                            {isConnectionNull
-                                                ? "Pending"
-                                                : "Connected"}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                dispatch(
-                                                    sendConnectionRequest({
-                                                        token: localStorage.getItem(
-                                                            "token"
-                                                        ),
-                                                        user_id:
-                                                            userProfile.userId
-                                                                ._id,
-                                                    })
-                                                );
-                                            }}
-                                            className={styles.connectBtn}
-                                        >
-                                            Connect
-                                        </button>
-                                    )}
-                                    <div
-                                        onClick={async () => {
-                                            const response =
-                                                await clientServer.get(
-                                                    `/user/download_resume?id=${userProfile.userId._id}`
-                                                );
-                                            window.open(
-                                                `${BASE_URL}/${response.data.message}`,
-                                                "_blank"
-                                            );
-                                        }}
-                                        style={{ cursor: "pointer" }}
-                                    >
-                                        <svg
-                                            style={{ width: "1.2em" }}
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={1.5}
-                                            stroke="currentColor"
-                                            className="size-6"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p>{userProfile.bio}</p>
-                                </div>
+                                {/* No Edit/Delete buttons */}
                             </div>
-                            <div style={{ flex: "0.2" }}>
-                                <h3>Recent Activity</h3>
-                                {userPosts.map((post) => {
-                                    return (
-                                        <div
-                                            className={styles.postCard}
-                                            key={post._id}
-                                        >
-                                            <div className={styles.card}>
-                                                <div
-                                                    className={
-                                                        styles.card__profileContainer
-                                                    }
-                                                >
-                                                    {post.media !== "" ? (
-                                                        <img
-                                                            src={`${BASE_URL}/${post.media}`}
-                                                            alt=""
-                                                        />
-                                                    ) : (
-                                                        <div
-                                                            style={{
-                                                                width: "3.4rem",
-                                                                height: "3.4rem",
-                                                            }}
-                                                        ></div>
-                                                    )}
-                                                </div>
-                                                <p>{post.body}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                    <div className={styles.workHistory}>
-                        <h4>Work History</h4>
-                        <div className={styles.workHistoryContainer}>
-                            {userProfile.pastWork.map((work, index) => {
-                                return (
-                                    <div
-                                        key={index}
-                                        className={styles.workHistoryCard}
-                                    >
-                                        <p
-                                            style={{
-                                                fontWeight: "bold",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "0.8rem",
-                                            }}
-                                        >
-                                            {work.company} - {work.position}
-                                        </p>
-                                        <p>{work.years}</p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                        ))
+                    ) : (
+                        <p>No work history provided.</p>
+                    )}
                 </div>
-            </DashboardLayout>
-        </UserLayout>
+            </div>
+
+            {/* --- 3. Recent Activity Card --- */}
+            <div className={styles.profileSectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Recent Activity</h4>
+                </div>
+                <div className={styles.activityContainer}>
+                    {userPosts.length > 0 ? (
+                        userPosts.map((post) => (
+                            <div className={styles.postCard} key={post._id}>
+                                <div className={styles.card}>
+                                    {post.media && (
+                                        <img
+                                            src={`${BASE_URL}/${post.media}`}
+                                            alt="Post media"
+                                            className={styles.postCardImage}
+                                        />
+                                    )}
+                                    <p className={styles.postCardBody}>
+                                        {post.body}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No recent activity.</p>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }
+
+// Server-side props remains the same
 export async function getServerSideProps(context) {
     console.log("From View");
     console.log(context.query.username);
@@ -254,7 +242,14 @@ export async function getServerSideProps(context) {
             },
         }
     );
-    const response = await request.data;
-    console.log(response);
     return { props: { userProfile: request.data.profile } };
 }
+
+// ADDED THIS:
+ViewProfilePage.getLayout = function getLayout(page) {
+    return (
+        <UserLayout>
+            <DashboardLayout>{page}</DashboardLayout>
+        </UserLayout>
+    );
+};

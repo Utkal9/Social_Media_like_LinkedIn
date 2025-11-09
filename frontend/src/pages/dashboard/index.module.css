@@ -1,160 +1,316 @@
-.scrollComponent {
-    display: flex;
-    justify-content: center;
-}
-.createPostContainer {
-    display: flex;
-    height: 10svh;
-    width: 100%;
-    padding-inline: 0.8rem;
-    gap: 1.3rem;
-    align-items: center;
-    background: rgb(255, 246, 246);
-    border-radius: 20px;
-    position: relative;
-}
-.wrapper {
+/* --- Global Feed Container --- */
+.feedContainer {
     display: flex;
     flex-direction: column;
-    gap: 1.3rem;
-    max-width: 80%;
+    gap: 1.5rem; /* 24px gap between items */
 }
-.uploadButton {
-    position: absolute;
-    right: 0;
-    bottom: -45%;
-    background: rgb(0, 153, 102);
-    color: white;
-    border-radius: 10px;
-    padding-inline: 1rem;
-    padding-block: 0.5rem;
-    cursor: pointer;
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #555;
 }
-.userProfile {
-    border-radius: 100%;
-    height: 60%;
-    width: fit-content;
+
+/* --- User Profile Pic Utility --- */
+.userProfilePic {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #ddd;
 }
-.createPostContainer > textarea {
+
+/* --- Create Post Box --- */
+.createPostContainer {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.createPostTop {
+    display: flex;
+    gap: 0.75rem;
     width: 100%;
 }
-.Fab {
-    background: rgb(0, 69, 153);
-    border-radius: 100%;
-    display: flex;
-    justify-content: center;
-}
-.Fab > svg {
-    width: fit-content;
-    height: 30px;
-    color: white;
-}
+
 .textAreaOfContent {
-    width: 80%;
-    height: 70%;
-    border: 1px solid silver;
-    border-radius: 10px;
-    font-family: Arial, Helvetica, sans-serif;
-    padding-inline: 1.5rem;
-    padding-block: 0.8rem;
+    flex: 1;
+    border: 1px solid #d0d0d0;
+    border-radius: 25px;
+    padding: 0.75rem 1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: none;
+    min-height: 50px;
     outline: none;
 }
-.singlrCard {
-    width: 100%;
-    border-radius: 10px 10px 0px 0px;
-    border-bottom: 1px solid rgb(179, 179, 179);
+.textAreaOfContent:focus {
+    border-color: #0a66c2;
+    box-shadow: 0 0 0 2px #0a66c240;
 }
-.singleCard__profileContainer {
+
+.createPostBottom {
     display: flex;
-    align-items: flex-start;
-    gap: 1.2rem;
-    padding: 1.2rem;
-    padding-right: 3.4rem;
+    align-items: center;
+    gap: 1rem;
 }
-.singleCard__profileContainer > img {
-    width: 10%;
+
+.uploadButton {
+    background: #0a66c2;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: auto; /* Pushes button to the right */
+    transition: background 0.2s;
+}
+.uploadButton:hover {
+    background: #004182;
+}
+.uploadButton:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+}
+
+.fileName {
+    font-size: 0.8rem;
+    color: #555;
+    background: #f3f3f3;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* --- Posts Container --- */
+.postsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* --- Single Post Card --- */
+.postCard {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden; /* Ensures image corners are rounded */
+}
+
+.postCardHeader {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    align-items: center;
+}
+.postCardHeaderInfo {
+    flex: 1;
+}
+.postCardUser {
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.postCardUser:hover {
+    text-decoration: underline;
+}
+.postCardUsername {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 0.25rem;
+}
+.deleteButton svg {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+.deleteButton:hover {
+    color: #d9534f; /* Red on hover */
+    background: #f9f9f9;
     border-radius: 50%;
 }
-.singleCard__image {
-    width: 100%;
-    padding-top: 0.6rem;
-    height: fit-content;
-    overflow: hidden;
+
+.postCardBody {
+    padding: 0 1rem 1rem;
 }
-.singleCard__image > img {
+.postCardBody p {
+    margin-bottom: 1rem;
+    white-space: pre-wrap; /* Preserves line breaks */
+}
+
+.postCardImageContainer {
+    width: 100%;
+    max-height: 500px;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+.postCardImageContainer img {
     width: 100%;
     height: auto;
     object-fit: cover;
-    border-radius: 20px;
 }
-.optionsContainer {
+
+.postCardStats {
+    font-size: 0.8rem;
+    color: #666;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.postCardActions {
     display: flex;
-    height: 20%;
-    width: 100%;
-    justify-content: space-between;
-    padding-block: 0.6rem;
+    justify-content: space-around;
+    padding: 0.25rem 1rem;
 }
-.singleOption__optionsContainer {
+
+/* Universal button style for post actions */
+.postActionButton {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
-    justify-content: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
     cursor: pointer;
+    padding: 0.75rem;
+    border-radius: 6px;
+    flex: 1; /* Makes all buttons same width */
+    justify-content: center;
+    font-weight: 600;
+    color: #555;
+    transition: background 0.2s;
 }
-.singleOption__optionsContainer > svg {
-    height: 100%;
-    width: 10%;
+.postActionButton:hover {
+    background: #f3f3f3;
 }
-.commentsContainer {
+.postActionButton svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* --- Comment Modal --- */
+.commentModalBackdrop {
     position: fixed;
     width: 100vw;
     height: 100vh;
     top: 0;
     left: 0;
-    z-index: 2;
-    background: rgb(0, 0, 0, 0.7);
-    overflow: hidden;
+    z-index: 1001; /* Above navbar */
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
 }
-.allCommentsContainer {
-    width: 40vw;
+
+.commentModalContent {
+    width: 90%;
+    max-width: 600px;
     height: 80vh;
     background: white;
     border-radius: 10px;
-    position: relative;
-    padding: 1.4rem;
-}
-.postCommentContainer {
-    position: absolute;
-    bottom: 1.2rem;
-    left: 1.2rem;
-    width: 90%;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.commentModalHeader {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 1.2rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
 }
-.postCommentContainer > input {
-    flex: 0.9;
-    padding-inline: 1.5rem;
-    padding-block: 1.2rem;
+.commentModalHeader h3 {
+    margin: 0;
+}
+.closeModalButton {
+    background: none;
     border: none;
-    outline: none;
-    background-color: rgb(228, 228, 228);
-    border-radius: 10px;
-}
-.postCommentContainer > input:focus {
-    border: 1px solid silver;
-}
-.postCommentContainer__commentBtn {
-    flex: 0.1;
-    width: fit-content;
-    padding: 1.1rem;
-    background: orange;
-    border-radius: 10px;
-    text-align: center;
-    color: white;
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #666;
     cursor: pointer;
+}
+
+.allCommentsContainer {
+    flex: 1; /* Takes up all available space */
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.noComments {
+    text-align: center;
+    color: #666;
+    padding-top: 2rem;
+}
+
+.singleComment {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.singleCommentBody {
+    background: #f3f2ef;
+    border-radius: 8px;
+    padding: 0.75rem;
+    flex: 1;
+}
+.commentUser {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+.commentUser span {
+    font-weight: 400;
+    color: #666;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+}
+.singleCommentBody p {
+    font-size: 0.95rem;
+}
+
+.postCommentContainer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-top: 1px solid #e0e0e0;
+    align-items: center;
+}
+.postCommentContainer input {
+    flex: 1;
+    border: 1px solid #d0d0d0;
+    border-radius: 20px;
+    padding: 0.6rem 1rem;
+    outline: none;
+}
+.postCommentContainer input:focus {
+    border-color: #0a66c2;
+}
+.postCommentButton {
+    background: #0a66c2;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.postCommentButton:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
 }
