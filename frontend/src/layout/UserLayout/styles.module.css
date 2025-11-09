@@ -1,0 +1,10 @@
+.layoutWrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.mainContent {
+    flex: 1; /* This is the key change */
+    /* It pushes the footer to the bottom */
+}

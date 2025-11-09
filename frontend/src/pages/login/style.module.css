@@ -1,67 +1,226 @@
-.container {
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+/* --- Base Container --- */
+.pageContainer {
     display: flex;
     justify-content: center;
-    height: 90svh;
     align-items: center;
-    background: snow;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
-.cardContainer {
-    height: 80vh;
-    display: flex;
-    border-radius: 10px;
+
+/* --- Main Form Card --- */
+.formCard {
+    width: 100%;
+    max-width: 450px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     overflow: hidden;
-    width: 80vw;
-    background: white;
-    box-shadow: 10px 10px 15px rgb(173, 173, 173);
+    animation: fadeIn 0.5s ease-out;
 }
-.cardContainer__left {
-    flex: 0.6;
-    padding-block: 10rem;
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Header --- */
+.formHeader {
+    text-align: center;
+    padding: 2rem 2rem 1.5rem 2rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.formHeader h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-top: 0.75rem;
+}
+
+.formHeader p {
+    font-size: 0.95rem;
+    color: #555;
+    margin-top: 0.25rem;
+}
+
+/* --- Form Content --- */
+.formContent {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 2rem;
+}
+
+/* --- Social Button --- */
+.socialButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.socialButton:hover {
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Divider --- */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+    padding: 0 1rem;
+}
+
+/* --- Input Fields --- */
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.inputGroup label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.inputGroup input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: "Poppins", sans-serif;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    background: #f9f9f9;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inputGroup input::placeholder {
+    color: #aaa;
+}
+
+.inputGroup input:focus {
+    outline: none;
+    border-color: #0a66c2;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1);
+}
+
+/* --- Forgot Password Link --- */
+.forgotPassword {
+    font-size: 0.9rem;
+    color: #0a66c2;
+    text-decoration: none;
+    text-align: right;
+    transition: text-decoration 0.2s;
+}
+
+.forgotPassword:hover {
+    text-decoration: underline;
+}
+
+/* --- Submit Button --- */
+.submitButton {
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(90deg, #0a66c2 0%, #004182 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.submitButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(10, 102, 194, 0.3);
+}
+
+.submitButton:active {
+    transform: translateY(0);
+}
+
+.submitButton:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* --- Footer --- */
+.formFooter {
+    text-align: center;
+    padding: 1.5rem 2rem;
+    background-color: #f9f9f9;
+    border-top: 1px solid #f0f0f0;
+}
+
+.formFooter p {
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.formFooter span {
+    font-weight: 600;
+    color: #0a66c2;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.formFooter span:hover {
+    text-decoration: underline;
+}
+
+/* --- Error/Success Messages --- */
+.errorMessage {
+    font-size: 0.9rem;
+    color: #d93025;
+    background: #fbeae9;
+    padding: 0.75rem;
+    border-radius: 8px;
     text-align: center;
 }
-.cardleft__heading {
-    font-weight: bold;
-    font-size: 1.6rem;
-}
-.inputField {
-    padding-inline: 1.3rem;
-    padding-block: 0.8rem;
-    outline: none;
-    border-radius: 10px;
-    border: 1px solid silver;
-    width: 100%;
-}
-.inputContainers {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding-top: 1.3rem;
-    max-width: 400px;
-    margin: 0 auto;
-    gap: 1.5rem;
-}
-.inputRow {
-    width: fit-content;
-    display: flex;
-    justify-content: space-between;
-    gap: 2.1rem;
-}
-.buttonWithOutline {
-    padding: 0.8rem 1.3rem;
-    background: rgb(236, 236, 236);
-    width: 50%;
-    border-radius: 10px;
-    cursor: pointer;
-}
-.cardContainer__right {
-    flex: 0.4;
-    background: #00488b;
-    display: flex;
-    justify-content: center;
-    color: white;
-    align-items: center;
-    flex-direction: column;
-    gap: 1.2rem;
-    padding-inline: 1.2rem;
+.successMessage {
+    font-size: 0.9rem;
+    color: #1e8e3e;
+    background: #e6f4ea;
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
 }

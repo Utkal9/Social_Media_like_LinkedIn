@@ -1,73 +1,179 @@
 .container {
-    padding: 1.3rem;
-    background: rgb(253, 253, 253);
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 1.5rem; /* 24px */
 }
+
+/* --- 1. Profile Header Card --- */
+.profileHeaderCard {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
 .backDropContainer {
     width: 100%;
-    height: 30vh;
+    height: 25vh; /* 25% of viewport height */
     background: url("https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80");
     background-size: cover;
-    background-repeat: no-repeat;
+    background-position: center;
     position: relative;
-    border-radius: 20px;
 }
-.backDropContainer img {
-    width: 10em;
-    height: 10em;
+
+.profilePic {
+    width: 150px;
+    height: 150px;
     object-fit: cover;
     border-radius: 50%;
     position: absolute;
-    bottom: -30%;
-    left: 5%;
-    text-align: center;
+    bottom: -75px; /* Halfway over the edge */
+    left: 2rem;
+    border: 5px solid white;
+    background-color: #eee;
 }
-.profileContainer__details {
-    padding-top: 6.6rem;
+
+.profileHeaderContent {
+    padding: 1.5rem;
+    padding-top: 90px; /* 75px profile pic + 15px space */
+    position: relative;
 }
-.card {
+
+/* --- Read-only text styles --- */
+.nameDisplay {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #000;
+    margin: 0;
+}
+.usernameDisplay {
+    color: grey;
+    margin-top: 0.25rem;
+}
+.bioDisplay {
+    font-size: 1rem;
+    color: #333;
+    margin-top: 1rem;
+    white-space: pre-wrap; /* Show line breaks */
+}
+
+/* --- 2. Profile Section Card (Reusable) --- */
+.profileSectionCard {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 1.5rem;
+}
+
+.sectionHeader {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 1.4rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
 }
-.card__profileContainer > img {
-    width: 3.4rem;
-    height: auto;
-    height: 3.4rem;
-    object-fit: cover;
+.sectionHeader h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
 }
-.connectBtn {
-    padding-inline: 0.8rem;
-    padding-block: 0.3rem;
-    background: rgba(3, 93, 0.905);
-    outline: none;
-    border: none;
-    color: white;
-    border-radius: 10px;
-    cursor: pointer;
-}
-.connectedButton {
-    padding-inline: 0.8rem;
-    padding-block: 0.3rem;
-    border: 1px solid rgba(3, 93, 183, 0.905);
-    color: rgba(3, 93, 183, 0.905);
-    outline: none;
-    border-radius: 10px;
-    cursor: pointer;
-}
+
+/* --- Work History Styles --- */
 .workHistoryContainer {
     display: flex;
-    gap: 1.4rem;
-    padding-top: 1.4rem;
-    width: 100%;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 1rem;
 }
 .workHistoryCard {
-    min-width: fit-content;
-    padding-inline: 2.5rem;
-    padding-block: 1rem;
-    border-radius: 10px;
-    box-shadow: 10px 10px 15px rgb(173, 173, 173);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+}
+.workPosition {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+.workCompany {
+    color: #333;
+}
+.workYears {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* --- Recent Activity Styles --- */
+.activityContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+.postCard {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.postCardImage {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+.postCardBody {
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+/* --- NEW: Header Action Buttons --- */
+.profileHeaderActions {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.connectBtn {
+    padding: 0.6rem 1.2rem;
+    background: #0a66c2;
+    color: white;
+    border: 1px solid #0a66c2;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.connectBtn:hover {
+    background: #004182;
+}
+
+.connectedButton {
+    padding: 0.6rem 1.2rem;
+    border: 1px solid #666;
+    color: #666;
+    background: #f3f3f3;
+    outline: none;
+    border-radius: 20px;
+    cursor: not-allowed;
+    font-weight: 600;
+}
+
+.downloadButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid #666;
+    color: #333;
+    background: transparent;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+.downloadButton:hover {
+    background: #f3f3f3;
 }

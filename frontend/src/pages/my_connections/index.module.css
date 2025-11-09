@@ -1,28 +1,164 @@
-.userCard {
+/* --- Main Container --- */
+.connectionsContainer {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 1.5rem;
+    min-height: 60vh;
+}
+
+.connectionsContainer h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* --- Tab Styles --- */
+.tabContainer {
     display: flex;
-    width: 100%;
-    gap: 1.2rem;
-    padding: 1.3rem;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+}
+
+.tab,
+.activeTab {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px; /* Aligns border with container border */
+}
+
+.activeTab {
+    color: #0a66c2;
+    border-bottom-color: #0a66c2;
+}
+
+.tab:hover {
+    background-color: #f3f3f3;
+}
+
+.noItemsMessage {
+    color: #666;
+    font-size: 1.1rem;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* --- Grid for "Received" Tab --- */
+.contentGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.requestCard {
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    box-shadow: 10px 10px 10px 0px rgb(0, 0, 0, 0.1);
+    gap: 0.5rem;
 }
-.profilePicture > img {
-    width: 6.5rem;
+
+.profilePicture {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
 }
-.myConnections {
+
+.userInfo h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    cursor: pointer;
+}
+.userInfo h3:hover {
+    text-decoration: underline;
+}
+
+.userInfo p {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0 0 1rem 0;
+}
+
+.buttonGroup {
     display: flex;
+    gap: 0.5rem;
     width: 100%;
-    justify-content: space-around;
-    padding-bottom: 1.5rem;
+}
+
+.acceptButton,
+.declineButton {
+    flex: 1; /* Make them equal width */
+    padding: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.acceptButton {
+    border: 1px solid #0a66c2;
+    background: #0a66c2;
+    color: white;
+}
+.acceptButton:hover {
+    background: #004182;
+}
+
+.declineButton {
+    border: 1px solid #666;
+    background: transparent;
+    color: #666;
+}
+.declineButton:hover {
+    background: #f3f3f3;
+    border-color: #333;
+    color: #333;
+}
+
+/* --- List for "My Network" Tab --- */
+.listGrid {
+    display: grid;
+    grid-template-columns: 1fr; /* One column list */
+    gap: 1rem;
+}
+
+.networkCard {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: background 0.2s;
     cursor: pointer;
 }
-.connectedButton {
-    padding-inline: 0.8rem;
-    padding-block: 0.3rem;
-    border: 1px solid rgba(3, 93, 183, 0.905);
-    color: rgba(3, 93, 183, 0.905);
-    outline: none;
-    border-radius: 10px;
-    cursor: pointer;
+.networkCard:hover {
+    background: #f9f9f9;
+}
+
+.profilePictureSmall {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.networkCard .userInfo {
+    text-align: left;
 }

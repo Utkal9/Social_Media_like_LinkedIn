@@ -1,19 +1,259 @@
-.allUserProfile {
+/* Overall page container, distinct from DashboardLayout's generic background */
+.discoverPageWrapper {
+    background: linear-gradient(
+        135deg,
+        #e0eafc 0%,
+        #cfdef3 100%
+    ); /* A soft, modern gradient */
+    border-radius: 12px;
+    padding: 2rem;
+    min-height: 80vh; /* Ensure it takes up vertical space */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); /* Subtle shadow for the whole content block */
+}
+
+.discoverTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50; /* Stronger header text */
+    margin-bottom: 2.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.discoverTitle::after {
+    /* Underline effect */
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #0a66c2 0%, #004182 100%);
+    margin: 10px auto 0;
+    border-radius: 2px;
+}
+
+.discoverGrid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(280px, 1fr)
+    ); /* Auto-fit columns, slightly larger cards */
+    gap: 2rem; /* Increased gap */
+    justify-content: center; /* Center items in the grid */
+}
+
+.noUsersMessage {
+    grid-column: 1 / -1; /* Span across all columns */
+    text-align: center;
+    font-size: 1.2rem;
+    color: #6c7a89;
+    padding: 3rem 0;
+}
+
+/* --- Base User Card Styling (Much bolder) --- */
+.userCard {
+    background: #ffffff;
+    border-radius: 18px; /* More rounded corners */
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Deeper shadow */
+    transition: all 0.3s ease; /* Smooth transitions for non-framer props */
     display: flex;
     flex-direction: column;
-    max-width: 80%;
-    gap: 1.2rem;
     align-items: center;
+    padding-bottom: 1.5rem; /* Space for content below */
+    border: 1px solid #e0e0e0;
 }
-.userCard {
+
+/* --- Hero Card Specific Styling --- */
+.userCard_large {
+    grid-column: span 2; /* Make it span two columns on larger screens */
+    min-height: 400px;
+    padding-bottom: 2.5rem;
+}
+@media (max-width: 768px) {
+    .userCard_large {
+        grid-column: span 1; /* On mobile, it's just a regular card */
+    }
+}
+
+.cardHeaderBackground {
+    width: 100%;
+    height: 100px; /* Consistent height for the banner */
+    background: linear-gradient(
+        135deg,
+        #4facfe 0%,
+        #00f2fe 100%
+    ); /* Bright, inviting gradient */
+    position: relative;
     display: flex;
-    gap: 1.2rem;
-    padding: 1.3rem;
-    cursor: pointer;
+    justify-content: center;
     align-items: center;
-    box-shadow: 10px 10px 10px 0px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* Hide any overflow from patterns */
 }
-.userCard__image {
-    width: 10%;
+/* You could add an SVG pattern here if desired */
+/* .cardHeaderBackground::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.8;
+    mix-blend-mode: overlay;
+} */
+
+.userProfileImage {
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #ffffff; /* Thicker white border */
+    margin-top: -60px; /* Pull it up into the banner */
+    position: relative;
+    z-index: 2; /* Ensure it's above the banner */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Stronger shadow for depth */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.userProfileImage:hover {
+    transform: scale(1.05);
+}
+
+.userCard_large .userProfileImage {
+    width: 150px; /* Larger image for hero card */
+    height: 150px;
+    margin-top: -75px;
+}
+
+.userInfoContent {
+    text-align: center;
+    padding: 1rem 1.5rem 0; /* Adjust padding for button */
+    flex-grow: 1; /* Allow content to grow */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Push button to bottom */
+    width: 100%; /* Take full width */
+}
+
+.userInfoContent h3 {
+    font-size: 1.5rem; /* Larger name */
+    font-weight: 700;
+    margin: 0.5rem 0 0.2rem;
+    color: #2c3e50;
+    cursor: pointer;
+    line-height: 1.2;
+}
+.userInfoContent h3:hover {
+    color: #0a66c2;
+    text-decoration: underline;
+}
+
+.usernameText {
+    font-size: 1rem;
+    color: #7f8c8d;
+    margin-bottom: 1rem;
+}
+
+.userBioSnippet {
+    font-size: 0.95rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+    line-height: 1.4;
+    height: 40px; /* Fixed height for consistent layout */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Handle long text */
+}
+
+/* --- Action Buttons (More distinct) --- */
+.connectActionButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%; /* Slightly narrower button */
+    margin: auto auto 0; /* Center and push to bottom */
+    padding: 0.8rem 1.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-radius: 25px; /* Pill shape */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.connectActionButton.connect {
+    background: linear-gradient(90deg, #0a66c2 0%, #004182 100%);
+    color: white;
+}
+.connectActionButton.connect:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(10, 102, 194, 0.4);
+}
+.connectActionButton.connect:active {
+    transform: translateY(0);
+}
+
+.connectActionButton.pending,
+.connectActionButton.connected {
+    background: #f0f4f8; /* Light grey for passive states */
+    color: #6c7a89;
+    cursor: not-allowed;
+    border: 1px solid #dce4eb;
+    box-shadow: none;
+}
+.connectActionButton.pending:hover,
+.connectActionButton.connected:hover {
+    transform: none; /* No hover effect on disabled */
+}
+
+.connectActionButton.accept {
+    /* Style for "Accept Request" button */
+    background: linear-gradient(
+        90deg,
+        #28a745 0%,
+        #218838 100%
+    ); /* Green gradient */
+    color: white;
+}
+.connectActionButton.accept:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .discoverGrid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .userCard_large {
+        grid-column: span 1; /* Revert to single column on smaller screens for consistency */
+    }
+}
+
+@media (max-width: 600px) {
+    .discoverPageWrapper {
+        padding: 1.5rem;
+    }
+    .discoverTitle {
+        font-size: 1.7rem;
+        margin-bottom: 2rem;
+    }
+    .userCard {
+        padding-bottom: 1rem;
+    }
+    .userProfileImage {
+        width: 100px;
+        height: 100px;
+        margin-top: -50px;
+    }
+    .userInfoContent h3 {
+        font-size: 1.3rem;
+    }
+    .usernameText {
+        font-size: 0.9rem;
+    }
+    .connectActionButton {
+        font-size: 0.95rem;
+        padding: 0.7rem 1rem;
+    }
 }

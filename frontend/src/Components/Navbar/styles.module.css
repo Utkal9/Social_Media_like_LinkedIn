@@ -1,21 +1,206 @@
+/* Container holds the navbar, adds shadow, and fixes it to the top */
 .container {
-    padding: 1.2rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    padding: 0 5%; /* Use percentage for responsive padding */
 }
+
+/* The navbar itself, using flex for layout */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 60px; /* Taller, more modern height */
+    max-width: 1200px; /* Max width for large screens */
+    margin: 0 auto; /* Center the navbar content */
 }
-.navbarOptionContainer {
+
+/* --- Left Side (Logo) --- */
+.navLeft {
+    flex: 1;
     display: flex;
+    align-items: center;
 }
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0a66c2; /* LinkedIn-like blue */
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+/* --- Center (Nav Links) --- */
+.navCenter {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.navLink {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    color: #666666; /* Default icon color */
+    padding: 0 0.5rem;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s;
+    height: 60px;
+    justify-content: center;
+}
+
+.navLink:hover {
+    color: #000000; /* Darker on hover */
+}
+
+.navLink.active {
+    color: #000000;
+    border-bottom: 2px solid #000000;
+}
+
+.navLink svg {
+    width: 24px;
+    height: 24px;
+}
+
+.navLink span {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* --- Right Side (Profile / Login) --- */
+.navRight {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
 .buttonJoin {
     font-weight: bold;
-    font-size: 0.7rem;
-    background: #cd8987;
+    font-size: 0.9rem;
+    background: #0a66c2;
     color: white;
-    padding-inline: 1.2rem;
-    padding-block: 0.6rem;
-    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
     cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.buttonJoin:hover {
+    background: #004182;
+}
+
+/* --- Profile Dropdown Menu --- */
+.profileMenu {
+    position: relative;
+}
+
+.profileButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #666666;
+}
+.profileButton:hover {
+    color: #000000;
+}
+
+.profileButton span {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.profilePic {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+
+.profileFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e0e0e0;
+    color: #333;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.dropdownContent {
+    position: absolute;
+    top: 100%; /* Position right below the button */
+    right: 0;
+    background-color: white;
+    min-width: 250px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px; /* Small gap */
+}
+
+.dropdownHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profilePicLarge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.dropdownHeader div {
+    line-height: 1.3;
+}
+.dropdownHeader p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.dropdownItem {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.dropdownItem:hover {
+    background-color: #f3f3f3;
+}
+
+/* Hide text on very small screens */
+@media (max-width: 768px) {
+    .navCenter {
+        gap: 0.5rem;
+    }
+    .navLink span,
+    .profileButton span {
+        display: none; /* Hide text, show only icons */
+    }
+    .logo {
+        font-size: 1.2rem;
+    }
+    .container {
+        padding: 0 2%;
+    }
 }

@@ -1,52 +1,160 @@
-.container {
-    font-family: "Poppins";
-    padding: 1.2rem;
+.pageWrapper {
+    background-color: #ffffff;
+    min-height: 100vh;
 }
+
+/* --- New Landing Page Header --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5%;
+    max-width: 1400px;
+    margin: 0 auto;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.logoContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0a66c2;
+}
+
+.nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.navButton {
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #333;
+}
+.navButton:hover {
+    color: #000;
+    background-color: #f3f3f3;
+}
+
+.navButton.primary {
+    background-color: #0a66c2;
+    color: #fff;
+    border-color: #0a66c2;
+}
+.navButton.primary:hover {
+    background-color: #004182;
+    border-color: #004182;
+    color: #fff;
+}
+
+/* --- Main Hero Section --- */
+.container {
+    padding: 2rem 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    min-height: calc(100vh - 90px); /* Full height minus header */
+}
+
 .mainContainer {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 4rem;
-    padding-inline: 2rem;
-    height: 80vh;
+    max-width: 1200px;
+    margin: 0 auto;
 }
+
 .mainContainer__left {
-    flex: 0.5;
+    flex: 1;
 }
+
 .mainContainer__right {
-    flex: 0.5;
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .mainContainer__right img {
-    max-width: 80%;
+    max-width: 100%;
     height: auto;
     border-radius: 10px;
     object-fit: cover;
 }
+
 .mainContainer__left > p:nth-child(1) {
-    font-size: 2.7rem;
-    background: -webkit-linear-gradient(45deg, #000000, #b2b2b2);
+    font-size: 3.5rem; /* Larger hero text */
+    background: linear-gradient(45deg, #0a66c2, #004182);
     background-clip: text;
-    font-weight: bold;
+    font-weight: 700;
     -webkit-text-fill-color: transparent;
+    line-height: 1.2;
 }
+
 .mainContainer__left > p:nth-child(2) {
     color: #4d4d4d;
-    font-size: 1.6rem;
+    font-size: 1.25rem;
+    margin-top: 1rem;
+    max-width: 500px;
 }
-.mainContainer__left > div.buttonJoin {
+
+.buttonJoin {
     width: fit-content;
     cursor: pointer;
     user-select: none;
     transition: all 0.2s;
-    margin-top: 0.8rem;
-    font-size: 1.5rem;
-    background: rgb(197, 44, 208);
+    margin-top: 2rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    background: #0a66c2;
     color: white;
-    padding-inline: 1.2rem;
-    padding-block: 0.6rem;
+    padding: 0.8rem 2rem;
     border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(10, 102, 194, 0.2);
+}
+.buttonJoin:hover {
+    background: #004182;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(10, 102, 194, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        padding: 1rem 5%;
+    }
+    .navButton {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+    .container {
+        padding-top: 2rem;
+    }
+    .mainContainer {
+        flex-direction: column-reverse;
+        padding: 0;
+        gap: 2rem;
+    }
+    .mainContainer__left > p:nth-child(1) {
+        font-size: 2.2rem;
+    }
+    .mainContainer__left > p:nth-child(2) {
+        font-size: 1rem;
+    }
+    .mainContainer__left {
+        text-align: center;
+    }
+    .buttonJoin {
+        margin: 1.5rem auto 0 auto;
+    }
 }
