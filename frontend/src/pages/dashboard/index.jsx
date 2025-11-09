@@ -342,13 +342,13 @@ export default function Dashboard() {
                                 {postState.comments.length !== 0 && (
                                     <div>
                                         {postState.comments.map(
-                                            (comment, index) => {
+                                            (postComment, index) => {
                                                 return (
                                                     <div
                                                         className={
                                                             styles.singleComment
                                                         }
-                                                        key={commentText._id}
+                                                        key={postComment._id}
                                                     >
                                                         <div
                                                             className={
@@ -356,7 +356,7 @@ export default function Dashboard() {
                                                             }
                                                         >
                                                             <img
-                                                                src={`${BASE_URL}/${comment.userId.profilePicture}`}
+                                                                src={`${BASE_URL}/${postComment.userId.profilePicture}`}
                                                                 alt=""
                                                             />
                                                             <div>
@@ -369,7 +369,7 @@ export default function Dashboard() {
                                                                     }}
                                                                 >
                                                                     {
-                                                                        comment
+                                                                        postComment
                                                                             .userId
                                                                             .name
                                                                     }
@@ -378,14 +378,16 @@ export default function Dashboard() {
                                                                     {" "}
                                                                     @
                                                                     {
-                                                                        comment
+                                                                        postComment
                                                                             .userId
                                                                             .username
                                                                     }
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <p>{comment.body}</p>
+                                                        <p>
+                                                            {postComment.body}
+                                                        </p>
                                                     </div>
                                                 );
                                             }
