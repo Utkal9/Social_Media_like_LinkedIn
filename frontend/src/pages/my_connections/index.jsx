@@ -1,3 +1,5 @@
+// frontend/src/pages/my_connections/index.jsx
+
 import {
     AcceptConnection,
     getMyConnectionRequests,
@@ -7,7 +9,7 @@ import UserLayout from "@/layout/UserLayout"; // Import
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-import { BASE_URL } from "@/config";
+// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { useRouter } from "next/router";
 
 export default function MyConnectionsPage() {
@@ -84,8 +86,9 @@ export default function MyConnectionsPage() {
                                     className={styles.requestCard}
                                     key={user._id}
                                 >
+                                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                     <img
-                                        src={`${BASE_URL}/${user.userId.profilePicture}`}
+                                        src={user.userId.profilePicture}
                                         alt=""
                                         className={styles.profilePicture}
                                         onClick={() =>
@@ -94,6 +97,7 @@ export default function MyConnectionsPage() {
                                             )
                                         }
                                     />
+                                    {/* --- END FIX --- */}
                                     <div className={styles.userInfo}>
                                         <h3
                                             onClick={() =>
@@ -155,11 +159,13 @@ export default function MyConnectionsPage() {
                                         )
                                     }
                                 >
+                                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                     <img
-                                        src={`${BASE_URL}/${user.userId.profilePicture}`}
+                                        src={user.userId.profilePicture}
                                         alt=""
                                         className={styles.profilePictureSmall}
                                     />
+                                    {/* --- END FIX --- */}
                                     <div className={styles.userInfo}>
                                         <h3>{user.userId.name}</h3>
                                         <p>@{user.userId.username}</p>

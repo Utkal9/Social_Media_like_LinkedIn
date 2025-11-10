@@ -20,13 +20,16 @@ export const createPost = createAsyncThunk(
             const formData = new FormData();
             formData.append("token", localStorage.getItem("token"));
             formData.append("body", body);
-            formData.append("media", file);
+            if (file) {
+                formData.append("media", file);
+            }
             const response = await clientServer.post("/post", formData, {
                 headers: {
                     "Content-type": "multipart/form-data",
                 },
             });
             if (response.status === 200) {
+                await thunkAPI.dispatch(getAllPosts());
                 return thunkAPI.fulfillWithValue("Post Uploaded");
             } else {
                 return thunkAPI.rejectWithValue("Post not Uploaded");
@@ -56,6 +59,7 @@ export const incrementPostLike = createAsyncThunk(
         try {
             const response = await clientServer.post("/increment_post_like", {
                 post_id: post.post_id,
+                token: localStorage.getItem("token"), // Send the token
             });
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {

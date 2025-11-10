@@ -13,7 +13,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-import { BASE_URL } from "@/config";
+// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 
 // --- SVG Icons (for better UI) ---
@@ -27,13 +27,13 @@ const ImageIcon = () => (
         <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
     </svg>
 );
-const LikeIcon = () => (
+const LikeIcon = ({ isLiked }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
+        fill={isLiked ? "#0a66c2" : "none"}
         viewBox="0 0 24 24"
         strokeWidth={1.5}
-        stroke="currentColor"
+        stroke={isLiked ? "#0a66c2" : "currentColor"}
     >
         <path
             strokeLinecap="round"
@@ -93,6 +93,7 @@ export default function Dashboard() {
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
     const postState = useSelector((state) => state.postReducer);
+    const [postError, setPostError] = useState("");
 
     useEffect(() => {
         if (authState.isTokenThere) {
@@ -109,9 +110,15 @@ export default function Dashboard() {
     const [commentText, setCommentText] = useState("");
 
     const handleUpload = async () => {
+        if (fileContent && fileContent.size > 10 * 1024 * 1024) {
+            // 10MB limit
+            setPostError("File is too large. Please select a file under 10MB.");
+            return;
+        }
         await dispatch(createPost({ file: fileContent, body: postContent }));
         setPostContent("");
         setFileContent(null);
+        setPostError("");
     };
 
     const handleLike = async (postId) => {
@@ -164,7 +171,7 @@ export default function Dashboard() {
                     <div className={styles.createPostTop}>
                         <img
                             className={styles.userProfilePic}
-                            src={`${BASE_URL}/${authState.user.userId.profilePicture}`}
+                            src={authState.user.userId.profilePicture}
                             alt="Your profile"
                         />
                         <textarea
@@ -174,6 +181,18 @@ export default function Dashboard() {
                             placeholder={`What's on your mind, ${authState.user.userId.name}?`}
                         ></textarea>
                     </div>
+                    {postError && (
+                        <p
+                            style={{
+                                color: "red",
+                                fontSize: "0.9rem",
+                                textAlign: "center",
+                                marginTop: "0.5rem",
+                            }}
+                        >
+                            {postError}
+                        </p>
+                    )}
                     <div className={styles.createPostBottom}>
                         <label
                             htmlFor="fileUpload"
@@ -182,7 +201,27 @@ export default function Dashboard() {
                             <ImageIcon /> <span>Photo</span>
                         </label>
                         <input
-                            onChange={(e) => setFileContent(e.target.files[0])}
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                const TEN_MB = 10 * 1024 * 1024;
+
+                                if (file && file.size > TEN_MB) {
+                                    // File is too large
+                                    setPostError(
+                                        "File is too large. Please select a file under 10MB."
+                                    );
+                                    setFileContent(null);
+                                    e.target.value = null; // Clear the file input
+                                } else if (file) {
+                                    // File is valid
+                                    setFileContent(file);
+                                    setPostError(""); // Clear any previous error
+                                } else {
+                                    // No file selected
+                                    setFileContent(null);
+                                    setPostError("");
+                                }
+                            }}
                             type="file"
                             hidden
                             id="fileUpload"
@@ -207,9 +246,10 @@ export default function Dashboard() {
                     {postState.posts.map((post) => (
                         <div key={post._id} className={styles.postCard}>
                             <div className={styles.postCardHeader}>
+                                {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                 <img
                                     className={styles.userProfilePic}
-                                    src={`${BASE_URL}/${post.userId.profilePicture}`}
+                                    src={post.userId.profilePicture}
                                     alt={`${post.userId.name}'s profile`}
                                     onClick={() =>
                                         router.push(
@@ -217,6 +257,7 @@ export default function Dashboard() {
                                         )
                                     }
                                 />
+                                {/* --- END FIX --- */}
                                 <div className={styles.postCardHeaderInfo}>
                                     <p
                                         className={styles.postCardUser}
@@ -251,14 +292,14 @@ export default function Dashboard() {
                                         }
                                     >
                                         <img
-                                            src={`${BASE_URL}/${post.media}`}
+                                            src={post.media}
                                             alt="Post media"
                                         />
                                     </div>
                                 )}
                             </div>
                             <div className={styles.postCardStats}>
-                                <span>{post.likes} Likes</span>
+                                <span>{post.likes.length} Likes</span>
                             </div>
                             <div className={styles.postCardActions}>
                                 <button
@@ -317,7 +358,7 @@ export default function Dashboard() {
                                     key={postComment._id}
                                 >
                                     <img
-                                        src={`${BASE_URL}/${postComment.userId.profilePicture}`}
+                                        src={postComment.userId.profilePicture}
                                         alt={postComment.userId.name}
                                         className={styles.userProfilePic}
                                     />
@@ -336,7 +377,7 @@ export default function Dashboard() {
                         <div className={styles.postCommentContainer}>
                             <img
                                 className={styles.userProfilePic}
-                                src={`${BASE_URL}/${authState.user.userId.profilePicture}`}
+                                src={authState.user.userId.profilePicture}
                                 alt="Your profile"
                             />
                             <input
