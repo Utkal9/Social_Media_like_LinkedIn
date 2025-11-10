@@ -12,13 +12,18 @@ export const createPost = async (req, res) => {
     try {
         const user = await User.findOne({ token: token });
         if (!user) return res.status(404).json({ message: "User not found" });
+
+        // --- CHANGED ---
         const post = new Post({
             userId: user._id,
             body: req.body.body,
-            media: req.file != undefined ? req.file.filename : "",
-            fileType:
-                req.file != undefined ? req.file.mimetype.split("/")[1] : "",
+            // We now get the secure URL from Cloudinary via req.file.path
+            media: req.file ? req.file.path : "",
+            // We can get the file type from mimetype
+            fileType: req.file ? req.file.mimetype : "",
         });
+        // --- CHANGED ---
+
         await post.save();
         return res.status(200).json({ message: "Post Created" });
     } catch (error) {

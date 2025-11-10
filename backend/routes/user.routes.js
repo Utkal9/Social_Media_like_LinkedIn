@@ -15,21 +15,34 @@ import {
     getUserProfileAndUserBasedOnUername,
 } from "../controllers/user.controller.js";
 
-import multer from "multer";
+// --- CHANGED ---
+// We import our configured Cloudinary uploader
+import upload from "../config/cloudinary.config.js";
+// We no longer need the local multer
+// import multer from "multer";
+// --- CHANGED ---
+
 const router = Router();
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, "uploads/");
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    },
-});
-const upload = multer({ storage: storage });
+// --- DELETED ---
+// All of this local storage code is no longer needed.
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, "uploads/");
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, file.originalname);
+//     },
+// });
+// const upload = multer({ storage: storage });
+// --- DELETED ---
+
 router
     .route("/update_profile_picture")
+    // This 'upload' is now the Cloudinary uploader we imported
     .post(upload.single("profile_picture"), uploadProfilePicture);
+
+// --- All other routes are unchanged ---
 router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/user_update").post(updateUserProfile);

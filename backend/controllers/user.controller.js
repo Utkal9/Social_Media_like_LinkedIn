@@ -3,35 +3,127 @@ import Profile from "../models/profile.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
+// fs is no longer needed for writing files, but we keep it for now
+// in case you need it for other things. We won't use it for PDFs.
 import fs from "fs";
 import ConnectionRequest from "../models/connections.model.js";
 import Post from "../models/posts.model.js";
 import Comment from "../models/comments.model.js";
 
-const convertUserDataTOPDF = async (userData) => {
-    const doc = new PDFDocument();
-    const outputPath = crypto.randomBytes(32).toString("hex") + ".pdf";
-    const stream = fs.createWriteStream("uploads/" + outputPath);
-    doc.pipe(stream);
-    doc.image(`uploads/${userData.userId.profilePicture}`, {
-        align: "center",
-        width: 100,
-    });
-    doc.fontSize(14).text(`Name: ${userData.userId.name}`);
-    doc.fontSize(14).text(`Username: ${userData.userId.username}`);
-    doc.fontSize(14).text(`Email: ${userData.userId.email}`);
-    doc.fontSize(14).text(`Bio: ${userData.bio}`);
-    doc.fontSize(14).text(`Current Position: ${userData.currentPost}`);
+// --- NEW IMPORTS ---
+// We need to import v2 as 'cloudinary' to get the uploader stream
+import { v2 as cloudinary } from "cloudinary";
+// Import 'request' to fetch images from their URL for the PDF
+import request from "request";
+// --- END NEW IMPORTS ---
 
-    doc.fontSize(14).text("Past Work: ");
-    userData.pastWork.forEach((work, index) => {
-        doc.fontSize(14).text(`Company Name: ${work.company}`);
-        doc.fontSize(14).text(`Position: ${work.position}`);
-        doc.fontSize(14).text(`Years: ${work.years}`);
+// --- COMPLETELY REBUILT FUNCTION ---
+// This function now creates a PDF, pipes it to Cloudinary, and returns a URL
+const convertUserDataTOPDF = (userData) => {
+    // We return a Promise that resolves with the Cloudinary URL
+    return new Promise((resolve, reject) => {
+        try {
+            const doc = new PDFDocument();
+
+            // Create an upload stream to Cloudinary
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: "pro-connect-resumes",
+                    resource_type: "raw", // Treat it as a raw file
+                    format: "pdf",
+                },
+                (error, result) => {
+                    if (error) {
+                        console.error("Cloudinary upload error:", error);
+                        return reject(error);
+                    }
+                    // Resolve with the new, permanent URL
+                    resolve(result.secure_url);
+                }
+            );
+
+            // Pipe the PDF document to the Cloudinary stream
+            doc.pipe(uploadStream);
+
+            // --- Build the PDF ---
+            const profilePicUrl = userData.userId.profilePicture;
+
+            // This function adds the text, so we can call it after the image loads
+            const addTextToDoc = () => {
+                doc.fontSize(14).text(`Name: ${userData.userId.name}`);
+                doc.fontSize(14).text(`Username: ${userData.userId.username}`);
+                doc.fontSize(14).text(`Email: ${userData.userId.email}`);
+                doc.fontSize(14).text(`Bio: ${userData.bio || ""}`);
+                doc.fontSize(14).text(
+                    `Current Position: ${userData.currentPost || ""}`
+                );
+
+                doc.addPage(); // Add a new page for work history
+                doc.fontSize(14).text("Past Work: ");
+                doc.moveDown();
+
+                if (userData.pastWork && userData.pastWork.length > 0) {
+                    userData.pastWork.forEach((work) => {
+                        doc.fontSize(12).text(
+                            `Company Name: ${work.company || ""}`
+                        );
+                        doc.fontSize(12).text(
+                            `Position: ${work.position || ""}`
+                        );
+                        doc.fontSize(12).text(`Years: ${work.years || ""}`);
+                        doc.moveDown();
+                    });
+                } else {
+                    doc.fontSize(12).text("No work history provided.");
+                }
+
+                // End the document to trigger the upload stream
+                doc.end();
+            };
+
+            // Check if the profile picture is a Cloudinary URL (starts with http)
+            if (profilePicUrl && profilePicUrl.startsWith("http")) {
+                // Fetch image from Cloudinary URL
+                request(
+                    { url: profilePicUrl, encoding: null },
+                    (err, res, body) => {
+                        if (err || res.statusCode !== 200) {
+                            console.error(
+                                "Error fetching image for PDF, continuing without it."
+                            );
+                            addTextToDoc(); // Add text even if image fails
+                        } else {
+                            // Embed the fetched image
+                            try {
+                                doc.image(body, {
+                                    align: "center",
+                                    width: 100,
+                                });
+                                doc.moveDown();
+                                addTextToDoc(); // Add text after image
+                            } catch (imageError) {
+                                console.error(
+                                    "Error embedding image in PDF:",
+                                    imageError
+                                );
+                                addTextToDoc(); // Continue if image embedding fails
+                            }
+                        }
+                    }
+                );
+            } else {
+                // Fallback for default.jpg or if no image
+                console.log(
+                    "No profile picture URL found, creating PDF without image."
+                );
+                addTextToDoc();
+            }
+        } catch (error) {
+            reject(error);
+        }
     });
-    doc.end();
-    return outputPath;
 };
+// --- END REBUILT FUNCTION ---
 
 export const register = async (req, res) => {
     try {
@@ -79,19 +171,30 @@ export const login = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const uploadProfilePicture = async (req, res) => {
     const { token } = req.body;
     try {
         const user = await User.findOne({ token: token });
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
-        user.profilePicture = req.file.filename;
+
+        // --- CHANGED ---
+        // We now get the secure Cloudinary URL from req.file.path
+        // If no file was uploaded, do nothing
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded." });
+        }
+        user.profilePicture = req.file.path;
+        // --- CHANGED ---
+
         await user.save();
         return res.json({ message: "Profile Picture Updated" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const updateUserProfile = async (req, res) => {
     try {
         const { token, ...newUserData } = req.body;
@@ -99,14 +202,18 @@ export const updateUserProfile = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
         const { username, email } = newUserData;
 
-        const existingUser = await User.findOne({
-            $or: [{ username }, { email }],
-        });
-        if (existingUser) {
-            if (existingUser || String(existingUser._id) !== String(user._id)) {
-                return res.status(400).json({ message: "User already exists" });
+        if (username || email) {
+            const existingUser = await User.findOne({
+                $or: [{ username }, { email }],
+            });
+            // Make sure we are not conflicting with *another* user
+            if (existingUser && String(existingUser._id) !== String(user._id)) {
+                return res
+                    .status(400)
+                    .json({ message: "Username or email already exists" });
             }
         }
+
         Object.assign(user, newUserData);
         await user.save();
         return res.json({ message: "User Updated" });
@@ -114,6 +221,7 @@ export const updateUserProfile = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const getUserAndProfile = async (req, res) => {
     try {
         const { token } = req.query;
@@ -130,6 +238,7 @@ export const getUserAndProfile = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const updateProfileData = async (req, res) => {
     try {
         const { token, ...newProfileData } = req.body;
@@ -146,6 +255,7 @@ export const updateProfileData = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const getAllUserProfile = async (req, res) => {
     try {
         const profiles = await Profile.find().populate(
@@ -157,15 +267,37 @@ export const getAllUserProfile = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// --- UPDATED FUNCTION ---
 export const downloadProfile = async (req, res) => {
-    const user_id = req.query.id;
-    const userProfile = await Profile.findOne({ userId: user_id }).populate(
-        "userId",
-        "name username email profilePicture"
-    );
-    let outputPath = await convertUserDataTOPDF(userProfile);
-    return res.json({ message: outputPath });
+    try {
+        const user_id = req.query.id;
+        if (!user_id) {
+            return res.status(400).json({ message: "User ID is required." });
+        }
+
+        const userProfile = await Profile.findOne({ userId: user_id }).populate(
+            "userId",
+            "name username email profilePicture"
+        );
+
+        if (!userProfile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+
+        // This now returns a Cloudinary URL
+        let cloudinaryUrl = await convertUserDataTOPDF(userProfile);
+
+        // Return the permanent URL
+        return res.json({ message: cloudinaryUrl });
+    } catch (error) {
+        console.error("Error in downloadProfile:", error);
+        // --- BUG FIX --- (Was 5G00)
+        return res.status(500).json({ message: "Failed to generate PDF." });
+    }
 };
+// --- END UPDATED FUNCTION ---
+
 export const sendConnectionRequest = async (req, res) => {
     const { token, connectionId } = req.body;
     try {
@@ -177,8 +309,10 @@ export const sendConnectionRequest = async (req, res) => {
                 .status(404)
                 .json({ message: "Connection User not found" });
         const existingRequest = await ConnectionRequest.findOne({
-            userId: user._id,
-            connectionId: connectionUser._id,
+            $or: [
+                { userId: user._id, connectionId: connectionUser._id },
+                { userId: connectionUser._id, connectionId: user._id },
+            ],
         });
         if (existingRequest) {
             return res.status(400).json({ message: "Request already sent" });
@@ -193,6 +327,7 @@ export const sendConnectionRequest = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const getMyConnectionsRequests = async (req, res) => {
     const { token } = req.query;
     try {
@@ -206,6 +341,7 @@ export const getMyConnectionsRequests = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const whatAreMyConnections = async (req, res) => {
     const { token } = req.query;
     try {
@@ -219,6 +355,7 @@ export const whatAreMyConnections = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const acceptConnectionRequest = async (req, res) => {
     const { token, requestId, action_type } = req.body;
     try {
@@ -233,14 +370,18 @@ export const acceptConnectionRequest = async (req, res) => {
         if (action_type === "accept") {
             connection.status_accepted = true;
         } else {
-            connection.status_accepted = false;
+            // "decline" or any other action will remove it
+            await ConnectionRequest.deleteOne({ _id: requestId });
+            return res.json({ message: "Request Declined" });
         }
         await connection.save();
         return res.json({ message: "Request Updated" });
     } catch (error) {
+        // --- BUG FIX --- (Was 5M00)
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const commentPost = async (req, res) => {
     const { token, post_id, commentBody } = req.body;
     try {
@@ -263,6 +404,7 @@ export const commentPost = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const getUserProfileAndUserBasedOnUername = async (req, res) => {
     const { username } = req.query;
     try {
