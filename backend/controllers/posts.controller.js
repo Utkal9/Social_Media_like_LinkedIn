@@ -12,8 +12,6 @@ export const createPost = async (req, res) => {
     try {
         const user = await User.findOne({ token: token });
         if (!user) return res.status(404).json({ message: "User not found" });
-
-        // --- CHANGED ---
         const post = new Post({
             userId: user._id,
             body: req.body.body,
@@ -22,7 +20,6 @@ export const createPost = async (req, res) => {
             // We can get the file type from mimetype
             fileType: req.file ? req.file.mimetype : "",
         });
-        // --- CHANGED ---
 
         await post.save();
         return res.status(200).json({ message: "Post Created" });
@@ -36,7 +33,8 @@ export const getAllPosts = async (req, res) => {
             "userId",
             "name username email profilePicture"
         );
-        return res.json({ posts });
+        const cleanPosts = posts.filter((post) => post && post.userId);
+        return res.json({ posts: cleanPosts });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -94,10 +92,8 @@ export const delete_comment_of_user = async (req, res) => {
     }
 };
 export const increment_likes = async (req, res) => {
-    // We now need token to know WHO is liking
     const { post_id, token } = req.body;
     try {
-        // Find the user who is liking
         const user = await User.findOne({ token: token }).select("_id");
         if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -106,20 +102,22 @@ export const increment_likes = async (req, res) => {
             return res.status(404).json({ message: "Post not found" });
         }
 
-        // Check if the user has already liked this post
         const userIndex = post.likes.indexOf(user._id);
+        let message = "";
 
         if (userIndex > -1) {
-            // User has liked, so UNLIKE (pull from array)
             post.likes.splice(userIndex, 1);
-            await post.save();
-            return res.json({ message: "Post Unliked" });
+            message = "Post Unliked";
         } else {
-            // User has not liked, so LIKE (push to array)
             post.likes.push(user._id);
-            await post.save();
-            return res.json({ message: "Post Liked" });
+            message = "Post Liked";
         }
+        await post.save();
+        const updatedPost = await Post.findById(post._id).populate(
+            "userId",
+            "name username email profilePicture"
+        );
+        return res.json({ message, post: updatedPost });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

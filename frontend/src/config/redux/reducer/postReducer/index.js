@@ -1,5 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getAllComments, getAllPosts } from "../../action/postAction";
+import {
+    getAllComments,
+    getAllPosts,
+    incrementPostLike,
+} from "../../action/postAction";
 
 const initialState = {
     posts: [],
@@ -30,7 +34,10 @@ const postSlice = createSlice({
                 state.isLoading = false;
                 state.isError = false;
                 state.postFetched = true;
-                state.posts = action.payload.posts.reverse();
+                const cleanPosts = action.payload.posts.filter(
+                    (post) => post && post.userId
+                );
+                state.posts = cleanPosts.reverse();
             })
             .addCase(getAllPosts.rejected, (state, action) => {
                 state.isLoading = false;
@@ -40,6 +47,21 @@ const postSlice = createSlice({
             .addCase(getAllComments.fulfilled, (state, action) => {
                 state.postId = action.payload.post_id;
                 state.comments = action.payload.comments;
+            })
+            .addCase(incrementPostLike.fulfilled, (state, action) => {
+                // Get the updated post from the action payload
+                const updatedPost = action.payload.post;
+                if (!updatedPost) {
+                    return;
+                }
+                // Find the index of the post in our state
+                const postIndex = state.posts.findIndex(
+                    (post) => post && post._id === updatedPost._id
+                );
+                // If found, replace it with the new updated post
+                if (postIndex > -1) {
+                    state.posts[postIndex] = updatedPost;
+                }
             });
     },
 });

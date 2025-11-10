@@ -79,66 +79,86 @@ export const sendConnectionRequest = createAsyncThunk(
                     connectionId: user.user_id,
                 }
             );
-            thunkAPI.dispatch(getConnectionsRequest({ token: user.token }));
+            // --- NEW: Refresh only the 'sent' list ---
+            thunkAPI.dispatch(getPendingSentRequests({ token: user.token }));
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message);
         }
     }
 );
-export const getConnectionsRequest = createAsyncThunk(
-    "user/getConnectionRequests",
-    async (user, thunkAPI) => {
-        try {
-            const response = await clientServer.get(
-                "/user/getConnectionRequests",
-                {
-                    params: {
-                        token: user.token,
-                    },
-                }
-            );
-            return thunkAPI.fulfillWithValue(response.data.connections);
-        } catch (error) {
-            return thunkAPI.rejectWithValue(error.response.data.message);
-        }
-    }
-);
-export const getMyConnectionRequests = createAsyncThunk(
-    "user/getMyConnectionRequests",
-    async (user, thunkAPI) => {
-        try {
-            const response = await clientServer.get(
-                "/user/user_connection_request",
-                {
-                    params: {
-                        token: user.token,
-                    },
-                }
-            );
-            return thunkAPI.fulfillWithValue(response.data);
-        } catch (error) {
-            return thunkAPI.rejectWithValue(error.response.data.message);
-        }
-    }
-);
-export const AcceptConnection = createAsyncThunk(
-    "user/acceptConnection",
-    async (user, thunkAPI) => {
+
+// --- NEW ACTION ---
+export const respondToConnectionRequest = createAsyncThunk(
+    "user/respondToConnectionRequest",
+    async (data, thunkAPI) => {
+        // data: { token, requestId, action_type: "accept" | "decline" }
         try {
             const response = await clientServer.post(
-                "/user/accept_connection_request",
+                "/user/respond_connection_request",
                 {
-                    token: user.token,
-                    requestId: user.connectionId,
-                    action_type: user.action,
+                    token: data.token,
+                    requestId: data.requestId,
+                    action_type: data.action_type,
                 }
             );
-            thunkAPI.dispatch(getConnectionsRequest({ token: user.token }));
-            thunkAPI.dispatch(getMyConnectionRequests({ token: user.token }));
+            // --- NEW: Refresh all connection states after responding ---
+            thunkAPI.dispatch(
+                getPendingIncomingRequests({ token: data.token })
+            );
+            thunkAPI.dispatch(getPendingSentRequests({ token: data.token }));
+            thunkAPI.dispatch(getMyNetwork({ token: data.token }));
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
+        }
+    }
+);
+
+// --- NEW ACTION ---
+export const getMyNetwork = createAsyncThunk(
+    "user/getMyNetwork",
+    async (user, thunkAPI) => {
+        try {
+            const response = await clientServer.get("/user/get_my_network", {
+                params: { token: user.token },
+            });
+            return thunkAPI.fulfillWithValue(response.data);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response.data.message);
+        }
+    }
+);
+
+// --- NEW ACTION ---
+export const getPendingIncomingRequests = createAsyncThunk(
+    "user/getPendingIncomingRequests",
+    async (user, thunkAPI) => {
+        try {
+            const response = await clientServer.get(
+                "/user/get_pending_incoming",
+                {
+                    params: { token: user.token },
+                }
+            );
+            return thunkAPI.fulfillWithValue(response.data);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response.data.message);
+        }
+    }
+);
+
+// --- NEW ACTION ---
+export const getPendingSentRequests = createAsyncThunk(
+    "user/getPendingSentRequests",
+    async (user, thunkAPI) => {
+        try {
+            const response = await clientServer.get("/user/get_pending_sent", {
+                params: { token: user.token },
+            });
+            return thunkAPI.fulfillWithValue(response.data);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response.data.message);
         }
     }
 );
