@@ -1,3 +1,5 @@
+// frontend/src/pages/index.jsx
+
 import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
@@ -29,7 +31,9 @@ export default function Home() {
                     </div>
                 </div>
                 <div className={styles.mainContainer__right}>
-                    <img src="images/homemain_connection.jpg" alt="" />
+                    {/* --- FIX: Static images in /public need a leading / --- */}
+                    <img src="/images/homemain_connection.jpg" alt="" />
+                    {/* --- END FIX --- */}
                 </div>
             </div>
         </div>

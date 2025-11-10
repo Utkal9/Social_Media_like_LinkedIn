@@ -94,15 +94,32 @@ export const delete_comment_of_user = async (req, res) => {
     }
 };
 export const increment_likes = async (req, res) => {
-    const { post_id } = req.body;
+    // We now need token to know WHO is liking
+    const { post_id, token } = req.body;
     try {
+        // Find the user who is liking
+        const user = await User.findOne({ token: token }).select("_id");
+        if (!user) return res.status(404).json({ message: "User not found" });
+
         const post = await Post.findOne({ _id: post_id });
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
-        post.likes = post.likes + 1;
-        await post.save();
-        return res.json({ message: "Likes Incremented" });
+
+        // Check if the user has already liked this post
+        const userIndex = post.likes.indexOf(user._id);
+
+        if (userIndex > -1) {
+            // User has liked, so UNLIKE (pull from array)
+            post.likes.splice(userIndex, 1);
+            await post.save();
+            return res.json({ message: "Post Unliked" });
+        } else {
+            // User has not liked, so LIKE (push to array)
+            post.likes.push(user._id);
+            await post.save();
+            return res.json({ message: "Post Liked" });
+        }
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

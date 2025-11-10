@@ -308,6 +308,11 @@ export const sendConnectionRequest = async (req, res) => {
             return res
                 .status(404)
                 .json({ message: "Connection User not found" });
+        if (user._id.toString() === connectionUser._id.toString()) {
+            return res
+                .status(400)
+                .json({ message: "You cannot connect with yourself." });
+        }
         const existingRequest = await ConnectionRequest.findOne({
             $or: [
                 { userId: user._id, connectionId: connectionUser._id },
@@ -369,6 +374,12 @@ export const acceptConnectionRequest = async (req, res) => {
         }
         if (action_type === "accept") {
             connection.status_accepted = true;
+            const reciprocalConnection = new ConnectionRequest({
+                userId: connection.connectionId, // Original receiver
+                connectionId: connection.userId, // Original sender
+                status_accepted: true, // Mark as accepted
+            });
+            await reciprocalConnection.save();
         } else {
             // "decline" or any other action will remove it
             await ConnectionRequest.deleteOne({ _id: requestId });

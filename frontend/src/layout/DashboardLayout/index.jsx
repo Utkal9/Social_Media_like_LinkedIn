@@ -1,9 +1,11 @@
+// frontend/src/layout/DashboardLayout/index.jsx
+
 import React, { useEffect } from "react";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { setTokenIsThere } from "@/config/redux/reducer/authReducer";
-import { BASE_URL } from "@/config";
+// import { BASE_URL } from "@/config"; // <-- No longer needed
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
@@ -31,9 +33,10 @@ export default function DashboardLayout({ children }) {
                     {authState.profileFetched && user ? (
                         <div className={styles.profileCard}>
                             <div className={styles.profileCardHeader}></div>
+                            {/* --- FIX: Removed ${BASE_URL}/ --- */}
                             {user.profilePicture ? (
                                 <img
-                                    src={`${BASE_URL}/${user.profilePicture}`}
+                                    src={user.profilePicture}
                                     alt="Profile"
                                     className={styles.profileCardPic}
                                     onClick={() => router.push("/profile")}
@@ -102,10 +105,12 @@ export default function DashboardLayout({ children }) {
                                             )
                                         }
                                     >
+                                        {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                         <img
-                                            src={`${BASE_URL}/${profile.userId.profilePicture}`}
+                                            src={profile.userId.profilePicture}
                                             alt={profile.userId.name}
                                         />
+                                        {/* --- END FIX --- */}
                                         <div>
                                             <strong>
                                                 {profile.userId.name}

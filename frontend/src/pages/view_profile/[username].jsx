@@ -1,4 +1,6 @@
-import clientServer, { BASE_URL } from "@/config";
+// frontend/src/pages/view_profile/[username].jsx
+
+import clientServer from "@/config"; // <-- BASE_URL not needed for images
 import DashboardLayout from "@/layout/DashboardLayout"; // Import
 import UserLayout from "@/layout/UserLayout"; // Import
 import React, { useEffect, useState } from "react";
@@ -122,7 +124,9 @@ export default function ViewProfilePage({ userProfile }) {
         const response = await clientServer.get(
             `/user/download_resume?id=${userProfile.userId._id}`
         );
-        window.open(`${BASE_URL}/${response.data.message}`, "_blank");
+        // --- FIX: The PDF URL is a FULL Cloudinary URL. Do not add BASE_URL. ---
+        window.open(response.data.message, "_blank");
+        // --- END FIX ---
     };
 
     // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
@@ -131,11 +135,13 @@ export default function ViewProfilePage({ userProfile }) {
             {/* --- 1. Profile Header Card --- */}
             <div className={styles.profileHeaderCard}>
                 <div className={styles.backDropContainer}>
+                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                     <img
-                        src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
+                        src={userProfile.userId.profilePicture}
                         alt="backDrop"
                         className={styles.profilePic}
                     />
+                    {/* --- END FIX --- */}
                 </div>
                 <div className={styles.profileHeaderContent}>
                     <div className={styles.profileHeaderActions}>
@@ -209,11 +215,13 @@ export default function ViewProfilePage({ userProfile }) {
                             <div className={styles.postCard} key={post._id}>
                                 <div className={styles.card}>
                                     {post.media && (
+                                        /* --- FIX: Removed ${BASE_URL}/ --- */
                                         <img
-                                            src={`${BASE_URL}/${post.media}`}
+                                            src={post.media}
                                             alt="Post media"
                                             className={styles.postCardImage}
                                         />
+                                        /* --- END FIX --- */
                                     )}
                                     <p className={styles.postCardBody}>
                                         {post.body}

@@ -1,9 +1,11 @@
+// frontend/src/Components/Navbar/index.jsx
+
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./styles.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { reset } from "@/config/redux/reducer/authReducer";
-import { BASE_URL } from "@/config";
+// import { BASE_URL } from "@/config"; // <-- No longer needed here
 import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence
 
 // --- SVG Icons ---
@@ -231,8 +233,6 @@ function NavbarComponent() {
                     <span>Discover</span>
                 </motion.div>
             </div>
-
-            {/* --- Right Side (Desktop Profile/Login) --- */}
             <div className={styles.navRight}>
                 {authState.profileFetched && authState.user ? (
                     <div className={styles.profileMenu} ref={dropdownRef}>
@@ -245,7 +245,7 @@ function NavbarComponent() {
                         >
                             {authState.user.userId.profilePicture ? (
                                 <img
-                                    src={`${BASE_URL}/${authState.user.userId.profilePicture}`}
+                                    src={authState.user.userId.profilePicture}
                                     alt="Profile"
                                     className={styles.profilePic}
                                 />
@@ -266,11 +266,15 @@ function NavbarComponent() {
                                 transition={{ duration: 0.2 }}
                             >
                                 <div className={styles.dropdownHeader}>
+                                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                     <img
-                                        src={`${BASE_URL}/${authState.user.userId.profilePicture}`}
+                                        src={
+                                            authState.user.userId.profilePicture
+                                        }
                                         alt="Profile"
                                         className={styles.profilePicLarge}
                                     />
+                                    {/* --- END FIX --- */}
                                     <div>
                                         <strong>
                                             {authState.user.userId.name}
@@ -304,8 +308,6 @@ function NavbarComponent() {
                     </motion.div>
                 )}
             </div>
-
-            {/* --- NEW Hamburger Menu Button (Mobile Only) --- */}
             <div className={styles.hamburgerMenuButton}>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                     <MenuIcon />

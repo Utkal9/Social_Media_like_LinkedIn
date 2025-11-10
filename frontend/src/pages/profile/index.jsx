@@ -1,8 +1,10 @@
+// frontend/src/pages/profile/index.jsx
+
 import React, { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import { getAboutUser } from "@/config/redux/action/authAction";
-import clientServer, { BASE_URL } from "@/config";
+import clientServer from "@/config"; // <-- BASE_URL not needed for images
 import UserLayout from "@/layout/UserLayout"; // Import
 import DashboardLayout from "@/layout/DashboardLayout"; // Import
 import { getAllPosts } from "@/config/redux/action/postAction";
@@ -192,11 +194,13 @@ export default function Profilepage() {
                             type="file"
                             id="profilePictureUpload"
                         />
+                        {/* --- FIX: Removed ${BASE_URL}/ --- */}
                         <img
-                            src={`${BASE_URL}/${userProfile.userId.profilePicture}`}
+                            src={userProfile.userId.profilePicture}
                             alt="backDrop"
                             className={styles.profilePic}
                         />
+                        {/* --- END FIX --- */}
                     </div>
                     <div className={styles.profileHeaderContent}>
                         <button
@@ -286,11 +290,13 @@ export default function Profilepage() {
                                 <div className={styles.postCard} key={post._id}>
                                     <div className={styles.card}>
                                         {post.media && (
+                                            /* --- FIX: Removed ${BASE_URL}/ --- */
                                             <img
-                                                src={`${BASE_URL}/${post.media}`}
+                                                src={post.media}
                                                 alt="Post media"
                                                 className={styles.postCardImage}
                                             />
+                                            /* --- END FIX --- */
                                         )}
                                         <p className={styles.postCardBody}>
                                             {post.body}

@@ -1,3 +1,5 @@
+// frontend/src/pages/discover/index.jsx
+
 import {
     getAllUsers,
     sendConnectionRequest,
@@ -9,7 +11,7 @@ import UserLayout from "@/layout/UserLayout";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-import { BASE_URL } from "@/config";
+// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 
@@ -136,9 +138,10 @@ export default function Discoverpage() {
                                 {/* NEW BACKGROUND ELEMENT */}
                                 {/* You can put a pattern SVG here, or just use CSS gradient */}
                             </div>
+                            {/* --- FIX: Removed ${BASE_URL}/ --- */}
                             <img
                                 className={styles.userProfileImage}
-                                src={`${BASE_URL}/${user.userId.profilePicture}`}
+                                src={user.userId.profilePicture}
                                 alt={`${user.userId.name}'s profile`}
                                 onClick={() => {
                                     router.push(
@@ -146,6 +149,7 @@ export default function Discoverpage() {
                                     );
                                 }}
                             />
+                            {/* --- END FIX --- */}
                             <div className={styles.userInfoContent}>
                                 {" "}
                                 {/* NEW WRAPPER FOR TEXT */}
