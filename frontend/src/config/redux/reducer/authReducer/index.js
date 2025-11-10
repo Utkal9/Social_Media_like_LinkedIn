@@ -3,8 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
     getAboutUser,
     getAllUsers,
-    getConnectionsRequest,
-    getMyConnectionRequests,
+    getMyNetwork,
+    getPendingIncomingRequests,
+    getPendingSentRequests,
     loginUser,
     registerUser,
 } from "../../action/authAction";
@@ -18,8 +19,9 @@ const initialState = {
     message: "",
     isTokenThere: false,
     profileFetched: false,
-    connections: [],
-    connectionRequest: [],
+    myNetwork: [], // List of user objects I am connected to
+    pendingIncoming: [], // List of connection objects (requests) sent TO me
+    pendingSent: [], // List of connection objects (requests) sent BY me
     all_users: [],
     all_profiles_fetched: false,
 };
@@ -88,17 +90,14 @@ const authSlice = createSlice({
                 state.all_profiles_fetched = true;
                 state.all_users = action.payload.profiles;
             })
-            .addCase(getConnectionsRequest.fulfilled, (state, action) => {
-                state.connections = action.payload;
+            .addCase(getMyNetwork.fulfilled, (state, action) => {
+                state.myNetwork = action.payload;
             })
-            .addCase(getConnectionsRequest.rejected, (state, action) => {
-                state.message = action.payload;
+            .addCase(getPendingIncomingRequests.fulfilled, (state, action) => {
+                state.pendingIncoming = action.payload;
             })
-            .addCase(getMyConnectionRequests.fulfilled, (state, action) => {
-                state.connectionRequest = action.payload;
-            })
-            .addCase(getMyConnectionRequests.rejected, (state, action) => {
-                state.message = action.payload;
+            .addCase(getPendingSentRequests.fulfilled, (state, action) => {
+                state.pendingSent = action.payload;
             });
     },
 });

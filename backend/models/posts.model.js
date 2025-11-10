@@ -14,6 +14,18 @@ const PostSchema = mongoose.Schema({
             ref: "User",
         },
     ],
+    // --- THIS IS THE FIX ---
+    // Add default: [] to ensure 'likes' is always an array
+    likes: {
+        type: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        default: [], // <-- THIS LINE FIXES THE BUG
+    },
+    // --- END FIX ---
     createdAt: {
         type: Date,
         default: Date.now,
