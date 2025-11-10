@@ -1,4 +1,4 @@
-/* Container holds the navbar, adds shadow, and fixes it to the top */
+/* --- 1. Main Container --- */
 .container {
     position: fixed;
     top: 0;
@@ -6,103 +6,130 @@
     width: 100%;
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     z-index: 1000;
-    padding: 0 5%; /* Use percentage for responsive padding */
+    padding: 0 5%;
 }
 
-/* The navbar itself, using flex for layout */
+/* --- 2. Navbar Content --- */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px; /* Taller, more modern height */
-    max-width: 1200px; /* Max width for large screens */
-    margin: 0 auto; /* Center the navbar content */
+    height: 60px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* --- Left Side (Logo) --- */
+/* --- 3. Left Side (Logo) --- */
 .navLeft {
     flex: 1;
     display: flex;
     align-items: center;
+    z-index: 1011; /* Keep logo above mobile menu */
 }
-
 .logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #0a66c2; /* LinkedIn-like blue */
     cursor: pointer;
     margin-right: 1rem;
+    display: flex;
+    align-items: center;
+}
+/* Ensure logo color is correct even if mobile menu is open */
+.logo svg path {
+    fill: url(#logoGradient);
 }
 
-/* --- Center (Nav Links) --- */
+/* --- 4. Center (Nav Links) --- */
 .navCenter {
     flex: 2;
     display: flex;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 0.5rem;
+    height: 100%;
+    position: relative; /* For the gliding pill */
 }
 
 .navLink {
     display: flex;
     flex-direction: column;
     align-items: center;
-    cursor: pointer;
-    color: #666666; /* Default icon color */
-    padding: 0 0.5rem;
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s;
-    height: 60px;
     justify-content: center;
+    cursor: pointer;
+    color: #555;
+    height: 100%;
+    width: 90px;
+    border-bottom: none; /* Removed border */
+    transition: all 0.2s ease-in-out;
+    position: relative; /* For the gliding pill */
+    z-index: 2; /* Sit on top of the pill */
+    background: none; /* Explicitly no background */
 }
 
+/* Remove default hover, pill will handle it */
 .navLink:hover {
-    color: #000000; /* Darker on hover */
+    color: #000;
+    background: none;
 }
 
 .navLink.active {
-    color: #000000;
-    border-bottom: 2px solid #000000;
+    color: #0a66c2;
+    font-weight: 600;
+}
+
+/* This is the gliding pill */
+.activeLinkPill {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 44px; /* Pill height */
+    width: 80px; /* Pill width */
+    background: #f0f5fb;
+    border-radius: 8px;
+    z-index: 1; /* Sit behind the link text/icon */
 }
 
 .navLink svg {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
 }
-
 .navLink span {
     font-size: 0.75rem;
     font-weight: 500;
+    margin-top: -2px;
+}
+.navLink.active span {
+    font-weight: 600;
 }
 
-/* --- Right Side (Profile / Login) --- */
+/* --- 5. Right Side (Profile / Login) --- */
 .navRight {
     flex: 1;
     display: flex;
     justify-content: flex-end;
 }
-
 .buttonJoin {
-    font-weight: bold;
+    font-weight: 600;
     font-size: 0.9rem;
     background: #0a66c2;
     color: white;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.2rem;
     border-radius: 20px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
+    border: none;
 }
-
 .buttonJoin:hover {
     background: #004182;
+    transform: scale(1.05);
 }
 
-/* --- Profile Dropdown Menu --- */
+/* --- 6. Profile Dropdown Menu --- */
 .profileMenu {
     position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
-
 .profileButton {
     background: none;
     border: none;
@@ -110,17 +137,23 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #666666;
+    justify-content: center;
+    color: #555;
+    width: 90px;
+    height: 100%;
+    border-bottom: none;
+    transition: all 0.2s ease-in-out;
 }
 .profileButton:hover {
     color: #000000;
+    background-color: #f5f5f5;
+    border-radius: 8px;
 }
-
 .profileButton span {
     font-size: 0.75rem;
     font-weight: 500;
+    margin-top: -2px;
 }
-
 .profilePic {
     width: 28px;
     height: 28px;
@@ -128,7 +161,6 @@
     object-fit: cover;
     border: 1px solid #ccc;
 }
-
 .profileFallback {
     display: flex;
     align-items: center;
@@ -138,34 +170,32 @@
     font-weight: bold;
     font-size: 0.9rem;
 }
-
 .dropdownContent {
     position: absolute;
-    top: 100%; /* Position right below the button */
+    top: 100%;
     right: 0;
     background-color: white;
     min-width: 250px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     overflow: hidden;
-    margin-top: 10px; /* Small gap */
+    margin-top: 5px;
+    border: 1px solid #eee;
+    z-index: 1000; /* Ensure it's above content */
 }
-
 .dropdownHeader {
     display: flex;
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid #f0f0f0;
 }
-
 .profilePicLarge {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
 }
-
 .dropdownHeader div {
     line-height: 1.3;
 }
@@ -173,33 +203,105 @@
     font-size: 0.9rem;
     color: #666;
 }
-
 .dropdownItem {
     width: 100%;
     text-align: left;
     background: none;
     border: none;
-    padding: 0.75rem 1rem;
+    padding: 0.8rem 1rem;
     font-size: 0.95rem;
     cursor: pointer;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.2s ease;
 }
-
 .dropdownItem:hover {
-    background-color: #f3f3f3;
+    background-color: #f5f5f5;
+    color: #0a66c2;
+    padding-left: 1.25rem;
 }
 
-/* Hide text on very small screens */
+/* --- 7. Hamburger Menu (Mobile Only) --- */
+.hamburgerMenuButton {
+    display: none; /* Hidden on desktop */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1011; /* Keep above mobile menu */
+}
+.hamburgerMenuButton button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333; /* Default color */
+}
+.hamburgerMenuButton button[aria-expanded="true"] {
+    color: #fff; /* Change to white when menu is open */
+}
+
+/* --- 8. Full-Screen Mobile Menu --- */
+.mobileMenu {
+    display: block; /* Will be shown/hidden by framer-motion */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3); /* Dimmed background */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1010; /* Just below the nav bar controls */
+}
+.mobileMenuContent {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80%; /* Menu slides in 80% */
+    max-width: 300px;
+    height: 100%;
+    background: #fff;
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    padding-top: 100px; /* Space for navbar */
+    padding-left: 10%;
+    gap: 1rem;
+}
+
+.mobileLink,
+.mobileLinkActive {
+    display: block;
+    font-size: 1.5rem; /* Larger, app-like text */
+    font-weight: 600;
+    color: #555;
+    text-decoration: none;
+}
+.mobileLinkActive {
+    color: #0a66c2;
+}
+.mobileDivider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 1rem 0;
+    width: 90%;
+}
+
+/* --- 9. Responsive Media Query --- */
 @media (max-width: 768px) {
-    .navCenter {
-        gap: 0.5rem;
+    .navCenter,
+    .navRight {
+        display: none; /* Hide desktop links and profile */
     }
-    .navLink span,
-    .profileButton span {
-        display: none; /* Hide text, show only icons */
+
+    .hamburgerMenuButton {
+        display: block; /* Show hamburger button */
     }
-    .logo {
-        font-size: 1.2rem;
+
+    .navLeft {
+        flex: 1; /* Make logo take up space */
     }
+
     .container {
         padding: 0 2%;
     }
