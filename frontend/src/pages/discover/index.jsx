@@ -1,16 +1,17 @@
+// frontend/src/pages/discover/index.jsx
+
 import {
     getAllUsers,
     sendConnectionRequest,
-    getMyNetwork,
-    getPendingIncomingRequests,
-    getPendingSentRequests,
-    respondToConnectionRequest,
+    getConnectionsRequest,
+    getMyConnectionRequests,
 } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
+// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 
@@ -25,78 +26,66 @@ export default function Discoverpage() {
             dispatch(getAllUsers());
         }
         if (token) {
-            // --- NEW: Dispatch all three ---
-            dispatch(getMyNetwork({ token }));
-            dispatch(getPendingIncomingRequests({ token }));
-            dispatch(getPendingSentRequests({ token }));
+            dispatch(getConnectionsRequest({ token }));
+            dispatch(getMyConnectionRequests({ token }));
         }
     }, [dispatch, authState.all_profiles_fetched]);
 
-    const handleConnect = (targetUserId, currentStatus) => {
-        const token = localStorage.getItem("token");
-        if (currentStatus === "Connect") {
-            dispatch(
-                sendConnectionRequest({
-                    token: token,
-                    user_id: targetUserId,
-                })
-            );
-        } else if (currentStatus === "Accept") {
-            // Find the request ID from the incoming list
-            const request = authState.pendingIncoming.find(
-                (req) => req.requester._id === targetUserId
-            );
-            if (request) {
-                dispatch(
-                    respondToConnectionRequest({
-                        token: token,
-                        requestId: request._id,
-                        action_type: "accept",
-                    })
-                );
-            }
-        }
-        // "Pending" and "Connected" states have disabled buttons, so no action
+    const handleConnect = (targetUserId) => {
+        dispatch(
+            sendConnectionRequest({
+                token: localStorage.getItem("token"),
+                user_id: targetUserId,
+            })
+        );
     };
+
+    // --- THIS FUNCTION IS NOW FIXED ---
     const getConnectStatus = (targetUserId) => {
-        // 1. Are we connected?
-        const isConnected = authState.myNetwork.some(
-            (user) => user._id === targetUserId
+        // 1. Are we already connected?
+        const isConnected = authState.connectionRequest.find(
+            (req) =>
+                req.userId._id === targetUserId && req.status_accepted === true
         );
         if (isConnected) return "Connected";
 
-        // 2. Did THEY send us a request?
-        const hasRequested = authState.pendingIncoming.some(
-            (req) => req.requester._id === targetUserId
+        // 2. Did WE send a request that is pending?
+        const isPending = authState.connections.find(
+            (req) =>
+                req.connectionId._id === targetUserId &&
+                req.status_accepted === null
         );
-        if (hasRequested) return "Accept"; // Offer to accept
+        if (isPending) return "Pending"; // <-- Corrected variable
 
-        // 3. Did WE send a request?
-        const isPending = authState.pendingSent.some(
-            (req) => req.recipient._id === targetUserId
+        // 3. Did THEY send us a request that is pending?
+        const hasRequested = authState.connectionRequest.find(
+            (req) =>
+                req.userId._id === targetUserId && req.status_accepted === null
         );
-        if (isPending) return "Pending";
+        if (hasRequested) return "Accept"; // Offer to accept if they sent it
 
         // 4. No connection status
         return "Connect";
     };
+    // --- END OF FIX ---
+
     const gridVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.08,
+                staggerChildren: 0.08, // Slightly slower stagger for effect
             },
         },
     };
 
     const cardVariants = {
-        hidden: { opacity: 0, y: 30 },
+        hidden: { opacity: 0, y: 30 }, // Start further down
         visible: {
             opacity: 1,
             y: 0,
             transition: { type: "spring", stiffness: 100, damping: 10 },
-        },
+        }, // Spring for bouncier animation
     };
 
     const filteredUsers = authState.all_profiles_fetched
@@ -124,28 +113,32 @@ export default function Discoverpage() {
                 )}
                 {filteredUsers.map((user, index) => {
                     const connectStatus = getConnectStatus(user.userId._id);
-                    const isFirstCard = index === 0;
+                    const isFirstCard = index === 0; // Identify the first card for "hero" styling
 
                     return (
                         <motion.div
                             key={user._id}
                             className={`${styles.userCard} ${
                                 isFirstCard ? styles.userCard_large : ""
-                            }`}
+                            }`} // Apply large class to first card
                             variants={cardVariants}
                             whileHover={{
-                                scale: 1.05,
-                                rotateY: 5,
-                                boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)",
+                                scale: 1.05, // Slightly more scale
+                                rotateY: 5, // Subtle 3D tilt
+                                boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)", // More pronounced shadow
                                 transition: {
                                     type: "spring",
                                     stiffness: 200,
                                     damping: 10,
                                 },
                             }}
-                            whileTap={{ scale: 0.98 }}
+                            whileTap={{ scale: 0.98 }} // Visual feedback on tap
                         >
-                            <div className={styles.cardHeaderBackground}></div>
+                            <div className={styles.cardHeaderBackground}>
+                                {/* NEW BACKGROUND ELEMENT */}
+                                {/* You can put a pattern SVG here, or just use CSS gradient */}
+                            </div>
+                            {/* --- FIX: Removed ${BASE_URL}/ --- */}
                             <img
                                 className={styles.userProfileImage}
                                 src={user.userId.profilePicture}
@@ -156,8 +149,10 @@ export default function Discoverpage() {
                                     );
                                 }}
                             />
+                            {/* --- END FIX --- */}
                             <div className={styles.userInfoContent}>
                                 {" "}
+                                {/* NEW WRAPPER FOR TEXT */}
                                 <h3
                                     onClick={() => {
                                         router.push(
@@ -170,6 +165,7 @@ export default function Discoverpage() {
                                 <p className={styles.usernameText}>
                                     @{user.userId.username}
                                 </p>
+                                {/* Display current post/bio for context */}
                                 {user.currentPost && (
                                     <p className={styles.userBioSnippet}>
                                         {user.currentPost}
@@ -180,17 +176,14 @@ export default function Discoverpage() {
                                         {user.bio.substring(0, 70)}...
                                     </p>
                                 )}{" "}
+                                {/* Short snippet */}
                                 <button
-                                    onClick={
-                                        () =>
-                                            handleConnect(
-                                                user.userId._id,
-                                                connectStatus
-                                            ) // --- PASS STATUS ---
+                                    onClick={() =>
+                                        handleConnect(user.userId._id)
                                     }
                                     className={`${styles.connectActionButton} ${
                                         styles[connectStatus.toLowerCase()]
-                                    }`}
+                                    }`} // Dynamic class for styling
                                     disabled={
                                         connectStatus !== "Connect" &&
                                         connectStatus !== "Accept"

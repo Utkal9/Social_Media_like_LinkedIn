@@ -1,18 +1,20 @@
-import clientServer from "@/config";
-import DashboardLayout from "@/layout/DashboardLayout";
-import UserLayout from "@/layout/UserLayout";
+// frontend/src/pages/view_profile/[username].jsx
+
+import clientServer from "@/config"; // <-- BASE_URL not needed for images
+import DashboardLayout from "@/layout/DashboardLayout"; // Import
+import UserLayout from "@/layout/UserLayout"; // Import
 import React, { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllPosts } from "@/config/redux/action/postAction";
 import {
-    getMyNetwork,
-    getPendingIncomingRequests,
-    getPendingSentRequests,
+    getConnectionsRequest,
+    getMyConnectionRequests,
     sendConnectionRequest,
-    respondToConnectionRequest,
 } from "@/config/redux/action/authAction";
+
+// --- Icons ---
 const DownloadIcon = () => (
     <svg
         style={{ width: "1.2em" }}
@@ -29,6 +31,7 @@ const DownloadIcon = () => (
         />
     </svg>
 );
+// --- End Icons ---
 
 export default function ViewProfilePage({ userProfile }) {
     const router = useRouter();
@@ -39,15 +42,14 @@ export default function ViewProfilePage({ userProfile }) {
     const [userPosts, setUserPosts] = useState([]);
 
     // State to hold the connection status
-    const [connectStatus, setConnectStatus] = useState("Connect"); // 'Connect', 'Pending', 'Accept', 'Connected'
+    const [connectStatus, setConnectStatus] = useState("Connect"); // 'Connect', 'Pending', 'Connected'
 
     const getUsersPost = async () => {
         await dispatch(getAllPosts());
         const token = localStorage.getItem("token");
         if (token) {
-            dispatch(getMyNetwork({ token }));
-            dispatch(getPendingIncomingRequests({ token }));
-            dispatch(getPendingSentRequests({ token }));
+            await dispatch(getConnectionsRequest({ token }));
+            await dispatch(getMyConnectionRequests({ token }));
         }
     };
 
@@ -58,95 +60,88 @@ export default function ViewProfilePage({ userProfile }) {
         });
         setUserPosts(post);
     }, [postReducer.posts, router.query.username]);
-    useEffect(() => {
-        const targetUserId = userProfile.userId._id;
 
-        // 1. Are we connected?
-        const isConnected = authState.myNetwork.some(
-            (user) => user._id === targetUserId
+    // Determine connection status
+    useEffect(() => {
+        // 1. Check if they are in my network (I received request and accepted)
+        const isConnected = authState.connectionRequest.some(
+            (req) =>
+                req.userId._id === userProfile.userId._id &&
+                req.status_accepted === true
         );
         if (isConnected) {
             setConnectStatus("Connected");
             return;
         }
 
-        // 2. Did THEY send us a request?
-        const hasRequested = authState.pendingIncoming.some(
-            (req) => req.requester._id === targetUserId
-        );
-        if (hasRequested) {
-            setConnectStatus("Accept"); // Offer to accept
-            return;
-        }
-
-        // 3. Did WE send a request?
-        const isPending = authState.pendingSent.some(
-            (req) => req.recipient._id === targetUserId
+        // 2. Check if I sent a request that is pending
+        const isPending = authState.connections.some(
+            (req) =>
+                req.connectionId._id === userProfile.userId._id &&
+                req.status_accepted === null
         );
         if (isPending) {
             setConnectStatus("Pending");
             return;
         }
 
-        // 4. No connection status
+        // 3. Check if they sent me a request (I just need to accept)
+        const hasRequested = authState.connectionRequest.some(
+            (req) =>
+                req.userId._id === userProfile.userId._id &&
+                req.status_accepted === null
+        );
+        if (hasRequested) {
+            setConnectStatus("Pending"); // Or "Accept"
+            return;
+        }
+
         setConnectStatus("Connect");
     }, [
-        authState.myNetwork,
-        authState.pendingIncoming,
-        authState.pendingSent,
+        authState.connections,
+        authState.connectionRequest,
         userProfile.userId._id,
     ]);
+
     // Fetch all posts and connection data on load
     useEffect(() => {
         getUsersPost();
-    }, [dispatch]);
-    const handleConnect = () => {
-        const token = localStorage.getItem("token");
-        const targetUserId = userProfile.userId._id;
+    }, [dispatch]); // Added dispatch
 
-        if (connectStatus === "Connect") {
-            dispatch(
-                sendConnectionRequest({
-                    token: token,
-                    user_id: targetUserId,
-                })
-            );
-            setConnectStatus("Pending"); // Optimistically update UI
-        } else if (connectStatus === "Accept") {
-            // Find the request ID from the incoming list
-            const request = authState.pendingIncoming.find(
-                (req) => req.requester._id === targetUserId
-            );
-            if (request) {
-                dispatch(
-                    respondToConnectionRequest({
-                        token: token,
-                        requestId: request._id,
-                        action_type: "accept",
-                    })
-                );
-                setConnectStatus("Connected"); // Optimistically update UI
-            }
-        }
+    // Handle sending a connection request
+    const handleConnect = () => {
+        dispatch(
+            sendConnectionRequest({
+                token: localStorage.getItem("token"),
+                user_id: userProfile.userId._id,
+            })
+        );
+        setConnectStatus("Pending"); // Optimistically update UI
     };
+
     // Handle resume download
     const handleDownloadResume = async () => {
         const response = await clientServer.get(
             `/user/download_resume?id=${userProfile.userId._id}`
         );
+        // --- FIX: The PDF URL is a FULL Cloudinary URL. Do not add BASE_URL. ---
         window.open(response.data.message, "_blank");
+        // --- END FIX ---
     };
 
+    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
     return (
         <div className={styles.container}>
             {/* --- 1. Profile Header Card --- */}
             <div className={styles.profileHeaderCard}>
                 <div className={styles.backDropContainer}>
+                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                     <img
                         src={userProfile.userId.profilePicture}
                         alt="backDrop"
                         className={styles.profilePic}
                     />
+                    {/* --- END FIX --- */}
                 </div>
                 <div className={styles.profileHeaderContent}>
                     <div className={styles.profileHeaderActions}>
@@ -162,18 +157,11 @@ export default function ViewProfilePage({ userProfile }) {
                             className={
                                 connectStatus === "Connect"
                                     ? styles.connectBtn
-                                    : connectStatus === "Accept"
-                                    ? styles.acceptBtn // Optional: Add a green 'accept' style
-                                    : styles.connectedButton // Use for 'Pending' and 'Connected'
+                                    : styles.connectedButton
                             }
-                            disabled={
-                                connectStatus === "Pending" ||
-                                connectStatus === "Connected"
-                            }
+                            disabled={connectStatus !== "Connect"}
                         >
-                            {connectStatus === "Accept"
-                                ? "Accept Request"
-                                : connectStatus}
+                            {connectStatus}
                         </button>
                     </div>
 
@@ -207,6 +195,7 @@ export default function ViewProfilePage({ userProfile }) {
                                         {work.years} years
                                     </p>
                                 </div>
+                                {/* No Edit/Delete buttons */}
                             </div>
                         ))
                     ) : (
@@ -226,11 +215,13 @@ export default function ViewProfilePage({ userProfile }) {
                             <div className={styles.postCard} key={post._id}>
                                 <div className={styles.card}>
                                     {post.media && (
+                                        /* --- FIX: Removed ${BASE_URL}/ --- */
                                         <img
                                             src={post.media}
                                             alt="Post media"
                                             className={styles.postCardImage}
                                         />
+                                        /* --- END FIX --- */
                                     )}
                                     <p className={styles.postCardBody}>
                                         {post.body}
@@ -246,6 +237,8 @@ export default function ViewProfilePage({ userProfile }) {
         </div>
     );
 }
+
+// Server-side props remains the same
 export async function getServerSideProps(context) {
     console.log("From View");
     console.log(context.query.username);
@@ -260,6 +253,7 @@ export async function getServerSideProps(context) {
     return { props: { userProfile: request.data.profile } };
 }
 
+// ADDED THIS:
 ViewProfilePage.getLayout = function getLayout(page) {
     return (
         <UserLayout>

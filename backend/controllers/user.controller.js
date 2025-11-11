@@ -3,12 +3,22 @@ import Profile from "../models/profile.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
+// fs is no longer needed for writing files, but we keep it for now
+// in case you need it for other things. We won't use it for PDFs.
 import fs from "fs";
-import Connection from "../models/connections.model.js";
+import ConnectionRequest from "../models/connections.model.js";
 import Post from "../models/posts.model.js";
 import Comment from "../models/comments.model.js";
+
+// --- NEW IMPORTS ---
+// We need to import v2 as 'cloudinary' to get the uploader stream
 import { v2 as cloudinary } from "cloudinary";
+// Import 'request' to fetch images from their URL for the PDF
 import request from "request";
+// --- END NEW IMPORTS ---
+
+// --- COMPLETELY REBUILT FUNCTION ---
+// This function now creates a PDF, pipes it to Cloudinary, and returns a URL
 const convertUserDataTOPDF = (userData) => {
     // We return a Promise that resolves with the Cloudinary URL
     return new Promise((resolve, reject) => {
@@ -113,6 +123,7 @@ const convertUserDataTOPDF = (userData) => {
         }
     });
 };
+// --- END REBUILT FUNCTION ---
 
 export const register = async (req, res) => {
     try {
@@ -162,24 +173,46 @@ export const login = async (req, res) => {
 };
 
 export const uploadProfilePicture = async (req, res) => {
-    const { token } = req.body;
     try {
-        const user = await User.findOne({ token: token });
+        const { token } = req.body;
+
+        const user = await User.findOne({ token });
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
 
-        // --- CHANGED ---
-        // We now get the secure Cloudinary URL from req.file.path
-        // If no file was uploaded, do nothing
         if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded." });
+            return res.status(400).json({ message: "No file uploaded" });
         }
-        user.profilePicture = req.file.path;
-        // --- CHANGED ---
 
+        // ✅ CLOUDINARY UPLOAD TRY BLOCK
+        let uploadedImage;
+        try {
+            uploadedImage = await cloudinary.uploader.upload_stream(
+                { resource_type: "image", folder: "profile_pictures" },
+                (error, result) => {
+                    if (error) throw error;
+                    return result;
+                }
+            );
+        } catch (err) {
+            return res
+                .status(400)
+                .json({ message: "Invalid file. Too large or corrupted." });
+        }
+
+        user.profilePicture = uploadedImage.secure_url;
         await user.save();
-        return res.json({ message: "Profile Picture Updated" });
+
+        return res.json({
+            message: "Profile picture updated",
+            url: uploadedImage.secure_url,
+        });
     } catch (error) {
+        if (error.code === "LIMIT_FILE_SIZE") {
+            return res
+                .status(400)
+                .json({ message: "File too large. Max 10MB allowed." });
+        }
         return res.status(500).json({ message: error.message });
     }
 };
@@ -285,160 +318,99 @@ export const downloadProfile = async (req, res) => {
         return res.status(500).json({ message: "Failed to generate PDF." });
     }
 };
-// --- NEW CONNECTION FUNCTION: sendConnectionRequest ---
+// --- END UPDATED FUNCTION ---
+
 export const sendConnectionRequest = async (req, res) => {
-    const { token, connectionId } = req.body; // connectionId is the recipient's ID
+    const { token, connectionId } = req.body;
     try {
-        const user = await User.findOne({ token: token }); // This is the requester
+        const user = await User.findOne({ token: token });
         if (!user) return res.status(404).json({ message: "User not found" });
-
-        const recipient = await User.findOne({ _id: connectionId });
-        if (!recipient)
-            return res.status(404).json({ message: "Recipient not found" });
-
-        if (user._id.toString() === recipient._id.toString()) {
+        const connectionUser = await User.findOne({ _id: connectionId });
+        if (!connectionUser)
+            return res
+                .status(404)
+                .json({ message: "Connection User not found" });
+        if (user._id.toString() === connectionUser._id.toString()) {
             return res
                 .status(400)
                 .json({ message: "You cannot connect with yourself." });
         }
-
-        // Check if a connection exists in EITHER direction
-        const existingConnection = await Connection.findOne({
+        const existingRequest = await ConnectionRequest.findOne({
             $or: [
-                { requester: user._id, recipient: recipient._id },
-                { requester: recipient._id, recipient: user._id },
+                { userId: user._id, connectionId: connectionUser._id },
+                { userId: connectionUser._id, connectionId: user._id },
             ],
         });
-
-        if (existingConnection) {
-            if (existingConnection.status === "pending") {
-                return res
-                    .status(400)
-                    .json({ message: "Request already sent or received" });
-            } else if (existingConnection.status === "accepted") {
-                return res.status(400).json({ message: "Already connected" });
-            }
-            // If declined, we'll just create a new request, the unique index will catch it
+        if (existingRequest) {
+            return res.status(400).json({ message: "Request already sent" });
         }
-
-        // Create ONE new connection document
-        const request = new Connection({
-            requester: user._id,
-            recipient: recipient._id,
-            status: "pending",
+        const request = new ConnectionRequest({
+            userId: user._id,
+            connectionId: connectionUser._id,
         });
-
         await request.save();
         return res.json({ message: "Request Sent" });
     } catch (error) {
-        // Handle unique constraint error (duplicate request)
-        if (error.code === 11000) {
-            return res.status(400).json({ message: "Request already sent." });
-        }
         return res.status(500).json({ message: error.message });
     }
 };
 
-// --- NEW CONNECTION FUNCTION: respondToConnectionRequest ---
-export const respondToConnectionRequest = async (req, res) => {
-    // requestId is the ID of the *connection document*
-    // action_type is "accept" or "decline"
+export const getMyConnectionsRequests = async (req, res) => {
+    const { token } = req.query;
+    try {
+        const user = await User.findOne({ token: token });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const connections = await ConnectionRequest.find({
+            userId: user._id,
+        }).populate("connectionId", "name username email profilePicture");
+        return res.json({ connections });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const whatAreMyConnections = async (req, res) => {
+    const { token } = req.query;
+    try {
+        const user = await User.findOne({ token: token });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        const connections = await ConnectionRequest.find({
+            connectionId: user._id,
+        }).populate("userId", "name username email profilePicture");
+        return res.json(connections);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const acceptConnectionRequest = async (req, res) => {
     const { token, requestId, action_type } = req.body;
     try {
-        const user = await User.findOne({ token: token }); // This is the recipient
+        const user = await User.findOne({ token: token });
         if (!user) return res.status(404).json({ message: "User not found" });
-
-        const connection = await Connection.findOne({
+        const connection = await ConnectionRequest.findOne({
             _id: requestId,
-            recipient: user._id, // IMPORTANT: Only the recipient can respond
-            status: "pending", // IMPORTANT: Can only respond to pending requests
         });
-
         if (!connection) {
-            return res
-                .status(404)
-                .json({ message: "Request not found or already handled" });
+            return res.status(404).json({ message: "Connection not found" });
         }
-
         if (action_type === "accept") {
-            connection.status = "accepted";
-            await connection.save();
-            return res.json({ message: "Request Accepted" });
-        } else if (action_type === "decline") {
-            // We set it to declined instead of deleting, to prevent future requests
-            connection.status = "declined";
-            await connection.save();
-            // Or you can delete it:
-            // await Connection.deleteOne({ _id: requestId });
-            return res.json({ message: "Request Declined" });
+            connection.status_accepted = true;
+            const reciprocalConnection = new ConnectionRequest({
+                userId: connection.connectionId, // Original receiver
+                connectionId: connection.userId, // Original sender
+                status_accepted: true, // Mark as accepted
+            });
+            await reciprocalConnection.save();
         } else {
-            return res.status(400).json({ message: "Invalid action" });
+            // "decline" or any other action will remove it
+            await ConnectionRequest.deleteOne({ _id: requestId });
+            return res.json({ message: "Request Declined" });
         }
+        await connection.save();
+        return res.json({ message: "Request Updated" });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// --- NEW CONNECTION FUNCTION: getMyNetwork ---
-export const getMyNetwork = async (req, res) => {
-    const { token } = req.query;
-    try {
-        const user = await User.findOne({ token: token });
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        const connections = await Connection.find({
-            $or: [{ requester: user._id }, { recipient: user._id }],
-            status: "accepted",
-        })
-            .populate("requester", "name username email profilePicture")
-            .populate("recipient", "name username email profilePicture");
-
-        // Return the *other* user in the connection
-        const network = connections.map((conn) => {
-            if (conn.requester._id.toString() === user._id.toString()) {
-                return conn.recipient;
-            }
-            return conn.requester;
-        });
-
-        return res.json(network);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// --- NEW CONNECTION FUNCTION: getPendingIncomingRequests ---
-export const getPendingIncomingRequests = async (req, res) => {
-    const { token } = req.query;
-    try {
-        const user = await User.findOne({ token: token });
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        const requests = await Connection.find({
-            recipient: user._id,
-            status: "pending",
-        }).populate("requester", "name username email profilePicture"); // Get the sender's info
-
-        return res.json(requests);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// --- NEW CONNECTION FUNCTION: getPendingSentRequests ---
-export const getPendingSentRequests = async (req, res) => {
-    const { token } = req.query;
-    try {
-        const user = await User.findOne({ token: token });
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        const requests = await Connection.find({
-            requester: user._id,
-            status: "pending",
-        }).populate("recipient", "name username email profilePicture"); // Get the recipient's info
-
-        return res.json(requests);
-    } catch (error) {
+        // --- BUG FIX --- (Was 5M00)
         return res.status(500).json({ message: error.message });
     }
 };

@@ -7,13 +7,16 @@ import {
     incrementPostLike,
     postComment,
 } from "@/config/redux/action/postAction";
-import DashboardLayout from "@/layout/DashboardLayout";
-import UserLayout from "@/layout/UserLayout";
+import DashboardLayout from "@/layout/DashboardLayout"; // Import
+import UserLayout from "@/layout/UserLayout"; // Import
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
+// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { resetPostId } from "@/config/redux/reducer/postReducer";
+
+// --- SVG Icons (for better UI) ---
 const ImageIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -100,14 +103,15 @@ export default function Dashboard() {
         if (!authState.all_profiles_fetched) {
             dispatch(getAllUsers());
         }
-    }, [authState.isTokenThere, dispatch]);
+    }, [authState.isTokenThere, dispatch]); // Added dispatch to dependency array
 
     const [postContent, setPostContent] = useState("");
-    const [fileContent, setFileContent] = useState(null);
+    const [fileContent, setFileContent] = useState(null); // Use null for initial state
     const [commentText, setCommentText] = useState("");
 
     const handleUpload = async () => {
         if (fileContent && fileContent.size > 10 * 1024 * 1024) {
+            // 10MB limit
             setPostError("File is too large. Please select a file under 10MB.");
             return;
         }
@@ -119,6 +123,7 @@ export default function Dashboard() {
 
     const handleLike = async (postId) => {
         await dispatch(incrementPostLike({ post_id: postId }));
+        dispatch(getAllPosts()); // Refresh posts to show new like count
     };
 
     const handleDelete = async (postId) => {
@@ -149,25 +154,15 @@ export default function Dashboard() {
                 post_id: postState.postId,
             })
         );
-        setCommentText("");
+        setCommentText(""); // Clear comment input after posting
     };
-
-    // --- THIS FUNCTION IS UPDATED ---
-    const isPostLikedByUser = (post) => {
-        // Check for authState.user AND ensure post.likes is an Array
-        if (!authState.user || !Array.isArray(post.likes)) {
-            return false;
-        }
-        // Now it's safe to call .includes()
-        const userIdString = authState.user.userId._id.toString();
-        return post.likes.map((id) => id.toString()).includes(userIdString);
-    };
-    // --- END UPDATE ---
 
     if (!authState.user) {
+        // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
         return <div className={styles.loading}>Loading feed...</div>;
     }
 
+    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
     return (
         <>
             <div className={styles.feedContainer}>
@@ -211,15 +206,18 @@ export default function Dashboard() {
                                 const TEN_MB = 10 * 1024 * 1024;
 
                                 if (file && file.size > TEN_MB) {
+                                    // File is too large
                                     setPostError(
                                         "File is too large. Please select a file under 10MB."
                                     );
                                     setFileContent(null);
-                                    e.target.value = null;
+                                    e.target.value = null; // Clear the file input
                                 } else if (file) {
+                                    // File is valid
                                     setFileContent(file);
-                                    setPostError("");
+                                    setPostError(""); // Clear any previous error
                                 } else {
+                                    // No file selected
                                     setFileContent(null);
                                     setPostError("");
                                 }
@@ -245,100 +243,90 @@ export default function Dashboard() {
 
                 {/* --- Posts Feed --- */}
                 <div className={styles.postsContainer}>
-                    {postState.posts.map((post) => {
-                        const isLiked = isPostLikedByUser(post);
-
-                        return (
-                            <div key={post._id} className={styles.postCard}>
-                                <div className={styles.postCardHeader}>
-                                    <img
-                                        className={styles.userProfilePic}
-                                        src={post.userId.profilePicture}
-                                        alt={`${post.userId.name}'s profile`}
+                    {postState.posts.map((post) => (
+                        <div key={post._id} className={styles.postCard}>
+                            <div className={styles.postCardHeader}>
+                                {/* --- FIX: Removed ${BASE_URL}/ --- */}
+                                <img
+                                    className={styles.userProfilePic}
+                                    src={post.userId.profilePicture}
+                                    alt={`${post.userId.name}'s profile`}
+                                    onClick={() =>
+                                        router.push(
+                                            `/view_profile/${post.userId.username}`
+                                        )
+                                    }
+                                />
+                                {/* --- END FIX --- */}
+                                <div className={styles.postCardHeaderInfo}>
+                                    <p
+                                        className={styles.postCardUser}
                                         onClick={() =>
                                             router.push(
                                                 `/view_profile/${post.userId.username}`
                                             )
                                         }
-                                    />
-                                    <div className={styles.postCardHeaderInfo}>
-                                        <p
-                                            className={styles.postCardUser}
-                                            onClick={() =>
-                                                router.push(
-                                                    `/view_profile/${post.userId.username}`
-                                                )
-                                            }
-                                        >
-                                            {post.userId.name}
-                                        </p>
-                                        <p className={styles.postCardUsername}>
-                                            @{post.userId.username}
-                                        </p>
-                                    </div>
-                                    {post.userId._id ===
-                                        authState.user.userId._id && (
-                                        <button
-                                            onClick={() =>
-                                                handleDelete(post._id)
-                                            }
-                                            className={styles.deleteButton}
-                                        >
-                                            <DeleteIcon />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className={styles.postCardBody}>
-                                    <p>{post.body}</p>
-                                    {post.media && (
-                                        <div
-                                            className={
-                                                styles.postCardImageContainer
-                                            }
-                                        >
-                                            <img
-                                                src={post.media}
-                                                alt="Post media"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles.postCardStats}>
-                                    <span>{post.likes?.length || 0} Likes</span>
-                                </div>
-                                <div className={styles.postCardActions}>
-                                    <button
-                                        onClick={() => handleLike(post._id)}
-                                        className={styles.postActionButton}
-                                        style={{
-                                            color: isLiked ? "#0a66c2" : "#555",
-                                        }}
                                     >
-                                        <LikeIcon isLiked={isLiked} />{" "}
-                                        <span>Like</span>
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleOpenComments(post._id)
-                                        }
-                                        className={styles.postActionButton}
-                                    >
-                                        <CommentIcon /> <span>Comment</span>
-                                    </button>
-                                    <button
-                                        onClick={() => handleShare(post.body)}
-                                        className={styles.postActionButton}
-                                    >
-                                        <ShareIcon /> <span>Share</span>
-                                    </button>
+                                        {post.userId.name}
+                                    </p>
+                                    <p className={styles.postCardUsername}>
+                                        @{post.userId.username}
+                                    </p>
                                 </div>
+                                {post.userId._id ===
+                                    authState.user.userId._id && (
+                                    <button
+                                        onClick={() => handleDelete(post._id)}
+                                        className={styles.deleteButton}
+                                    >
+                                        <DeleteIcon />
+                                    </button>
+                                )}
                             </div>
-                        );
-                    })}
+                            <div className={styles.postCardBody}>
+                                <p>{post.body}</p>
+                                {post.media && (
+                                    <div
+                                        className={
+                                            styles.postCardImageContainer
+                                        }
+                                    >
+                                        <img
+                                            src={post.media}
+                                            alt="Post media"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            <div className={styles.postCardStats}>
+                                <span>{post.likes} Likes</span>
+                            </div>
+                            <div className={styles.postCardActions}>
+                                <button
+                                    onClick={() => handleLike(post._id)}
+                                    className={styles.postActionButton}
+                                >
+                                    <LikeIcon /> <span>Like</span>
+                                </button>
+                                <button
+                                    onClick={() => handleOpenComments(post._id)}
+                                    className={styles.postActionButton}
+                                >
+                                    <CommentIcon /> <span>Comment</span>
+                                </button>
+                                <button
+                                    onClick={() => handleShare(post.body)}
+                                    className={styles.postActionButton}
+                                >
+                                    <ShareIcon /> <span>Share</span>
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 
-            {/* --- Comment Modal (No changes here) --- */}
+            {/* --- Comment Modal --- */}
             {postState.postId !== "" && (
                 <div
                     className={styles.commentModalBackdrop}
@@ -413,6 +401,7 @@ export default function Dashboard() {
     );
 }
 
+// ADDED THIS:
 Dashboard.getLayout = function getLayout(page) {
     return (
         <UserLayout>

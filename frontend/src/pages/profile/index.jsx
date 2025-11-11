@@ -58,6 +58,8 @@ export default function Profilepage() {
         position: "",
         years: "",
     });
+    const [profilePicError, setProfilePicError] = useState("");
+    const [profilePicFile, setProfilePicFile] = useState(null);
 
     // Fetch data
     useEffect(() => {
@@ -78,14 +80,18 @@ export default function Profilepage() {
     }, [authState.user, postReducer.posts]);
 
     // Handler for profile picture upload
-    const updateProfilePicture = async (file) => {
+    const updateProfilePicture = async () => {
+        if (!profilePicFile) return;
+
         const formData = new FormData();
-        formData.append("profile_picture", file);
+        formData.append("profile_picture", profilePicFile);
         formData.append("token", localStorage.getItem("token"));
+
         await clientServer.post("/update_profile_picture", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
-        dispatch(getAboutUser({ token: localStorage.getItem("token") })); // Re-fetch user
+
+        dispatch(getAboutUser({ token: localStorage.getItem("token") }));
     };
 
     // Handler for saving name, bio, etc.
@@ -187,9 +193,24 @@ export default function Profilepage() {
                             <EditIcon /> <p>Edit</p>
                         </label>
                         <input
-                            onChange={(e) =>
-                                updateProfilePicture(e.target.files[0])
-                            }
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                const TEN_MB = 10 * 1024 * 1024;
+
+                                if (file && file.size > TEN_MB) {
+                                    setProfilePicError(
+                                        "File is too large. Please select a file under 10MB."
+                                    );
+                                    setProfilePicFile(null);
+                                    e.target.value = null; // ✅ reset input
+                                } else if (file) {
+                                    setProfilePicFile(file);
+                                    setProfilePicError("");
+                                } else {
+                                    setProfilePicFile(null);
+                                    setProfilePicError("");
+                                }
+                            }}
                             hidden
                             type="file"
                             id="profilePictureUpload"
@@ -202,6 +223,18 @@ export default function Profilepage() {
                         />
                         {/* --- END FIX --- */}
                     </div>
+                    {profilePicError && (
+                        <p
+                            style={{
+                                color: "red",
+                                fontSize: "0.9rem",
+                                textAlign: "end",
+                                marginTop: "0.5rem",
+                            }}
+                        >
+                            {profilePicError}
+                        </p>
+                    )}
                     <div className={styles.profileHeaderContent}>
                         <button
                             className={styles.saveChangesButton}
