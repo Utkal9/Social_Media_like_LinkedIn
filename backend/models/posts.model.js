@@ -8,8 +8,6 @@ const PostSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    // --- THIS IS THE FIX ---
-    // Add default: [] to ensure 'likes' is always an array
     likes: {
         type: [
             {
@@ -17,9 +15,8 @@ const PostSchema = mongoose.Schema({
                 ref: "User",
             },
         ],
-        default: [], // <-- THIS LINE FIXES THE BUG
+        default: [],
     },
-    // --- END FIX ---
     createdAt: {
         type: Date,
         default: Date.now,

@@ -49,14 +49,8 @@ const postSlice = createSlice({
                 state.comments = action.payload.comments;
             })
             .addCase(incrementPostLike.fulfilled, (state, action) => {
-                // Get the updated post from the action payload
-                const updatedPost = action.payload.post;
-                if (!updatedPost) {
-                    return;
-                }
-                state.posts = state.posts.map((post) =>
-                    post._id === updatedPost._id ? updatedPost : post
-                );
+                // You can leave this empty, or just set a success message
+                state.message = "Post like toggled";
             });
     },
 });
