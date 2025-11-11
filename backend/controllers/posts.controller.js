@@ -102,13 +102,22 @@ export const increment_likes = async (req, res) => {
             return res.status(404).json({ message: "Post not found" });
         }
 
-        const userIndex = post.likes.indexOf(user._id);
+        if (!Array.isArray(post.likes)) {
+            post.likes = [];
+        }
+        const userIdString = user._id.toString();
+        const userIndex = post.likes
+            .map((id) => id.toString())
+            .indexOf(userIdString);
+
         let message = "";
 
         if (userIndex > -1) {
+            // User found, so UNLIKE the post
             post.likes.splice(userIndex, 1);
             message = "Post Unliked";
         } else {
+            // User not found, so LIKE the post
             post.likes.push(user._id);
             message = "Post Liked";
         }
