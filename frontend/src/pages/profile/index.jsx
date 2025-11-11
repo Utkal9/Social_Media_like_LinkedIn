@@ -59,7 +59,6 @@ export default function Profilepage() {
         years: "",
     });
     const [profilePicError, setProfilePicError] = useState("");
-    const [profilePicFile, setProfilePicFile] = useState(null);
 
     // Fetch data
     useEffect(() => {
@@ -80,18 +79,20 @@ export default function Profilepage() {
     }, [authState.user, postReducer.posts]);
 
     // Handler for profile picture upload
-    const updateProfilePicture = async () => {
-        if (!profilePicFile) return;
+    const updateProfilePicture = async (fileToUpload) => {
+        try {
+            const formData = new FormData();
+            formData.append("profile_picture", fileToUpload);
+            formData.append("token", localStorage.getItem("token"));
 
-        const formData = new FormData();
-        formData.append("profile_picture", profilePicFile);
-        formData.append("token", localStorage.getItem("token"));
-
-        await clientServer.post("/update_profile_picture", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+            await clientServer.post("/update_profile_picture", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+        } catch (error) {
+            console.error("Failed to upload picture:", error);
+            setProfilePicError("Upload failed. Please try again.");
+        }
     };
 
     // Handler for saving name, bio, etc.
@@ -201,14 +202,12 @@ export default function Profilepage() {
                                     setProfilePicError(
                                         "File is too large. Please select a file under 10MB."
                                     );
-                                    setProfilePicFile(null);
-                                    e.target.value = null; // ✅ reset input
+                                    e.target.value = null; // reset input
                                 } else if (file) {
-                                    setProfilePicFile(file);
-                                    setProfilePicError("");
+                                    setProfilePicError(""); // Clear error
+                                    updateProfilePicture(file); // Upload immediately
                                 } else {
-                                    setProfilePicFile(null);
-                                    setProfilePicError("");
+                                    setProfilePicError(""); // Clear error
                                 }
                             }}
                             hidden
