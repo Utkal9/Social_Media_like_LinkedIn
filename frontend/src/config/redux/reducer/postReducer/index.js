@@ -1,9 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import {
-    getAllComments,
-    getAllPosts,
-    incrementPostLike,
-} from "../../action/postAction";
+import { getAllComments, getAllPosts } from "../../action/postAction";
 
 const initialState = {
     posts: [],
@@ -34,10 +30,7 @@ const postSlice = createSlice({
                 state.isLoading = false;
                 state.isError = false;
                 state.postFetched = true;
-                const cleanPosts = action.payload.posts.filter(
-                    (post) => post && post.userId
-                );
-                state.posts = cleanPosts.reverse();
+                state.posts = action.payload.posts.reverse();
             })
             .addCase(getAllPosts.rejected, (state, action) => {
                 state.isLoading = false;
@@ -47,10 +40,6 @@ const postSlice = createSlice({
             .addCase(getAllComments.fulfilled, (state, action) => {
                 state.postId = action.payload.post_id;
                 state.comments = action.payload.comments;
-            })
-            .addCase(incrementPostLike.fulfilled, (state, action) => {
-                // You can leave this empty, or just set a success message
-                state.message = "Post like toggled";
             });
     },
 });
