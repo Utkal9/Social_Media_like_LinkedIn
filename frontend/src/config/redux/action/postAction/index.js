@@ -53,13 +53,19 @@ export const deletePost = createAsyncThunk(
         }
     }
 );
-export const incrementPostLike = createAsyncThunk(
-    "post/incrementLike",
-    async (post, thunkAPI) => {
+export const toggleLike = createAsyncThunk(
+    "post/toggleLike",
+    async (data, thunkAPI) => {
+        const { token, post_id } = data;
         try {
-            const response = await clientServer.post("/increment_post_like", {
-                post_id: post.post_id,
+            // This is the new endpoint we made
+            const response = await clientServer.post("/toggle_like", {
+                token: token,
+                post_id: post_id,
             });
+            thunkAPI.dispatch(getAllPosts());
+            // The response.data will be { message, post_id, likes }
+            // thanks to our backend fix.
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);

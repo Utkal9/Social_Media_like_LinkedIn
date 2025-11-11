@@ -4,7 +4,7 @@ import {
     deletePost,
     getAllComments,
     getAllPosts,
-    incrementPostLike,
+    toggleLike,
     postComment,
 } from "@/config/redux/action/postAction";
 import DashboardLayout from "@/layout/DashboardLayout"; // Import
@@ -121,9 +121,17 @@ export default function Dashboard() {
         setPostError("");
     };
 
-    const handleLike = async (postId) => {
-        await dispatch(incrementPostLike({ post_id: postId }));
-        dispatch(getAllPosts()); // Refresh posts to show new like count
+    // ---- CHANGE IT TO THIS ----
+    const handleLike = (postId) => {
+        // You need the token to send with the like
+        const token = localStorage.getItem("token");
+
+        dispatch(
+            toggleLike({
+                post_id: postId,
+                token: token,
+            })
+        );
     };
 
     const handleDelete = async (postId) => {
@@ -299,15 +307,42 @@ export default function Dashboard() {
                                 )}
                             </div>
                             <div className={styles.postCardStats}>
-                                <span>{post.likes} Likes</span>
+                                <span>
+                                    {Array.isArray(post.likes)
+                                        ? post.likes.length
+                                        : 0}{" "}
+                                    Likes
+                                </span>
                             </div>
                             <div className={styles.postCardActions}>
-                                <button
-                                    onClick={() => handleLike(post._id)}
-                                    className={styles.postActionButton}
-                                >
-                                    <LikeIcon /> <span>Like</span>
-                                </button>
+                                {(() => {
+                                    // --- REPLACE WITH THIS ---
+                                    const isLiked =
+                                        Array.isArray(post.likes) &&
+                                        post.likes.includes(
+                                            authState.user.userId._id
+                                        );
+                                    return (
+                                        <button
+                                            onClick={() => handleLike(post._id)}
+                                            className={styles.postActionButton}
+                                            // Optional: Add a style to make the text blue too
+                                            style={{
+                                                color: isLiked
+                                                    ? "#0a66c2"
+                                                    : "inherit",
+                                            }}
+                                        >
+                                            {/* Pass the 'isLiked' prop to the icon */}
+                                            <LikeIcon isLiked={isLiked} />
+
+                                            {/* Change the text based on the 'isLiked' state */}
+                                            <span>
+                                                {isLiked ? "Liked" : "Like"}
+                                            </span>
+                                        </button>
+                                    );
+                                })()}
                                 <button
                                     onClick={() => handleOpenComments(post._id)}
                                     className={styles.postActionButton}

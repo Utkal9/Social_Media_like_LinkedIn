@@ -1,5 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getAllComments, getAllPosts } from "../../action/postAction";
+import {
+    getAllComments,
+    getAllPosts,
+    toggleLike,
+} from "../../action/postAction";
 
 const initialState = {
     posts: [],
@@ -41,6 +45,31 @@ const postSlice = createSlice({
                 state.postId = action.payload.post_id;
                 state.comments = action.payload.comments;
             });
+        // .addCase(toggleLike.pending, (state) => {
+        //     // You could set a specific 'isLiking' state here if you want
+        //     state.isLoading = true;
+        // })
+        // .addCase(toggleLike.fulfilled, (state, action) => {
+        //     state.isLoading = false;
+
+        //     // action.payload is { message, post_id, likes }
+        //     const { post_id, likes } = action.payload;
+
+        //     // Find the post in the state array
+        //     const postIndex = state.posts.findIndex(
+        //         (post) => post._id === post_id
+        //     );
+
+        //     // If found, update its 'likes' array directly
+        //     if (postIndex !== -1) {
+        //         state.posts[postIndex].likes = likes;
+        //     }
+        // })
+        // .addCase(toggleLike.rejected, (state, action) => {
+        //     state.isLoading = false;
+        //     state.isError = true;
+        //     state.message = action.payload; // Will show like/unlike error
+        // });
     },
 });
 export const { resetPostId } = postSlice.actions;
