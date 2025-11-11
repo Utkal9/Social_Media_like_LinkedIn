@@ -162,7 +162,8 @@ export default function Dashboard() {
             return false;
         }
         // Now it's safe to call .includes()
-        return post.likes.includes(authState.user.userId._id);
+        const userIdString = authState.user.userId._id.toString();
+        return post.likes.map((id) => id.toString()).includes(userIdString);
     };
     // --- END UPDATE ---
 
@@ -306,7 +307,7 @@ export default function Dashboard() {
                                     )}
                                 </div>
                                 <div className={styles.postCardStats}>
-                                    <span>{post.likes.length} Likes</span>
+                                    <span>{post.likes?.length || 0} Likes</span>
                                 </div>
                                 <div className={styles.postCardActions}>
                                     <button

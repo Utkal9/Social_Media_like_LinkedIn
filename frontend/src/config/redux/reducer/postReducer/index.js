@@ -54,14 +54,9 @@ const postSlice = createSlice({
                 if (!updatedPost) {
                     return;
                 }
-                // Find the index of the post in our state
-                const postIndex = state.posts.findIndex(
-                    (post) => post && post._id === updatedPost._id
+                state.posts = state.posts.map((post) =>
+                    post._id === updatedPost._id ? updatedPost : post
                 );
-                // If found, replace it with the new updated post
-                if (postIndex > -1) {
-                    state.posts[postIndex] = updatedPost;
-                }
             });
     },
 });

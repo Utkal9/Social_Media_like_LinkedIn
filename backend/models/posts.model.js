@@ -8,12 +8,6 @@ const PostSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    likes: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        },
-    ],
     // --- THIS IS THE FIX ---
     // Add default: [] to ensure 'likes' is always an array
     likes: {
