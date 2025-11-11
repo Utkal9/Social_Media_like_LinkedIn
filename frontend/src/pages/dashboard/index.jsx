@@ -1,4 +1,3 @@
-// frontend/src/pages/dashboard/index.jsx
 import { getAboutUser, getAllUsers } from "@/config/redux/action/authAction";
 import {
     createPost,
@@ -15,8 +14,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
-
-// ... (All SVG Icons remain the same) ...
 const ImageIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"

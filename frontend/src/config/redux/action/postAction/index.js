@@ -61,6 +61,7 @@ export const incrementPostLike = createAsyncThunk(
                 post_id: post.post_id,
                 token: localStorage.getItem("token"), // Send the token
             });
+            thunkAPI.dispatch(getAllPosts());
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
