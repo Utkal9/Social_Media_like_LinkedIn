@@ -93,16 +93,45 @@ export const delete_comment_of_user = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
-export const increment_likes = async (req, res) => {
-    const { post_id } = req.body;
+// DELETE your old 'increment_likes' function and ADD this one:
+
+export const toggleLikeOnPost = async (req, res) => {
+    const { post_id, token } = req.body;
+
     try {
+        const user = await User.findOne({ token: token }).select("_id");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const userId = user._id;
+
         const post = await Post.findOne({ _id: post_id });
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
-        post.likes = post.likes + 1;
-        await post.save();
-        return res.json({ message: "Likes Incremented" });
+        if (!Array.isArray(post.likes)) {
+            post.likes = [];
+        }
+
+        const hasLiked = post.likes.includes(userId);
+
+        if (hasLiked) {
+            post.likes.pull(userId);
+            await post.save();
+            return res.json({
+                message: "Post unliked",
+                post_id: post._id,
+                likes: post.likes,
+            });
+        } else {
+            post.likes.push(userId);
+            await post.save();
+            return res.json({
+                message: "Post liked",
+                post_id: post._id,
+                likes: post.likes,
+            });
+        }
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

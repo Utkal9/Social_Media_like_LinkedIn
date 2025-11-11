@@ -6,7 +6,7 @@ import {
     deletePost,
     get_comments_by_post,
     delete_comment_of_user,
-    increment_likes,
+    toggleLikeOnPost,
 } from "../controllers/posts.controller.js";
 
 // --- CHANGED ---
@@ -43,5 +43,5 @@ router.route("/delete_post").post(deletePost);
 router.route("/comment").post(commentPost);
 router.route("/get_comments").get(get_comments_by_post);
 router.route("/delete_comment").post(delete_comment_of_user);
-router.route("/increment_post_like").post(increment_likes);
+router.route("/toggle_like").post(toggleLikeOnPost);
 export default router;
