@@ -172,6 +172,8 @@ export const login = async (req, res) => {
     }
 };
 
+// In user.controller.js
+
 export const uploadProfilePicture = async (req, res) => {
     try {
         const { token } = req.body;
@@ -180,34 +182,26 @@ export const uploadProfilePicture = async (req, res) => {
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
 
+        // This 'req.file' is provided by the middleware that ran in user.routes.js
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
-        // ✅ CLOUDINARY UPLOAD TRY BLOCK
-        let uploadedImage;
-        try {
-            uploadedImage = await cloudinary.uploader.upload_stream(
-                { resource_type: "image", folder: "profile_pictures" },
-                (error, result) => {
-                    if (error) throw error;
-                    return result;
-                }
-            );
-        } catch (err) {
-            return res
-                .status(400)
-                .json({ message: "Invalid file. Too large or corrupted." });
-        }
+        // The middleware already uploaded the file to Cloudinary.
+        // The new secure URL is in req.file.path (based on your config)
+        const newProfilePictureUrl = req.file.path;
 
-        user.profilePicture = uploadedImage.secure_url;
+        // Save this new URL to the user's document
+        user.profilePicture = newProfilePictureUrl;
         await user.save();
 
+        // Send the new URL back to the frontend
         return res.json({
             message: "Profile picture updated",
-            url: uploadedImage.secure_url,
+            url: newProfilePictureUrl,
         });
     } catch (error) {
+        // This error handling is still good
         if (error.code === "LIMIT_FILE_SIZE") {
             return res
                 .status(400)
