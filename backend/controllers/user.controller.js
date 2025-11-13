@@ -3,136 +3,141 @@ import Profile from "../models/profile.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import PDFDocument from "pdfkit";
-// fs is no longer needed for writing files, but we keep it for now
-// in case you need it for other things. We won't use it for PDFs.
-import fs from "fs";
 import ConnectionRequest from "../models/connections.model.js";
 import Post from "../models/posts.model.js";
 import Comment from "../models/comments.model.js";
 
-// --- NEW IMPORTS ---
-// We need to import v2 as 'cloudinary' to get the uploader stream
 import { v2 as cloudinary } from "cloudinary";
-// Import 'request' to fetch images from their URL for the PDF
 import request from "request";
-// --- END NEW IMPORTS ---
 
-// --- COMPLETELY REBUILT FUNCTION ---
-// This function now creates a PDF, pipes it to Cloudinary, and returns a URL
-const convertUserDataTOPDF = (userData) => {
-    // We return a Promise that resolves with the Cloudinary URL
+// --- HELPER: Fetch Image Buffer ---
+// We fetch the image BEFORE starting the PDF to prevent Cloudinary timeouts
+const fetchImageBuffer = (url) => {
+    return new Promise((resolve) => {
+        if (!url || !url.startsWith("http")) {
+            return resolve(null);
+        }
+        // Set a timeout of 4 seconds to avoid hanging forever
+        request({ url, encoding: null, timeout: 4000 }, (err, res, body) => {
+            if (err || res.statusCode !== 200) {
+                console.log(
+                    "Failed to fetch profile image for PDF:",
+                    err?.message
+                );
+                return resolve(null);
+            }
+            resolve(body);
+        });
+    });
+};
+
+// --- PDF GENERATOR: Pre-fetch image, then stream PDF ---
+const convertUserDataTOPDF = async (userData) => {
+    // 1. Pre-fetch the image buffer (Async)
+    const profilePicUrl = userData.userId.profilePicture;
+    const imageBuffer = await fetchImageBuffer(profilePicUrl);
+
+    // 2. Create the PDF and Upload Stream (Sync generation)
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument();
 
-            // Create an upload stream to Cloudinary
+            // Cloudinary upload stream
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: "pro-connect-resumes",
-                    resource_type: "raw", // Treat it as a raw file
-                    format: "pdf",
+                    resource_type: "auto", // FIX: Use 'auto' so Cloudinary detects it as PDF and serves correct headers
+                    // format: "pdf", // Let Cloudinary detect the format from the stream
                 },
                 (error, result) => {
                     if (error) {
                         console.error("Cloudinary upload error:", error);
                         return reject(error);
                     }
-                    // Resolve with the new, permanent URL
+                    // Success! Return the URL
                     resolve(result.secure_url);
                 }
             );
 
-            // Pipe the PDF document to the Cloudinary stream
+            // Pipe PDF -> Cloudinary
             doc.pipe(uploadStream);
 
-            // --- Build the PDF ---
-            const profilePicUrl = userData.userId.profilePicture;
+            // --- 3. Build PDF Content ---
 
-            // This function adds the text, so we can call it after the image loads
-            const addTextToDoc = () => {
-                doc.fontSize(14).text(`Name: ${userData.userId.name}`);
-                doc.fontSize(14).text(`Username: ${userData.userId.username}`);
-                doc.fontSize(14).text(`Email: ${userData.userId.email}`);
-                doc.fontSize(14).text(`Bio: ${userData.bio || ""}`);
-                doc.fontSize(14).text(
-                    `Current Position: ${userData.currentPost || ""}`
-                );
-
-                doc.addPage(); // Add a new page for work history
-                doc.fontSize(14).text("Past Work: ");
-                doc.moveDown();
-
-                if (userData.pastWork && userData.pastWork.length > 0) {
-                    userData.pastWork.forEach((work) => {
-                        doc.fontSize(12).text(
-                            `Company Name: ${work.company || ""}`
-                        );
-                        doc.fontSize(12).text(
-                            `Position: ${work.position || ""}`
-                        );
-                        doc.fontSize(12).text(`Years: ${work.years || ""}`);
-                        doc.moveDown();
+            // Add Image (if we successfully fetched it)
+            if (imageBuffer) {
+                try {
+                    doc.image(imageBuffer, {
+                        fit: [100, 100],
+                        align: "center",
                     });
-                } else {
-                    doc.fontSize(12).text("No work history provided.");
+                    doc.moveDown();
+                } catch (imgErr) {
+                    console.error(
+                        "Error embedding image in PDF:",
+                        imgErr.message
+                    );
                 }
-
-                // End the document to trigger the upload stream
-                doc.end();
-            };
-
-            // Check if the profile picture is a Cloudinary URL (starts with http)
-            if (profilePicUrl && profilePicUrl.startsWith("http")) {
-                // Fetch image from Cloudinary URL
-                request(
-                    { url: profilePicUrl, encoding: null },
-                    (err, res, body) => {
-                        if (err || res.statusCode !== 200) {
-                            console.error(
-                                "Error fetching image for PDF, continuing without it."
-                            );
-                            addTextToDoc(); // Add text even if image fails
-                        } else {
-                            // Embed the fetched image
-                            try {
-                                doc.image(body, {
-                                    align: "center",
-                                    width: 100,
-                                });
-                                doc.moveDown();
-                                addTextToDoc(); // Add text after image
-                            } catch (imageError) {
-                                console.error(
-                                    "Error embedding image in PDF:",
-                                    imageError
-                                );
-                                addTextToDoc(); // Continue if image embedding fails
-                            }
-                        }
-                    }
-                );
-            } else {
-                // Fallback for default.jpg or if no image
-                console.log(
-                    "No profile picture URL found, creating PDF without image."
-                );
-                addTextToDoc();
             }
+
+            // Add Text Details
+            doc.fontSize(20).text(userData.userId.name || "Name Not Provided", {
+                align: "center",
+            });
+            doc.fontSize(12).text(
+                `@${userData.userId.username || "username"}`,
+                { align: "center" }
+            );
+            doc.fontSize(10).text(userData.userId.email || "", {
+                align: "center",
+            });
+            doc.moveDown();
+
+            doc.fontSize(14).text("About", { underline: true });
+            doc.fontSize(12).text(userData.bio || "No bio provided.");
+            doc.moveDown();
+
+            doc.fontSize(14).text("Current Position", { underline: true });
+            doc.fontSize(12).text(userData.currentPost || "Not specified.");
+            doc.moveDown();
+
+            doc.addPage();
+            doc.fontSize(16).text("Work History", { underline: true });
+            doc.moveDown();
+
+            if (userData.pastWork && userData.pastWork.length > 0) {
+                userData.pastWork.forEach((work) => {
+                    doc.fontSize(14).text(work.company || "Unknown Company", {
+                        bold: true,
+                    });
+                    doc.fontSize(12).text(
+                        `Position: ${work.position || "N/A"}`
+                    );
+                    doc.fontSize(12).text(
+                        `Experience: ${work.years || "0"} years`
+                    );
+                    doc.moveDown();
+                });
+            } else {
+                doc.fontSize(12).text("No work history provided.");
+            }
+
+            // Finalize the PDF (this triggers the upload completion)
+            doc.end();
         } catch (error) {
             reject(error);
         }
     });
 };
-// --- END REBUILT FUNCTION ---
+
+// --- CONTROLLERS ---
 
 export const register = async (req, res) => {
     try {
         const { name, email, password, username } = req.body;
         if (!name || !email || !password || !username)
             return res.status(400).json({ message: "All fields are required" });
-        const user = await User.findOne({
-            email,
-        });
+        const user = await User.findOne({ email });
         if (user)
             return res.status(400).json({ message: "User already exists" });
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -156,9 +161,7 @@ export const login = async (req, res) => {
         const { email, password } = req.body;
         if (!email || !password)
             return res.status(400).json({ message: "All fields are required" });
-        const user = await User.findOne({
-            email,
-        });
+        const user = await User.findOne({ email });
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
         const isMatch = await bcrypt.compare(password, user.password);
@@ -172,36 +175,26 @@ export const login = async (req, res) => {
     }
 };
 
-// In user.controller.js
-
 export const uploadProfilePicture = async (req, res) => {
     try {
         const { token } = req.body;
-
         const user = await User.findOne({ token });
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
 
-        // This 'req.file' is provided by the middleware that ran in user.routes.js
         if (!req.file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
 
-        // The middleware already uploaded the file to Cloudinary.
-        // The new secure URL is in req.file.path (based on your config)
         const newProfilePictureUrl = req.file.path;
-
-        // Save this new URL to the user's document
         user.profilePicture = newProfilePictureUrl;
         await user.save();
 
-        // Send the new URL back to the frontend
         return res.json({
             message: "Profile picture updated",
             url: newProfilePictureUrl,
         });
     } catch (error) {
-        // This error handling is still good
         if (error.code === "LIMIT_FILE_SIZE") {
             return res
                 .status(400)
@@ -222,7 +215,6 @@ export const updateUserProfile = async (req, res) => {
             const existingUser = await User.findOne({
                 $or: [{ username }, { email }],
             });
-            // Make sure we are not conflicting with *another* user
             if (existingUser && String(existingUser._id) !== String(user._id)) {
                 return res
                     .status(400)
@@ -284,7 +276,6 @@ export const getAllUserProfile = async (req, res) => {
     }
 };
 
-// --- UPDATED FUNCTION ---
 export const downloadProfile = async (req, res) => {
     try {
         const user_id = req.query.id;
@@ -301,18 +292,15 @@ export const downloadProfile = async (req, res) => {
             return res.status(404).json({ message: "Profile not found." });
         }
 
-        // This now returns a Cloudinary URL
+        // We await the new function which handles async image fetching internally
         let cloudinaryUrl = await convertUserDataTOPDF(userProfile);
 
-        // Return the permanent URL
         return res.json({ message: cloudinaryUrl });
     } catch (error) {
         console.error("Error in downloadProfile:", error);
-        // --- BUG FIX --- (Was 5G00)
         return res.status(500).json({ message: "Failed to generate PDF." });
     }
 };
-// --- END UPDATED FUNCTION ---
 
 export const sendConnectionRequest = async (req, res) => {
     const { token, connectionId } = req.body;
@@ -382,29 +370,25 @@ export const acceptConnectionRequest = async (req, res) => {
     try {
         const user = await User.findOne({ token: token });
         if (!user) return res.status(404).json({ message: "User not found" });
+
         const connection = await ConnectionRequest.findOne({
             _id: requestId,
+            connectionId: user._id,
         });
+
         if (!connection) {
             return res.status(404).json({ message: "Connection not found" });
         }
+
         if (action_type === "accept") {
             connection.status_accepted = true;
-            const reciprocalConnection = new ConnectionRequest({
-                userId: connection.connectionId, // Original receiver
-                connectionId: connection.userId, // Original sender
-                status_accepted: true, // Mark as accepted
-            });
-            await reciprocalConnection.save();
+            await connection.save();
+            return res.json({ message: "Request Accepted" });
         } else {
-            // "decline" or any other action will remove it
             await ConnectionRequest.deleteOne({ _id: requestId });
             return res.json({ message: "Request Declined" });
         }
-        await connection.save();
-        return res.json({ message: "Request Updated" });
     } catch (error) {
-        // --- BUG FIX --- (Was 5M00)
         return res.status(500).json({ message: error.message });
     }
 };

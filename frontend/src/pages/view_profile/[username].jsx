@@ -43,6 +43,8 @@ export default function ViewProfilePage({ userProfile }) {
 
     // State to hold the connection status
     const [connectStatus, setConnectStatus] = useState("Connect"); // 'Connect', 'Pending', 'Connected'
+    const isOwnProfile =
+        authState.user && authState.user.userId._id === userProfile.userId._id;
 
     const getUsersPost = async () => {
         await dispatch(getAllPosts());
@@ -63,18 +65,27 @@ export default function ViewProfilePage({ userProfile }) {
 
     // Determine connection status
     useEffect(() => {
-        // 1. Check if they are in my network (I received request and accepted)
-        const isConnected = authState.connectionRequest.some(
+        // If it's my profile, don't waste time calculating status
+        if (isOwnProfile) return;
+
+        // 1. Connected? (Reciprocal)
+        const isConnectedRec = authState.connectionRequest.some(
             (req) =>
                 req.userId._id === userProfile.userId._id &&
                 req.status_accepted === true
         );
-        if (isConnected) {
+        const isConnectedSent = authState.connections.some(
+            (req) =>
+                req.connectionId._id === userProfile.userId._id &&
+                req.status_accepted === true
+        );
+
+        if (isConnectedRec || isConnectedSent) {
             setConnectStatus("Connected");
             return;
         }
 
-        // 2. Check if I sent a request that is pending
+        // 2. Pending? (I sent)
         const isPending = authState.connections.some(
             (req) =>
                 req.connectionId._id === userProfile.userId._id &&
@@ -85,14 +96,14 @@ export default function ViewProfilePage({ userProfile }) {
             return;
         }
 
-        // 3. Check if they sent me a request (I just need to accept)
+        // 3. They requested? (I received)
         const hasRequested = authState.connectionRequest.some(
             (req) =>
                 req.userId._id === userProfile.userId._id &&
                 req.status_accepted === null
         );
         if (hasRequested) {
-            setConnectStatus("Pending"); // Or "Accept"
+            setConnectStatus("Pending"); // Or "Accept" but keeping it simple
             return;
         }
 
@@ -101,6 +112,7 @@ export default function ViewProfilePage({ userProfile }) {
         authState.connections,
         authState.connectionRequest,
         userProfile.userId._id,
+        isOwnProfile,
     ]);
 
     // Fetch all posts and connection data on load
@@ -152,17 +164,19 @@ export default function ViewProfilePage({ userProfile }) {
                             <DownloadIcon />
                             <span>Download Resume</span>
                         </button>
-                        <button
-                            onClick={handleConnect}
-                            className={
-                                connectStatus === "Connect"
-                                    ? styles.connectBtn
-                                    : styles.connectedButton
-                            }
-                            disabled={connectStatus !== "Connect"}
-                        >
-                            {connectStatus}
-                        </button>
+                        {!isOwnProfile && (
+                            <button
+                                onClick={handleConnect}
+                                className={
+                                    connectStatus === "Connect"
+                                        ? styles.connectBtn
+                                        : styles.connectedButton
+                                }
+                                disabled={connectStatus !== "Connect"}
+                            >
+                                {connectStatus}
+                            </button>
+                        )}
                     </div>
 
                     <h2 className={styles.nameDisplay}>

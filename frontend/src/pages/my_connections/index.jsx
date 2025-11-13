@@ -3,13 +3,13 @@
 import {
     AcceptConnection,
     getMyConnectionRequests,
+    getConnectionsRequest,
 } from "@/config/redux/action/authAction";
-import DashboardLayout from "@/layout/DashboardLayout"; // Import
-import UserLayout from "@/layout/UserLayout"; // Import
+import DashboardLayout from "@/layout/DashboardLayout";
+import UserLayout from "@/layout/UserLayout";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { useRouter } from "next/router";
 
 export default function MyConnectionsPage() {
@@ -17,40 +17,70 @@ export default function MyConnectionsPage() {
     const router = useRouter();
     const authState = useSelector((state) => state.auth);
 
-    // State to manage active tab
     const [activeTab, setActiveTab] = useState("received");
 
     useEffect(() => {
-        dispatch(
-            getMyConnectionRequests({ token: localStorage.getItem("token") })
-        );
+        const token = localStorage.getItem("token");
+        if (token) {
+            // 1. Fetch requests sent TO me
+            dispatch(getMyConnectionRequests({ token }));
+            // 2. Fetch requests sent BY me
+            dispatch(getConnectionsRequest({ token }));
+        }
     }, [dispatch]);
 
-    // Unified handler for Accept/Decline actions
     const handleConnectionAction = (requestId, action) => {
         dispatch(
             AcceptConnection({
                 connectionId: requestId,
                 token: localStorage.getItem("token"),
-                action: action, // "accept" or "decline"
+                action: action,
             })
         );
     };
 
-    // Filter lists for cleaner rendering
+    // --- LOGIC START ---
+
+    // 1. Pending Requests (Received Only)
     const pendingRequests = authState.connectionRequest.filter(
         (connection) => connection.status_accepted === null
     );
-    const myNetwork = authState.connectionRequest.filter(
+
+    // 2. Accepted Connections (Both directions)
+    // Direction A: Someone sent to me, I accepted
+    const receivedAccepted = authState.connectionRequest.filter(
+        (connection) => connection.status_accepted === true
+    );
+    // Direction B: I sent to someone, they accepted
+    const sentAccepted = authState.connections.filter(
         (connection) => connection.status_accepted === true
     );
 
-    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
+    // 3. Merge into a unique Map to remove duplicates
+    // We use the User ID as the key
+    const networkMap = new Map();
+
+    receivedAccepted.forEach((req) => {
+        if (req.userId) {
+            networkMap.set(req.userId._id, req.userId);
+        }
+    });
+
+    sentAccepted.forEach((req) => {
+        if (req.connectionId) {
+            networkMap.set(req.connectionId._id, req.connectionId);
+        }
+    });
+
+    // Convert Map values back to an array for rendering
+    const myNetworkList = Array.from(networkMap.values());
+
+    // --- LOGIC END ---
+
     return (
         <div className={styles.connectionsContainer}>
             <h2>Manage Connections</h2>
 
-            {/* --- Tab Navigation --- */}
             <div className={styles.tabContainer}>
                 <button
                     className={
@@ -68,11 +98,11 @@ export default function MyConnectionsPage() {
                     }
                     onClick={() => setActiveTab("network")}
                 >
-                    My Network {myNetwork.length > 0 && `(${myNetwork.length})`}
+                    My Network{" "}
+                    {myNetworkList.length > 0 && `(${myNetworkList.length})`}
                 </button>
             </div>
 
-            {/* --- Tab Content --- */}
             <div className={styles.tabContent}>
                 {activeTab === "received" && (
                     <div className={styles.contentGrid}>
@@ -81,41 +111,39 @@ export default function MyConnectionsPage() {
                                 No pending connection requests.
                             </p>
                         ) : (
-                            pendingRequests.map((user) => (
+                            pendingRequests.map((req) => (
                                 <div
                                     className={styles.requestCard}
-                                    key={user._id}
+                                    key={req._id}
                                 >
-                                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                     <img
-                                        src={user.userId.profilePicture}
+                                        src={req.userId.profilePicture}
                                         alt=""
                                         className={styles.profilePicture}
                                         onClick={() =>
                                             router.push(
-                                                `/view_profile/${user.userId.username}`
+                                                `/view_profile/${req.userId.username}`
                                             )
                                         }
                                     />
-                                    {/* --- END FIX --- */}
                                     <div className={styles.userInfo}>
                                         <h3
                                             onClick={() =>
                                                 router.push(
-                                                    `/view_profile/${user.userId.username}`
+                                                    `/view_profile/${req.userId.username}`
                                                 )
                                             }
                                         >
-                                            {user.userId.name}
+                                            {req.userId.name}
                                         </h3>
-                                        <p>@{user.userId.username}</p>
+                                        <p>@{req.userId.username}</p>
                                     </div>
                                     <div className={styles.buttonGroup}>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleConnectionAction(
-                                                    user._id,
+                                                    req._id,
                                                     "decline"
                                                 );
                                             }}
@@ -127,7 +155,7 @@ export default function MyConnectionsPage() {
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleConnectionAction(
-                                                    user._id,
+                                                    req._id,
                                                     "accept"
                                                 );
                                             }}
@@ -144,31 +172,29 @@ export default function MyConnectionsPage() {
 
                 {activeTab === "network" && (
                     <div className={styles.listGrid}>
-                        {myNetwork.length === 0 ? (
+                        {myNetworkList.length === 0 ? (
                             <p className={styles.noItemsMessage}>
                                 Your network is empty. Go discover people!
                             </p>
                         ) : (
-                            myNetwork.map((user) => (
+                            myNetworkList.map((user) => (
                                 <div
                                     className={styles.networkCard}
                                     key={user._id}
                                     onClick={() =>
                                         router.push(
-                                            `/view_profile/${user.userId.username}`
+                                            `/view_profile/${user.username}`
                                         )
                                     }
                                 >
-                                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                     <img
-                                        src={user.userId.profilePicture}
+                                        src={user.profilePicture}
                                         alt=""
                                         className={styles.profilePictureSmall}
                                     />
-                                    {/* --- END FIX --- */}
                                     <div className={styles.userInfo}>
-                                        <h3>{user.userId.name}</h3>
-                                        <p>@{user.userId.username}</p>
+                                        <h3>{user.name}</h3>
+                                        <p>@{user.username}</p>
                                     </div>
                                 </div>
                             ))
@@ -180,7 +206,6 @@ export default function MyConnectionsPage() {
     );
 }
 
-// ADDED THIS:
 MyConnectionsPage.getLayout = function getLayout(page) {
     return (
         <UserLayout>
