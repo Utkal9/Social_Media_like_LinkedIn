@@ -43,11 +43,19 @@ export default function Discoverpage() {
     // --- THIS FUNCTION IS NOW FIXED ---
     const getConnectStatus = (targetUserId) => {
         // 1. Are we already connected?
-        const isConnected = authState.connectionRequest.find(
+        // Check if I received a request and accepted it
+        const connectedReceived = authState.connectionRequest.find(
             (req) =>
                 req.userId._id === targetUserId && req.status_accepted === true
         );
-        if (isConnected) return "Connected";
+        // Check if I sent a request and it was accepted
+        const connectedSent = authState.connections.find(
+            (req) =>
+                req.connectionId._id === targetUserId &&
+                req.status_accepted === true
+        );
+
+        if (connectedReceived || connectedSent) return "Connected";
 
         // 2. Did WE send a request that is pending?
         const isPending = authState.connections.find(
@@ -55,7 +63,7 @@ export default function Discoverpage() {
                 req.connectionId._id === targetUserId &&
                 req.status_accepted === null
         );
-        if (isPending) return "Pending"; // <-- Corrected variable
+        if (isPending) return "Pending";
 
         // 3. Did THEY send us a request that is pending?
         const hasRequested = authState.connectionRequest.find(

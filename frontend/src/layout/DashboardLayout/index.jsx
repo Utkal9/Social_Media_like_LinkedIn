@@ -5,7 +5,6 @@ import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { setTokenIsThere } from "@/config/redux/reducer/authReducer";
-// import { BASE_URL } from "@/config"; // <-- No longer needed
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
@@ -92,34 +91,59 @@ export default function DashboardLayout({ children }) {
                     <div className={styles.widgetCard}>
                         <h4>Top Profiles to Follow</h4>
                         {authState.all_profiles_fetched ? (
-                            authState.all_users.slice(0, 5).map(
-                                (
-                                    profile // Show top 5
-                                ) => (
-                                    <div
-                                        key={profile._id}
-                                        className={styles.profileItem}
-                                        onClick={() =>
-                                            router.push(
-                                                `/view_profile/${profile.userId.username}`
-                                            )
-                                        }
-                                    >
-                                        {/* --- FIX: Removed ${BASE_URL}/ --- */}
-                                        <img
-                                            src={profile.userId.profilePicture}
-                                            alt={profile.userId.name}
-                                        />
-                                        {/* --- END FIX --- */}
-                                        <div>
-                                            <strong>
-                                                {profile.userId.name}
-                                            </strong>
-                                            <p>@{profile.userId.username}</p>
+                            authState.all_users
+                                // --- CRASH FIX START ---
+                                .filter((profile) => {
+                                    // 1. Check if the profile in the list is valid
+                                    if (!profile.userId) return false;
+
+                                    // 2. Check if YOUR user data is loaded.
+                                    // If not loaded yet, we can't filter self out, so just keep them for now (safest option)
+                                    if (
+                                        !authState.user ||
+                                        !authState.user.userId
+                                    )
+                                        return true;
+
+                                    // 3. If both exist, filter out yourself
+                                    return (
+                                        profile.userId._id !==
+                                        authState.user.userId._id
+                                    );
+                                })
+                                // --- CRASH FIX END ---
+                                .slice(0, 5)
+                                .map(
+                                    (
+                                        profile // Show top 5
+                                    ) => (
+                                        <div
+                                            key={profile._id}
+                                            className={styles.profileItem}
+                                            onClick={() =>
+                                                router.push(
+                                                    `/view_profile/${profile.userId.username}`
+                                                )
+                                            }
+                                        >
+                                            <img
+                                                src={
+                                                    profile.userId
+                                                        .profilePicture
+                                                }
+                                                alt={profile.userId.name}
+                                            />
+                                            <div>
+                                                <strong>
+                                                    {profile.userId.name}
+                                                </strong>
+                                                <p>
+                                                    @{profile.userId.username}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )
                                 )
-                            )
                         ) : (
                             <p>Loading...</p> // You could add a skeleton here too
                         )}
