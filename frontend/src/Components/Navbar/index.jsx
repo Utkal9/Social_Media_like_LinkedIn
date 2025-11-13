@@ -55,32 +55,18 @@ const DiscoverIcon = ({ isActive }) => (
     </svg>
 );
 const LogoIcon = () => (
-    <svg
-        width="32"
-        height="32"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <path
-            d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM12 10.5c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm0 6c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
-            fill="url(#logoGradient)"
-        />
-        <defs>
-            <linearGradient
-                id="logoGradient"
-                x1="2"
-                y1="2"
-                x2="22"
-                y2="22"
-                gradientUnits="userSpaceOnUse"
-            >
-                <stop stopColor="#0a66c2" />
-                <stop offset="1" stopColor="#004182" />
-            </linearGradient>
-        </defs>
-    </svg>
+    <img
+        src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/A3Q7xGO4EOc9ZVJo/chatgpt-image-aug-11-2025-10_04_14-pm-YleQ8RV01OtW9GKv.png"
+        alt="Logo"
+        style={{
+            width: "32px",
+            height: "32px",
+            objectFit: "cover",
+            borderRadius: "6px", // make it clean & professional
+        }}
+    />
 );
+
 // --- NEW Hamburger Menu Icon ---
 const MenuIcon = () => (
     <svg
