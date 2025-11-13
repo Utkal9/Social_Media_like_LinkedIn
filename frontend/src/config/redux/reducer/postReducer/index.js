@@ -43,7 +43,7 @@ const postSlice = createSlice({
             })
             .addCase(getAllComments.fulfilled, (state, action) => {
                 state.postId = action.payload.post_id;
-                state.comments = action.payload.comments;
+                state.comments = action.payload.comments.reverse();
             });
         // .addCase(toggleLike.pending, (state) => {
         //     // You could set a specific 'isLiking' state here if you want

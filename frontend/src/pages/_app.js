@@ -15,7 +15,12 @@ export default function App({ Component, pageProps }) {
                     name="viewport"
                     content="width=device-width, initial-scale=1"
                 />
-                <title>Pro Connect</title>
+                <title>LinkUps</title>
+                <link
+                    rel="icon"
+                    href="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/A3Q7xGO4EOc9ZVJo/chatgpt-image-aug-11-2025-10_04_14-pm-YleQ8RV01OtW9GKv.png"
+                    type="image/png"
+                />
             </Head>
             <Provider store={store}>
                 {getLayout(<Component {...pageProps} />)}
