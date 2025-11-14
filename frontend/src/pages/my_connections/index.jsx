@@ -7,7 +7,8 @@ import {
 } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { useSocket } from "@/context/SocketContext"; // Import useSocket
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
@@ -15,6 +16,7 @@ import { useRouter } from "next/router";
 export default function MyConnectionsPage() {
     const dispatch = useDispatch();
     const router = useRouter();
+    const socket = useSocket(); // Get socket from context
     const authState = useSelector((state) => state.auth);
 
     const [activeTab, setActiveTab] = useState("received");
@@ -38,6 +40,42 @@ export default function MyConnectionsPage() {
             })
         );
     };
+
+    // --- NEW CALL HANDLER FUNCTION ---
+    const handleStartOneOnOneCall = (connectionUser) => {
+        const currentUser = authState.user?.userId;
+        const connectionUserId = connectionUser._id;
+
+        // 1. Check if the socket and user are ready
+        if (!currentUser || !connectionUserId) {
+            console.error("[CALLER] User IDs not found, cannot start call.");
+            return;
+        }
+        if (!socket) {
+            console.error("[CALLER] Socket not connected, cannot start call.");
+            return;
+        }
+
+        console.log(`[CALLER] Starting 1-on-1 call...`);
+
+        // 2. Create the unique room link
+        const roomId = [currentUser._id, connectionUserId].sort().join("-");
+        const roomUrl = `http://localhost:3001/${roomId}`; // ApnaVideoCall frontend URL
+
+        // 3. THIS IS THE NEW NOTIFICATION:
+        console.log(
+            `[CALLER] Emitting 'start-call' to user: ${connectionUserId}`
+        );
+        socket.emit("start-call", {
+            fromUser: currentUser, // Your user object
+            toUserId: connectionUserId, // The ID of the person you're calling
+            roomUrl: roomUrl, // The link to join
+        });
+
+        // 4. Open the call for yourself (this was the original plan)
+        window.open(roomUrl, "_blank");
+    };
+    // --- END NEW FUNCTION ---
 
     // --- LOGIC START ---
 
@@ -181,21 +219,39 @@ export default function MyConnectionsPage() {
                                 <div
                                     className={styles.networkCard}
                                     key={user._id}
-                                    onClick={() =>
-                                        router.push(
-                                            `/view_profile/${user.username}`
-                                        )
-                                    }
                                 >
-                                    <img
-                                        src={user.profilePicture}
-                                        alt=""
-                                        className={styles.profilePictureSmall}
-                                    />
-                                    <div className={styles.userInfo}>
-                                        <h3>{user.name}</h3>
-                                        <p>@{user.username}</p>
+                                    {/* --- 1. This new wrapper div keeps the profile link behavior --- */}
+                                    <div
+                                        className={styles.networkCardInfo}
+                                        onClick={() =>
+                                            router.push(
+                                                `/view_profile/${user.username}`
+                                            )
+                                        }
+                                    >
+                                        <img
+                                            src={user.profilePicture}
+                                            alt=""
+                                            className={
+                                                styles.profilePictureSmall
+                                            }
+                                        />
+                                        <div className={styles.userInfo}>
+                                            <h3>{user.name}</h3>
+                                            <p>@{user.username}</p>
+                                        </div>
                                     </div>
+
+                                    {/* --- 2. THIS IS THE NEW BUTTON THAT WAS ADDED --- */}
+                                    <button
+                                        className={styles.callButton}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevents the profile click
+                                            handleStartOneOnOneCall(user); // Triggers the new function
+                                        }}
+                                    >
+                                        Call
+                                    </button>
                                 </div>
                             ))
                         )}
