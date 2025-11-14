@@ -1,5 +1,3 @@
-// frontend/src/Components/Navbar/index.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./styles.module.css";
 import { useRouter } from "next/router";
@@ -54,6 +52,25 @@ const DiscoverIcon = ({ isActive }) => (
         />
     </svg>
 );
+
+// --- NEW MEET ICON ---
+const MeetIcon = ({ isActive }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={isActive ? 2.5 : 2}
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 13.5 5.25h-9A2.25 2.25 0 0 0 2.25 7.5v9A2.25 2.25 0 0 0 4.5 18.75Z"
+        />
+    </svg>
+);
+// --- END NEW MEET ICON ---
+
 const LogoIcon = () => (
     <img
         src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/A3Q7xGO4EOc9ZVJo/chatgpt-image-aug-11-2025-10_04_14-pm-YleQ8RV01OtW9GKv.png"
@@ -218,6 +235,21 @@ function NavbarComponent() {
                     <DiscoverIcon isActive={router.pathname === "/discover"} />
                     <span>Discover</span>
                 </motion.div>
+
+                {/* --- NEW MEET LINK --- */}
+                <motion.div
+                    className={`${styles.navLink} ${
+                        router.pathname === "/meet" ? styles.active : ""
+                    }`}
+                    onClick={() => handleNavigation("/meet")}
+                    variants={itemHover}
+                    whileHover="hover"
+                    whileTap="tap"
+                >
+                    <MeetIcon isActive={router.pathname === "/meet"} />
+                    <span>Meet</span>
+                </motion.div>
+                {/* --- END NEW MEET LINK --- */}
             </div>
             <div className={styles.navRight}>
                 {authState.profileFetched && authState.user ? (
@@ -357,6 +389,19 @@ function NavbarComponent() {
                         >
                             Discover
                         </a>
+
+                        {/* --- NEW MEET LINK (MOBILE) --- */}
+                        <a
+                            className={
+                                router.pathname === "/meet"
+                                    ? styles.mobileLinkActive
+                                    : styles.mobileLink
+                            }
+                            onClick={() => handleNavigation("/meet")}
+                        >
+                            Meet
+                        </a>
+                        {/* --- END NEW MEET LINK (MOBILE) --- */}
 
                         <div className={styles.mobileDivider}></div>
 

@@ -2,6 +2,7 @@ import { store } from "@/config/redux/store.js";
 import "@/styles/globals.css";
 import { Provider } from "react-redux";
 import Head from "next/head";
+import { SocketProvider } from "@/context/SocketContext";
 
 export default function App({ Component, pageProps }) {
     // Get a layout function from the page component, if it exists.
@@ -23,7 +24,9 @@ export default function App({ Component, pageProps }) {
                 />
             </Head>
             <Provider store={store}>
-                {getLayout(<Component {...pageProps} />)}
+                <SocketProvider>
+                    {getLayout(<Component {...pageProps} />)}
+                </SocketProvider>
             </Provider>
         </>
     );

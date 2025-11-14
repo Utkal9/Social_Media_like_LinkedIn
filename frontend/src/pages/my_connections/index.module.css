@@ -139,26 +139,64 @@
 }
 
 .networkCard {
+    /* ... your existing styles for networkCard ... */
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    transition: background 0.2s;
+    justify-content: space-between; /* This is new */
+}
+
+/* --- THIS IS A NEW STYLE --- */
+.networkCardInfo {
+    display: flex;
+    align-items: center;
     cursor: pointer;
+    flex-grow: 1; /* Lets it take up available space */
+    min-width: 0; /* Prevents text from overflowing */
 }
-.networkCard:hover {
-    background: #f9f9f9;
-}
+/* --- END NEW STYLE --- */
 
 .profilePictureSmall {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0; /* Prevents image from shrinking */
 }
 
-.networkCard .userInfo {
-    text-align: left;
+.userInfo {
+    /* ... your existing styles ... */
+    min-width: 0; /* Prevents text from overflowing */
 }
+
+.userInfo h3 {
+    /* ... your existing styles ... */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Good for long names */
+}
+
+/* --- UPDATED CSS FOR CALL BUTTON --- */
+.callButton {
+    border: 1px solid #0a66c2;
+    color: #0a66c2;
+    background-color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 16px; /* Use explicit margin */
+    white-space: nowrap;
+    flex-shrink: 0; /* Prevents button from shrinking */
+}
+
+.callButton:hover {
+    background-color: #eef3f8;
+    color: #004182;
+}
+/* --- END UPDATED CSS --- */
+.networkCardInfo {
+    cursor: pointer;
+}
+/* --- END NEW CSS --- */
