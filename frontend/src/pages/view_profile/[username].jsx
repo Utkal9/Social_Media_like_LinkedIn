@@ -133,12 +133,38 @@ export default function ViewProfilePage({ userProfile }) {
 
     // Handle resume download
     const handleDownloadResume = async () => {
-        const response = await clientServer.get(
-            `/user/download_resume?id=${userProfile.userId._id}`
-        );
-        // --- FIX: The PDF URL is a FULL Cloudinary URL. Do not add BASE_URL. ---
-        window.open(response.data.message, "_blank");
-        // --- END FIX ---
+        try {
+            const response = await clientServer.get(
+                `/user/download_resume?id=${userProfile.userId._id}`,
+                {
+                    responseType: "blob", // <-- Tell axios to expect a file blob
+                }
+            );
+
+            // Create a URL for the blob in the browser's memory
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+
+            // Create a temporary link element
+            const link = document.createElement("a");
+            link.href = url;
+
+            // Set the download filename
+            link.setAttribute(
+                "download",
+                `${userProfile.userId.username}_resume.pdf`
+            );
+
+            // Append to DOM, click it, and remove it
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+
+            // Clean up the object URL
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Failed to download resume:", error);
+            alert("Error: Could not generate resume.");
+        }
     };
 
     // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
