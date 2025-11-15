@@ -12,29 +12,40 @@ import UserLayout from "@/layout/UserLayout"; // Import layout
 import DashboardLayout from "@/layout/DashboardLayout"; // Import layout
 // Note: You do not need a Navbar import if it's included in UserLayout
 
+// --- 1. Define your return URL here ---
+const SOCIAL_MEDIA_DASHBOARD_URL =
+    "https://linkupfrontend-qs7g.onrender.com/dashboard";
+
 function MeetPage() {
     const [meetingCode, setMeetingCode] = useState("");
 
     const handleJoinVideoCall = () => {
         if (!meetingCode.trim()) {
-            // Using a simple browser alert for this example,
-            // but you could replace with a modal or snackbar
             console.error("Please enter a meeting code.");
             return;
         }
-        // This is correct: open the URL of your video call app
-        window.open(
-            `${process.env.NEXT_PUBLIC_VIDEO_CALL_URL}/${meetingCode.trim()}`,
-            "_blank"
-        );
+
+        // --- 2. Build the new URL with the redirect parameter ---
+        const baseUrl = `${
+            process.env.NEXT_PUBLIC_VIDEO_CALL_URL
+        }/${meetingCode.trim()}`;
+        const finalUrl = `${baseUrl}?redirect_url=${encodeURIComponent(
+            SOCIAL_MEDIA_DASHBOARD_URL
+        )}`;
+
+        window.open(finalUrl, "_blank");
     };
 
     const handleStartNewCall = () => {
         const newRoomId = crypto.randomUUID(); // Generates a unique ID
-        window.open(
-            `${process.env.NEXT_PUBLIC_VIDEO_CALL_URL}/${newRoomId}`,
-            "_blank"
-        );
+
+        // --- 3. Build the new URL with the redirect parameter ---
+        const baseUrl = `${process.env.NEXT_PUBLIC_VIDEO_CALL_URL}/${newRoomId}`;
+        const finalUrl = `${baseUrl}?redirect_url=${encodeURIComponent(
+            SOCIAL_MEDIA_DASHBOARD_URL
+        )}`;
+
+        window.open(finalUrl, "_blank");
     };
 
     return (
