@@ -13,6 +13,9 @@ import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 
+const VIDEO_CALL_URL =
+    process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
+
 export default function MyConnectionsPage() {
     const dispatch = useDispatch();
     const router = useRouter();
@@ -60,7 +63,7 @@ export default function MyConnectionsPage() {
 
         // 2. Create the unique room link
         const roomId = [currentUser._id, connectionUserId].sort().join("-");
-        const roomUrl = `http://localhost:3001/${roomId}`; // ApnaVideoCall frontend URL
+        const roomUrl = `${VIDEO_CALL_URL}/${roomId}`; // ApnaVideoCall frontend URL
 
         // 3. THIS IS THE NEW NOTIFICATION:
         console.log(
