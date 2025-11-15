@@ -78,10 +78,13 @@ export const SocketProvider = ({ children }) => {
         if (socketInstance.current) return;
 
         // Connect to the correct port 9090
-        const newSocket = io("http://localhost:9090", {
-            transports: ["polling", "websocket"],
-            autoConnect: false, // We will connect manually
-        });
+        const newSocket = io(
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090",
+            {
+                transports: ["polling", "websocket"],
+                autoConnect: false, // We will connect manually
+            }
+        );
 
         socketInstance.current = newSocket;
         setSocket(newSocket);
