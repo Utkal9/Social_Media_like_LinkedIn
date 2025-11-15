@@ -23,12 +23,18 @@ function MeetPage() {
             return;
         }
         // This is correct: open the URL of your video call app
-        window.open(`http://localhost:3001/${meetingCode.trim()}`, "_blank");
+        window.open(
+            `${process.env.NEXT_PUBLIC_VIDEO_CALL_URL}/${meetingCode.trim()}`,
+            "_blank"
+        );
     };
 
     const handleStartNewCall = () => {
         const newRoomId = crypto.randomUUID(); // Generates a unique ID
-        window.open(`http://localhost:3001/${newRoomId}`, "_blank");
+        window.open(
+            `${process.env.NEXT_PUBLIC_VIDEO_CALL_URL}/${newRoomId}`,
+            "_blank"
+        );
     };
 
     return (
