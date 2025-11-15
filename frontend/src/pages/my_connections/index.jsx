@@ -63,7 +63,18 @@ export default function MyConnectionsPage() {
 
         // 2. Create the unique room link
         const roomId = [currentUser._id, connectionUserId].sort().join("-");
-        const roomUrl = `${VIDEO_CALL_URL}/${roomId}`; // ApnaVideoCall frontend URL
+        const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
+
+        // --- THIS IS THE NEW PART ---
+        // Define the exact URL you want to return to
+        const returnUrl = "https://linkupfrontend-qs7g.onrender.com/dashboard";
+
+        // Add the returnUrl as a query parameter
+        // encodeURIComponent ensures the URL is safely passed
+        const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
+            returnUrl
+        )}`;
+        // --- END NEW PART ---
 
         // 3. THIS IS THE NEW NOTIFICATION:
         console.log(
@@ -72,11 +83,11 @@ export default function MyConnectionsPage() {
         socket.emit("start-call", {
             fromUser: currentUser, // Your user object
             toUserId: connectionUserId, // The ID of the person you're calling
-            roomUrl: roomUrl, // The link to join
+            roomUrl: roomUrlWithRedirect, // Send the new URL
         });
 
-        // 4. Open the call for yourself (this was the original plan)
-        window.open(roomUrl, "_blank");
+        // 4. Open the call for yourself
+        window.open(roomUrlWithRedirect, "_blank");
     };
     // --- END NEW FUNCTION ---
 
