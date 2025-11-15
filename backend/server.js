@@ -18,7 +18,7 @@ const URL = process.env.MONGO_URL;
 
 // --- UNIFIED CORS ---
 const corsOptions = {
-    origin: "http://localhost:3000", // Your frontend URL
+    origin: process.env.FRONTEND_URL || "http://localhost:3000", // Your frontend URL
     methods: ["GET", "POST"],
 };
 
