@@ -34,9 +34,24 @@ export const getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find().populate(
             "userId",
-            "name username email profilePicture"
+            "name username email profilePicture isOnline lastSeen"
         );
         return res.json({ posts });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+export const getPostById = async (req, res) => {
+    const { post_id } = req.query;
+    try {
+        const post = await Post.findOne({ _id: post_id }).populate(
+            "userId",
+            "name username email profilePicture isOnline lastSeen"
+        );
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+        return res.json({ post });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -68,7 +83,7 @@ export const get_comments_by_post = async (req, res) => {
         }
         const comments = await Comment.find({ postId: post_id }).populate(
             "userId",
-            "username name profilePicture"
+            "username name profilePicture isOnline lastSeen"
         );
         return res.json(comments.reverse());
     } catch (error) {

@@ -1,15 +1,15 @@
-// frontend/src/layout/DashboardLayout/index.jsx
-
 import React, { useEffect } from "react";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { setTokenIsThere } from "@/config/redux/reducer/authReducer";
+import { useSocket } from "@/context/SocketContext";
 
 export default function DashboardLayout({ children }) {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
+    const { onlineStatuses } = useSocket() || {};
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -23,6 +23,11 @@ export default function DashboardLayout({ children }) {
     // Fallback for profile picture
     const user = authState.user?.userId;
     const userFallback = user?.name ? user.name.charAt(0).toUpperCase() : "?";
+    const isUserOnline = (uid, defaultStatus) => {
+        return onlineStatuses && onlineStatuses[uid]
+            ? onlineStatuses[uid].isOnline
+            : defaultStatus;
+    };
 
     return (
         <div className={styles.pageContainer}>
@@ -33,21 +38,29 @@ export default function DashboardLayout({ children }) {
                         <div className={styles.profileCard}>
                             <div className={styles.profileCardHeader}></div>
                             {/* --- FIX: Removed ${BASE_URL}/ --- */}
-                            {user.profilePicture ? (
-                                <img
-                                    src={user.profilePicture}
-                                    alt="Profile"
-                                    className={styles.profileCardPic}
-                                    onClick={() => router.push("/profile")}
-                                />
-                            ) : (
-                                <div
-                                    className={`${styles.profileCardPic} ${styles.profileFallback}`}
-                                    onClick={() => router.push("/profile")}
-                                >
-                                    {userFallback}
-                                </div>
-                            )}
+                            <div
+                                className={styles.avatarWrapper}
+                                onClick={() => router.push("/profile")}
+                            >
+                                {user.profilePicture ? (
+                                    <img
+                                        src={user.profilePicture}
+                                        alt="Profile"
+                                        className={styles.profileCardPic}
+                                    />
+                                ) : (
+                                    <div
+                                        className={`${styles.profileCardPic} ${styles.profileFallback}`}
+                                    >
+                                        {userFallback}
+                                    </div>
+                                )}
+                                {isUserOnline(user._id, true) && (
+                                    <span
+                                        className={styles.onlineDotLarge}
+                                    ></span>
+                                )}
+                            </div>
                             <h3 onClick={() => router.push("/profile")}>
                                 {user.name}
                             </h3>
@@ -126,13 +139,29 @@ export default function DashboardLayout({ children }) {
                                                 )
                                             }
                                         >
-                                            <img
-                                                src={
-                                                    profile.userId
-                                                        .profilePicture
+                                            <div
+                                                className={
+                                                    styles.itemAvatarContainer
                                                 }
-                                                alt={profile.userId.name}
-                                            />
+                                            >
+                                                <img
+                                                    src={
+                                                        profile.userId
+                                                            .profilePicture
+                                                    }
+                                                    alt={profile.userId.name}
+                                                />
+                                                {isUserOnline(
+                                                    profile.userId._id,
+                                                    profile.userId.isOnline
+                                                ) && (
+                                                    <span
+                                                        className={
+                                                            styles.onlineDotSmall
+                                                        }
+                                                    ></span>
+                                                )}
+                                            </div>
                                             <div>
                                                 <strong>
                                                     {profile.userId.name}

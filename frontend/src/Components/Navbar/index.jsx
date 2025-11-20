@@ -1,10 +1,12 @@
+// frontend/src/Components/Navbar/index.jsx
+
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./styles.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { reset } from "@/config/redux/reducer/authReducer";
-// import { BASE_URL } from "@/config"; // <-- No longer needed here
-import { motion, AnimatePresence } from "framer-motion"; // Import AnimatePresence
+import { motion, AnimatePresence } from "framer-motion";
+import { useSocket } from "@/context/SocketContext"; // <--- IMPORT THIS
 
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (
@@ -52,8 +54,6 @@ const DiscoverIcon = ({ isActive }) => (
         />
     </svg>
 );
-
-// --- NEW MEET ICON ---
 const MeetIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -69,7 +69,6 @@ const MeetIcon = ({ isActive }) => (
         />
     </svg>
 );
-// --- END NEW MEET ICON ---
 const MessagingIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -85,7 +84,6 @@ const MessagingIcon = ({ isActive }) => (
         />
     </svg>
 );
-
 const LogoIcon = () => (
     <img
         src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/A3Q7xGO4EOc9ZVJo/chatgpt-image-aug-11-2025-10_04_14-pm-YleQ8RV01OtW9GKv.png"
@@ -94,12 +92,10 @@ const LogoIcon = () => (
             width: "32px",
             height: "32px",
             objectFit: "cover",
-            borderRadius: "6px", // make it clean & professional
+            borderRadius: "6px",
         }}
     />
 );
-
-// --- NEW Hamburger Menu Icon ---
 const MenuIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -116,14 +112,15 @@ const MenuIcon = () => (
         />
     </svg>
 );
-// --- End Icons ---
 
 function NavbarComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
+    const { socket, onlineStatuses } = useSocket() || {}; // Get online statuses
+
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // <-- NEW STATE
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
@@ -146,21 +143,34 @@ function NavbarComponent() {
     }, [dropdownRef]);
 
     const handleLogout = () => {
+        // --- KEY CHANGE: INSTANT OFFLINE ---
+        if (socket) {
+            console.log("Logging out: Disconnecting socket...");
+            socket.disconnect();
+        }
+        // -----------------------------------
+
         localStorage.removeItem("token");
         dispatch(reset());
         setDropdownOpen(false);
-        setIsMobileMenuOpen(false); // Close mobile menu on logout
+        setIsMobileMenuOpen(false);
         router.push("/login");
     };
 
     const handleNavigation = (path) => {
         router.push(path);
         setDropdownOpen(false);
-        setIsMobileMenuOpen(false); // Close mobile menu on nav
+        setIsMobileMenuOpen(false);
     };
 
     const userName = authState.user?.userId?.name;
     const userFallback = userName ? userName.charAt(0).toUpperCase() : "?";
+    const myId = authState.user?.userId?._id;
+    const isMyOnline = myId
+        ? (onlineStatuses && onlineStatuses[myId]?.isOnline) ??
+          authState.user?.userId?.isOnline ??
+          true
+        : false;
 
     const navVariants = {
         hidden: { y: -50, opacity: 0 },
@@ -175,12 +185,7 @@ function NavbarComponent() {
             },
         },
     };
-
-    const itemHover = {
-        hover: { scale: 1.1, y: -2 },
-        tap: { scale: 0.95 },
-    };
-
+    const itemHover = { hover: { scale: 1.1, y: -2 }, tap: { scale: 0.95 } };
     const mobileMenuVariants = {
         hidden: { opacity: 0, height: 0 },
         visible: {
@@ -195,10 +200,8 @@ function NavbarComponent() {
         },
     };
 
-    // This is a helper function to avoid duplicating the main nav bar code
     const renderNavContent = () => (
         <div className={styles.navbar}>
-            {/* --- Left Side (Logo) --- */}
             <div className={styles.navLeft}>
                 <div
                     className={styles.logo}
@@ -207,8 +210,6 @@ function NavbarComponent() {
                     <LogoIcon />
                 </div>
             </div>
-
-            {/* --- Center (Desktop Links) --- */}
             <div className={styles.navCenter}>
                 <motion.div
                     className={`${styles.navLink} ${
@@ -250,8 +251,6 @@ function NavbarComponent() {
                     <DiscoverIcon isActive={router.pathname === "/discover"} />
                     <span>Discover</span>
                 </motion.div>
-
-                {/* --- NEW MEET LINK --- */}
                 <motion.div
                     className={`${styles.navLink} ${
                         router.pathname === "/meet" ? styles.active : ""
@@ -278,7 +277,6 @@ function NavbarComponent() {
                     />
                     <span>Messaging</span>
                 </motion.div>
-                {/* --- END NEW MEET LINK --- */}
             </div>
             <div className={styles.navRight}>
                 {authState.profileFetched && authState.user ? (
@@ -290,19 +288,26 @@ function NavbarComponent() {
                             whileHover="hover"
                             whileTap="tap"
                         >
-                            {authState.user.userId.profilePicture ? (
-                                <img
-                                    src={authState.user.userId.profilePicture}
-                                    alt="Profile"
-                                    className={styles.profilePic}
-                                />
-                            ) : (
-                                <div
-                                    className={`${styles.profilePic} ${styles.profileFallback}`}
-                                >
-                                    {userFallback}
-                                </div>
-                            )}
+                            <div className={styles.avatarContainer}>
+                                {authState.user.userId.profilePicture ? (
+                                    <img
+                                        src={
+                                            authState.user.userId.profilePicture
+                                        }
+                                        alt="Profile"
+                                        className={styles.profilePic}
+                                    />
+                                ) : (
+                                    <div
+                                        className={`${styles.profilePic} ${styles.profileFallback}`}
+                                    >
+                                        {userFallback}
+                                    </div>
+                                )}
+                                {isMyOnline && (
+                                    <span className={styles.onlineDot}></span>
+                                )}
+                            </div>
                             <span>Me</span>
                         </motion.button>
                         {dropdownOpen && (
@@ -313,7 +318,6 @@ function NavbarComponent() {
                                 transition={{ duration: 0.2 }}
                             >
                                 <div className={styles.dropdownHeader}>
-                                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
                                     <img
                                         src={
                                             authState.user.userId.profilePicture
@@ -321,7 +325,6 @@ function NavbarComponent() {
                                         alt="Profile"
                                         className={styles.profilePicLarge}
                                     />
-                                    {/* --- END FIX --- */}
                                     <div>
                                         <strong>
                                             {authState.user.userId.name}
@@ -363,12 +366,9 @@ function NavbarComponent() {
         </div>
     );
 
-    // --- RENDER A STATIC VERSION ON SERVER (prevents hydration error) ---
-    if (!hasMounted) {
+    if (!hasMounted)
         return <nav className={styles.container}>{renderNavContent()}</nav>;
-    }
 
-    // --- RENDER THE *MOTION* VERSION ONCE MOUNTED (client-side) ---
     return (
         <motion.nav
             className={styles.container}
@@ -377,8 +377,6 @@ function NavbarComponent() {
             animate="visible"
         >
             {renderNavContent()}
-
-            {/* --- NEW Mobile Menu Dropdown --- */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
@@ -418,8 +416,6 @@ function NavbarComponent() {
                         >
                             Discover
                         </a>
-
-                        {/* --- NEW MEET LINK (MOBILE) --- */}
                         <a
                             className={
                                 router.pathname === "/meet"
@@ -430,7 +426,6 @@ function NavbarComponent() {
                         >
                             Meet
                         </a>
-                        {/* --- END NEW MEET LINK (MOBILE) --- */}
                         <a
                             className={
                                 router.pathname === "/messaging"
@@ -441,9 +436,7 @@ function NavbarComponent() {
                         >
                             Messaging
                         </a>
-
                         <div className={styles.mobileDivider}></div>
-
                         {authState.profileFetched && authState.user ? (
                             <>
                                 <a

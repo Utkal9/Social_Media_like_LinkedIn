@@ -154,12 +154,30 @@
     font-weight: 500;
     margin-top: -2px;
 }
+.avatarContainer {
+    position: relative;
+    display: inline-block;
+}
+
+.onlineDot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: #057642;
+    border: 2px solid white;
+    border-radius: 50%;
+    box-sizing: border-box;
+    z-index: 2;
+}
 .profilePic {
     width: 28px;
     height: 28px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid #ccc;
+    display: block;
 }
 .profileFallback {
     display: flex;

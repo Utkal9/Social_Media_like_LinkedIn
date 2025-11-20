@@ -6,12 +6,32 @@ import clientServer from "@/config";
 import { useSelector } from "react-redux";
 import { useSocket } from "@/context/SocketContext";
 import styles from "./index.module.css";
-import { useRouter } from "next/router"; // Import router
+import { useRouter } from "next/router";
+
+// --- UPDATED HELPER ---
+function getTimeAgo(dateString) {
+    if (!dateString) return "Offline";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
+
+    // Precise seconds logic
+    if (diffInSeconds < 60) {
+        return `${diffInSeconds} second${diffInSeconds !== 1 ? "s" : ""} ago`;
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    return `${Math.floor(diffInHours / 24)}d ago`;
+}
+// ----------------------
 
 function MessagingPage() {
-    const router = useRouter(); // Get router
+    const router = useRouter();
     const auth = useSelector((state) => state.auth);
-    const socket = useSocket();
+    const { socket, onlineStatuses, setOnlineStatuses } = useSocket() || {};
 
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
@@ -19,35 +39,47 @@ function MessagingPage() {
     const [inputText, setInputText] = useState("");
     const messagesEndRef = useRef(null);
 
-    // 1. Fetch Sidebar Conversations
-    useEffect(() => {
-        const fetchConversations = async () => {
-            if (auth.isTokenThere) {
+    const fetchConversations = async () => {
+        if (auth.isTokenThere) {
+            try {
                 const res = await clientServer.get("/messages/conversations", {
                     params: { token: localStorage.getItem("token") },
                 });
                 setConversations(res.data);
+
+                const initialStatuses = {};
+                res.data.forEach((user) => {
+                    initialStatuses[user._id] = {
+                        isOnline: user.isOnline,
+                        lastSeen: user.lastSeen,
+                    };
+                });
+                if (setOnlineStatuses) {
+                    setOnlineStatuses((prev) => ({
+                        ...initialStatuses,
+                        ...prev,
+                    }));
+                }
+            } catch (err) {
+                console.error("Error fetching conversations:", err);
             }
-        };
+        }
+    };
+
+    useEffect(() => {
         fetchConversations();
     }, [auth.isTokenThere]);
 
-    // --- NEW: Handle URL Query for "Start Chat" ---
-    // If url is /messaging?chatWith=username, load that user
     useEffect(() => {
         if (!router.isReady || !auth.isTokenThere) return;
-
-        const { chatWith } = router.query; // Expecting username
-
+        const { chatWith } = router.query;
         if (chatWith) {
-            // 1. Check if we already have a conversation with them
             const existingChat = conversations.find(
                 (c) => c.username === chatWith
             );
             if (existingChat) {
                 setActiveChat(existingChat);
             } else {
-                // 2. If not, fetch their details manually
                 const fetchTargetUser = async () => {
                     try {
                         const res = await clientServer.get(
@@ -56,54 +88,49 @@ function MessagingPage() {
                                 params: { username: chatWith },
                             }
                         );
-                        // The API returns { profile: { ... userId: { name, username ... } } }
-                        // We need to flatten it to match the conversation object structure
                         const targetUser = res.data.profile.userId;
-
-                        // Add to conversation list temporarily (UI only)
                         setConversations((prev) => {
-                            // Prevent duplicates if effect runs twice
                             if (prev.find((c) => c._id === targetUser._id))
                                 return prev;
                             return [targetUser, ...prev];
                         });
                         setActiveChat(targetUser);
                     } catch (err) {
-                        console.error(
-                            "Could not fetch user to chat with:",
-                            err
-                        );
+                        console.error("Could not fetch user:", err);
                     }
                 };
                 fetchTargetUser();
             }
         }
-    }, [router.isReady, router.query, conversations, auth.isTokenThere]);
-    // ---------------------------------------------
+    }, [router.isReady, router.query, auth.isTokenThere]);
 
-    // 2. Fetch Messages when activeChat changes
     useEffect(() => {
         if (!activeChat) return;
         const fetchMessages = async () => {
-            const res = await clientServer.get("/messages/get", {
-                params: {
-                    token: localStorage.getItem("token"),
-                    otherUserId: activeChat._id,
-                },
-            });
-            setMessages(res.data);
-            scrollToBottom();
+            try {
+                const res = await clientServer.get("/messages/get", {
+                    params: {
+                        token: localStorage.getItem("token"),
+                        otherUserId: activeChat._id,
+                    },
+                });
+                setMessages(res.data);
+                scrollToBottom();
+            } catch (err) {
+                console.error(err);
+            }
         };
         fetchMessages();
     }, [activeChat]);
 
-    // 3. Listen for Incoming Messages
     useEffect(() => {
         if (!socket) return;
         const handleReceiveMessage = (data) => {
             if (activeChat && data.sender === activeChat._id) {
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
+            } else {
+                fetchConversations();
             }
         };
         socket.on("receive-chat-message", handleReceiveMessage);
@@ -120,8 +147,8 @@ function MessagingPage() {
 
     const handleSendMessage = async () => {
         if (!inputText.trim() || !activeChat) return;
-
-        const myId = auth.user.userId._id;
+        const myId = auth.user?.userId?._id;
+        if (!myId) return;
 
         const newMsg = {
             sender: myId,
@@ -129,87 +156,140 @@ function MessagingPage() {
             message: inputText,
             createdAt: new Date().toISOString(),
         };
+
         setMessages((prev) => [...prev, newMsg]);
         setInputText("");
         scrollToBottom();
 
-        await clientServer.post("/messages/send", {
-            token: localStorage.getItem("token"),
-            toUserId: activeChat._id,
-            message: newMsg.message,
-        });
-
-        socket.emit("send-chat-message", {
-            senderId: myId,
-            receiverId: activeChat._id,
-            message: newMsg.message,
-        });
+        try {
+            await clientServer.post("/messages/send", {
+                token: localStorage.getItem("token"),
+                toUserId: activeChat._id,
+                message: newMsg.message,
+            });
+            if (socket) {
+                socket.emit("send-chat-message", {
+                    senderId: myId,
+                    receiverId: activeChat._id,
+                    message: newMsg.message,
+                });
+            }
+        } catch (err) {
+            console.error("Failed to send message", err);
+        }
     };
 
     return (
         <div className={styles.container}>
-            {/* Sidebar */}
             <div className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
                     <h3>Messaging</h3>
-                    <input
-                        type="text"
-                        placeholder="Search messages"
-                        className={styles.searchBar}
-                    />
                 </div>
                 <div className={styles.conversationList}>
-                    {conversations.map((user) => (
-                        <div
-                            key={user._id}
-                            className={`${styles.conversationItem} ${
-                                activeChat?._id === user._id
-                                    ? styles.active
-                                    : ""
-                            }`}
-                            onClick={() => {
-                                setActiveChat(user);
-                                // Optional: Clear URL query to keep it clean
-                                // router.push("/messaging", undefined, { shallow: true });
-                            }}
-                        >
-                            <img
-                                src={user.profilePicture}
-                                alt=""
-                                className={styles.avatar}
-                            />
-                            <div className={styles.info}>
-                                <h4>{user.name}</h4>
-                                <p>@{user.username}</p>
+                    {conversations.map((user) => {
+                        const statusData =
+                            onlineStatuses && onlineStatuses[user._id]
+                                ? onlineStatuses[user._id]
+                                : {
+                                      isOnline: user.isOnline,
+                                      lastSeen: user.lastSeen,
+                                  };
+                        const isOnline = statusData.isOnline;
+
+                        return (
+                            <div
+                                key={user._id}
+                                className={`${styles.conversationItem} ${
+                                    activeChat?._id === user._id
+                                        ? styles.active
+                                        : ""
+                                }`}
+                                onClick={() => setActiveChat(user)}
+                            >
+                                <div className={styles.avatarContainer}>
+                                    <img
+                                        src={user.profilePicture}
+                                        alt=""
+                                        className={styles.avatar}
+                                    />
+                                    {isOnline && (
+                                        <span
+                                            className={styles.onlineDot}
+                                        ></span>
+                                    )}
+                                </div>
+                                <div className={styles.info}>
+                                    <h4>{user.name}</h4>
+                                    {isOnline ? (
+                                        <p
+                                            className={`${styles.statusText} ${styles.online}`}
+                                        >
+                                            Available
+                                        </p>
+                                    ) : (
+                                        <p className={styles.statusText}>
+                                            {statusData.lastSeen
+                                                ? getTimeAgo(
+                                                      statusData.lastSeen
+                                                  )
+                                                : "Offline"}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
-
-            {/* Chat Area */}
             <div className={styles.chatArea}>
                 {activeChat ? (
                     <>
                         <div className={styles.chatHeader}>
                             <div className={styles.chatHeaderInfo}>
-                                <h3
-                                    onClick={() =>
-                                        router.push(
-                                            `/view_profile/${activeChat.username}`
-                                        )
-                                    }
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    {activeChat.name}
-                                </h3>
-                                <span>@{activeChat.username}</span>
+                                <div>
+                                    <h3
+                                        onClick={() =>
+                                            router.push(
+                                                `/view_profile/${activeChat.username}`
+                                            )
+                                        }
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        {activeChat.name}
+                                    </h3>
+                                    {onlineStatuses &&
+                                    onlineStatuses[activeChat._id]?.isOnline ? (
+                                        <span
+                                            style={{
+                                                fontSize: "0.8rem",
+                                                color: "#057642",
+                                            }}
+                                        >
+                                            Active now
+                                        </span>
+                                    ) : (
+                                        <span
+                                            style={{
+                                                fontSize: "0.8rem",
+                                                color: "#666",
+                                            }}
+                                        >
+                                            Last seen{" "}
+                                            {getTimeAgo(
+                                                onlineStatuses &&
+                                                    onlineStatuses[
+                                                        activeChat._id
+                                                    ]?.lastSeen
+                                            )}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         <div className={styles.messagesList}>
                             {messages.map((msg, index) => {
                                 const isMe =
-                                    msg.sender === auth.user.userId._id;
+                                    msg.sender === auth.user?.userId?._id;
                                 return (
                                     <div
                                         key={index}
@@ -236,7 +316,7 @@ function MessagingPage() {
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
                                 placeholder="Write a message..."
-                                onKeyPress={(e) =>
+                                onKeyDown={(e) =>
                                     e.key === "Enter" &&
                                     !e.shiftKey &&
                                     handleSendMessage()

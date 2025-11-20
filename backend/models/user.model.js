@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+
 const UserSchema = mongoose.Schema({
     name: {
         type: String,
@@ -27,6 +28,16 @@ const UserSchema = mongoose.Schema({
         default:
             "https://res.cloudinary.com/dx28uxwrg/image/upload/v1762799986/default_dlizpg.jpg",
     },
+    // --- NEW FIELDS ---
+    isOnline: {
+        type: Boolean,
+        default: false,
+    },
+    lastSeen: {
+        type: Date,
+        default: Date.now,
+    },
+    // ------------------
     createdAt: {
         type: Date,
         default: Date.now,

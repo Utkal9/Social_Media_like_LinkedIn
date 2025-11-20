@@ -11,14 +11,15 @@ import UserLayout from "@/layout/UserLayout";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
+import { useSocket } from "@/context/SocketContext";
 
 export default function Discoverpage() {
     const authState = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const router = useRouter();
+    const { onlineStatuses } = useSocket() || {};
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -40,24 +41,20 @@ export default function Discoverpage() {
         );
     };
 
-    // --- THIS FUNCTION IS NOW FIXED ---
     const getConnectStatus = (targetUserId) => {
-        // 1. Are we already connected?
-        // Check if I received a request and accepted it
+        // 1. Connected?
         const connectedReceived = authState.connectionRequest.find(
             (req) =>
                 req.userId._id === targetUserId && req.status_accepted === true
         );
-        // Check if I sent a request and it was accepted
         const connectedSent = authState.connections.find(
             (req) =>
                 req.connectionId._id === targetUserId &&
                 req.status_accepted === true
         );
-
         if (connectedReceived || connectedSent) return "Connected";
 
-        // 2. Did WE send a request that is pending?
+        // 2. Pending (Sent by me)?
         const isPending = authState.connections.find(
             (req) =>
                 req.connectionId._id === targetUserId &&
@@ -65,35 +62,34 @@ export default function Discoverpage() {
         );
         if (isPending) return "Pending";
 
-        // 3. Did THEY send us a request that is pending?
+        // 3. Pending (Received from them)?
         const hasRequested = authState.connectionRequest.find(
             (req) =>
                 req.userId._id === targetUserId && req.status_accepted === null
         );
-        if (hasRequested) return "Accept"; // Offer to accept if they sent it
+        if (hasRequested) return "Accept";
 
-        // 4. No connection status
         return "Connect";
     };
-    // --- END OF FIX ---
 
-    const gridVariants = {
+    const isUserOnline = (uid, defaultStatus) => {
+        return onlineStatuses && onlineStatuses[uid]
+            ? onlineStatuses[uid].isOnline
+            : defaultStatus;
+    };
+
+    // Animation variants
+    const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
-            transition: {
-                staggerChildren: 0.08, // Slightly slower stagger for effect
-            },
+            transition: { staggerChildren: 0.05 },
         },
     };
 
-    const cardVariants = {
-        hidden: { opacity: 0, y: 30 }, // Start further down
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { type: "spring", stiffness: 100, damping: 10 },
-        }, // Spring for bouncier animation
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
     };
 
     const filteredUsers = authState.all_profiles_fetched
@@ -106,99 +102,109 @@ export default function Discoverpage() {
 
     return (
         <div className={styles.discoverPageWrapper}>
-            <h2 className={styles.discoverTitle}>People You May Know</h2>
+            <div className={styles.headerContainer}>
+                <h2 className={styles.discoverTitle}>People You May Know</h2>
+                <p className={styles.discoverSubtitle}>
+                    Expand your professional network
+                </p>
+            </div>
 
             <motion.div
                 className={styles.discoverGrid}
-                variants={gridVariants}
+                variants={containerVariants}
                 initial="hidden"
                 animate="visible"
             >
                 {filteredUsers.length === 0 && (
-                    <p className={styles.noUsersMessage}>
-                        No users to discover right now.
-                    </p>
+                    <div className={styles.noUsersMessage}>
+                        <p>No new profiles to discover right now.</p>
+                        <button onClick={() => dispatch(getAllUsers())}>
+                            Refresh List
+                        </button>
+                    </div>
                 )}
-                {filteredUsers.map((user, index) => {
+
+                {filteredUsers.map((user) => {
                     const connectStatus = getConnectStatus(user.userId._id);
-                    const isFirstCard = index === 0; // Identify the first card for "hero" styling
 
                     return (
                         <motion.div
                             key={user._id}
-                            className={`${styles.userCard} ${
-                                isFirstCard ? styles.userCard_large : ""
-                            }`} // Apply large class to first card
-                            variants={cardVariants}
-                            whileHover={{
-                                scale: 1.05, // Slightly more scale
-                                rotateY: 5, // Subtle 3D tilt
-                                boxShadow: "0 15px 30px rgba(0, 0, 0, 0.2)", // More pronounced shadow
-                                transition: {
-                                    type: "spring",
-                                    stiffness: 200,
-                                    damping: 10,
-                                },
-                            }}
-                            whileTap={{ scale: 0.98 }} // Visual feedback on tap
+                            className={styles.userCard}
+                            variants={itemVariants}
+                            whileHover={{ y: -4 }} // Subtle lift
                         >
-                            <div className={styles.cardHeaderBackground}>
-                                {/* NEW BACKGROUND ELEMENT */}
-                                {/* You can put a pattern SVG here, or just use CSS gradient */}
-                            </div>
-                            {/* --- FIX: Removed ${BASE_URL}/ --- */}
-                            <img
-                                className={styles.userProfileImage}
-                                src={user.userId.profilePicture}
-                                alt={`${user.userId.name}'s profile`}
-                                onClick={() => {
+                            {/* Banner Background */}
+                            <div className={styles.cardHeaderBackground}></div>
+
+                            {/* Avatar with Online Dot */}
+                            <div
+                                className={styles.avatarWrapper}
+                                onClick={() =>
                                     router.push(
                                         `/view_profile/${user.userId.username}`
-                                    );
-                                }}
-                            />
-                            {/* --- END FIX --- */}
+                                    )
+                                }
+                            >
+                                <img
+                                    className={styles.userProfileImage}
+                                    src={user.userId.profilePicture}
+                                    alt={user.userId.name}
+                                />
+                                {isUserOnline(
+                                    user.userId._id,
+                                    user.userId.isOnline
+                                ) && <span className={styles.onlineDot}></span>}
+                            </div>
+
+                            {/* User Info */}
                             <div className={styles.userInfoContent}>
-                                {" "}
-                                {/* NEW WRAPPER FOR TEXT */}
                                 <h3
-                                    onClick={() => {
+                                    onClick={() =>
                                         router.push(
                                             `/view_profile/${user.userId.username}`
-                                        );
-                                    }}
+                                        )
+                                    }
                                 >
                                     {user.userId.name}
                                 </h3>
                                 <p className={styles.usernameText}>
                                     @{user.userId.username}
                                 </p>
-                                {/* Display current post/bio for context */}
-                                {user.currentPost && (
-                                    <p className={styles.userBioSnippet}>
-                                        {user.currentPost}
-                                    </p>
-                                )}
-                                {user.bio && !user.currentPost && (
-                                    <p className={styles.userBioSnippet}>
-                                        {user.bio.substring(0, 70)}...
-                                    </p>
-                                )}{" "}
-                                {/* Short snippet */}
+
+                                {/* Bio / Headline */}
+                                <div className={styles.bioContainer}>
+                                    {user.currentPost ? (
+                                        <p>{user.currentPost}</p>
+                                    ) : user.bio ? (
+                                        <p>
+                                            {user.bio.length > 60
+                                                ? user.bio.substring(0, 60) +
+                                                  "..."
+                                                : user.bio}
+                                        </p>
+                                    ) : (
+                                        <p className={styles.placeholderBio}>
+                                            No bio available
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Connect Button */}
                                 <button
                                     onClick={() =>
                                         handleConnect(user.userId._id)
                                     }
-                                    className={`${styles.connectActionButton} ${
+                                    className={`${styles.connectBtn} ${
                                         styles[connectStatus.toLowerCase()]
-                                    }`} // Dynamic class for styling
+                                    }`}
                                     disabled={
                                         connectStatus !== "Connect" &&
                                         connectStatus !== "Accept"
                                     }
                                 >
                                     {connectStatus === "Accept"
-                                        ? "Accept Request"
+                                        ? "Accept"
                                         : connectStatus}
                                 </button>
                             </div>

@@ -63,9 +63,10 @@ export const getConversations = async (req, res) => {
             ]),
         ];
 
+        // --- UPDATED: Include isOnline and lastSeen ---
         const contacts = await User.find({
             _id: { $in: allContactIds },
-        }).select("name username profilePicture");
+        }).select("name username profilePicture isOnline lastSeen");
 
         res.json(contacts);
     } catch (error) {

@@ -231,7 +231,10 @@ export const getUserAndProfile = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
         const profile = await Profile.findOne({
             userId: user._id,
-        }).populate("userId", "name email username profilePicture");
+        }).populate(
+            "userId",
+            "name email username profilePicture isOnline lastSeen"
+        );
         if (!profile) {
             return res.status(404).json({ message: "Profile not found" });
         }
@@ -262,7 +265,7 @@ export const getAllUserProfile = async (req, res) => {
     try {
         const profiles = await Profile.find().populate(
             "userId",
-            "name username email profilePicture"
+            "name username email profilePicture isOnline lastSeen"
         );
         return res.json({ profiles });
     } catch (error) {
@@ -411,7 +414,10 @@ export const getMyConnectionsRequests = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
         const connections = await ConnectionRequest.find({
             userId: user._id,
-        }).populate("connectionId", "name username email profilePicture");
+        }).populate(
+            "connectionId",
+            "name username email profilePicture isOnline lastSeen"
+        );
         return res.json({ connections });
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -425,7 +431,10 @@ export const whatAreMyConnections = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
         const connections = await ConnectionRequest.find({
             connectionId: user._id,
-        }).populate("userId", "name username email profilePicture");
+        }).populate(
+            "userId",
+            "name username email profilePicture isOnline lastSeen"
+        );
         return res.json(connections);
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -490,7 +499,10 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
         if (!user) return res.status(404).json({ message: "User not found" });
         const userProfile = await Profile.findOne({
             userId: user._id,
-        }).populate("userId", "name email username profilePicture");
+        }).populate(
+            "userId",
+            "name email username profilePicture isOnline lastSeen"
+        );
         if (!userProfile) {
             return res.status(404).json({ message: "Profile not found" });
         }

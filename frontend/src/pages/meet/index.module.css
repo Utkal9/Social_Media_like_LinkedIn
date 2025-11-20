@@ -1,0 +1,189 @@
+/* --- Layout --- */
+.meetContainer {
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    min-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Changed from center to avoid cutoff on small screens */
+    padding: 3rem 1rem;
+    overflow: hidden;
+}
+
+.contentWrapper {
+    display: flex;
+    width: 100%;
+    justify-content: center; /* Center the single column */
+}
+
+/* --- Action Section --- */
+.actionSection {
+    width: 100%;
+    max-width: 480px; /* Slightly narrower for better focus */
+    text-align: center;
+}
+
+.header {
+    margin-bottom: 2.5rem;
+}
+
+.header h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    color: #0a66c2;
+    margin-bottom: 0.75rem;
+}
+
+.header p {
+    font-size: 1rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* --- Cards --- */
+.cardContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.actionCard {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: left; /* Keep card content left-aligned */
+}
+
+.actionCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    background: #fff;
+}
+
+.cardText {
+    margin-bottom: 1.25rem;
+}
+
+.cardText h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #191919;
+    margin-bottom: 0.25rem;
+}
+
+.cardText p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* --- Icons --- */
+.iconWrapperPrimary,
+.iconWrapperSecondary {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.iconWrapperPrimary {
+    background-color: #e7f3ff;
+    color: #0a66c2;
+}
+
+.iconWrapperSecondary {
+    background-color: #f3f3f3;
+    color: #5e5e5e;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+}
+
+/* --- Buttons --- */
+.primaryButton {
+    width: 100%;
+    padding: 0.85rem;
+    background-color: #0a66c2;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+    background-color: #004182;
+}
+
+/* --- Input Group --- */
+.inputGroup {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.inputGroup input {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border: 1px solid #999;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.inputGroup input:focus {
+    border-color: #0a66c2;
+    box-shadow: 0 0 0 1px #0a66c2;
+}
+
+.secondaryButton {
+    padding: 0 1.5rem;
+    background-color: transparent;
+    color: #0a66c2;
+    border: 1px solid #0a66c2;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondaryButton:hover:not(:disabled) {
+    background-color: #e7f3ff;
+    border-color: #004182;
+    color: #004182;
+}
+
+.secondaryButton:disabled {
+    border-color: #ccc;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* --- Divider --- */
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    height: 1px;
+    background: #e0e0e0;
+    flex: 1;
+    margin: 0 1rem;
+}

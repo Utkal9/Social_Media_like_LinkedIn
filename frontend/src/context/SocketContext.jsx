@@ -69,6 +69,7 @@ const IncomingCallHandler = ({ socket }) => {
 
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
+    const [onlineStatuses, setOnlineStatuses] = useState({});
     const auth = useSelector((state) => state.auth);
     const socketInstance = useRef(null);
 
@@ -102,6 +103,12 @@ export const SocketProvider = ({ children }) => {
                 newSocket.emit("register-user", auth.user.userId._id);
             }
         });
+        newSocket.on("user-status-change", ({ userId, isOnline, lastSeen }) => {
+            setOnlineStatuses((prev) => ({
+                ...prev,
+                [userId]: { isOnline, lastSeen },
+            }));
+        });
 
         return () => {
             newSocket.disconnect();
@@ -116,12 +123,18 @@ export const SocketProvider = ({ children }) => {
             console.log(
                 `[RECEIVER] User logged in, emitting 'register-user' for ${auth.user.userId._id}`
             );
+            if (!socket.connected) {
+                console.log("[SOCKET] Reconnecting socket...");
+                socket.connect();
+            }
             socket.emit("register-user", auth.user.userId._id);
         }
     }, [socket, auth.user]); // Re-run when user or socket changes
 
     return (
-        <SocketContext.Provider value={socket}>
+        <SocketContext.Provider
+            value={{ socket, onlineStatuses, setOnlineStatuses }}
+        >
             <IncomingCallHandler socket={socket} />
             {children}
         </SocketContext.Provider>
