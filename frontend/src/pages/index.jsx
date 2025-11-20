@@ -1,18 +1,15 @@
-// frontend/src/pages/index.jsx
-
 import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
 import { useRouter } from "next/router";
-import UserLayout from "@/layout/UserLayout"; // Keep the import
+import UserLayout from "@/layout/UserLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
     const router = useRouter();
     return (
-        // <UserLayout> <-- REMOVED
         <div className={styles.container}>
             <Head>
                 <title>Pro Connect - Home</title>
@@ -31,17 +28,13 @@ export default function Home() {
                     </div>
                 </div>
                 <div className={styles.mainContainer__right}>
-                    {/* --- FIX: Static images in /public need a leading / --- */}
                     <img src="/images/homemain_connection.jpg" alt="" />
-                    {/* --- END FIX --- */}
                 </div>
             </div>
         </div>
-        // </UserLayout> <-- REMOVED
     );
 }
 
-// ADDED THIS:
 Home.getLayout = function getLayout(page) {
     return <UserLayout>{page}</UserLayout>;
 };

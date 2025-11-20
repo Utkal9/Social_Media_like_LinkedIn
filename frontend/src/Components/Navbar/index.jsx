@@ -1,12 +1,10 @@
-// frontend/src/Components/Navbar/index.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./styles.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { reset } from "@/config/redux/reducer/authReducer";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSocket } from "@/context/SocketContext"; // <--- IMPORT THIS
+import { useSocket } from "@/context/SocketContext";
 
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (
@@ -117,7 +115,7 @@ function NavbarComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
-    const { socket, onlineStatuses } = useSocket() || {}; // Get online statuses
+    const { socket, onlineStatuses } = useSocket() || {};
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -143,13 +141,9 @@ function NavbarComponent() {
     }, [dropdownRef]);
 
     const handleLogout = () => {
-        // --- KEY CHANGE: INSTANT OFFLINE ---
         if (socket) {
-            console.log("Logging out: Disconnecting socket...");
             socket.disconnect();
         }
-        // -----------------------------------
-
         localStorage.removeItem("token");
         dispatch(reset());
         setDropdownOpen(false);

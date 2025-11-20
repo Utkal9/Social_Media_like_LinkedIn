@@ -1,4 +1,3 @@
-// frontend/src/pages/messaging/index.jsx
 import React, { useEffect, useState, useRef } from "react";
 import UserLayout from "@/layout/UserLayout";
 import DashboardLayout from "@/layout/DashboardLayout";
@@ -7,6 +6,9 @@ import { useSelector } from "react-redux";
 import { useSocket } from "@/context/SocketContext";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
+
+const VIDEO_CALL_URL =
+    process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
 
 // --- ICONS ---
 const SearchIcon = () => (
@@ -122,7 +124,7 @@ function MessagingPage() {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [showMenu, setShowMenu] = useState(false); // For 3-dots menu
+    const [showMenu, setShowMenu] = useState(false);
     const messagesEndRef = useRef(null);
 
     const fetchConversations = async () => {
@@ -133,7 +135,6 @@ function MessagingPage() {
                 });
                 setConversations(res.data);
 
-                // Update online statuses based on fetched data
                 const initialStatuses = {};
                 res.data.forEach((user) => {
                     initialStatuses[user._id] = {
@@ -157,7 +158,6 @@ function MessagingPage() {
         fetchConversations();
     }, [auth.isTokenThere]);
 
-    // Handle direct link to chat
     useEffect(() => {
         if (!router.isReady || !auth.isTokenThere) return;
         const { chatWith } = router.query;
@@ -265,9 +265,26 @@ function MessagingPage() {
         }
     };
 
-    // --- NEW FUNCTIONALITY HANDLERS ---
+    const handleStartVideoCall = () => {
+        if (!activeChat || !auth.user?.userId || !socket) return;
+
+        const roomId = [auth.user.userId._id, activeChat._id].sort().join("-");
+        const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
+        const returnUrl = `${window.location.origin}/dashboard`;
+        const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
+            returnUrl
+        )}`;
+
+        socket.emit("start-call", {
+            fromUser: auth.user.userId,
+            toUserId: activeChat._id,
+            roomUrl: roomUrlWithRedirect,
+        });
+
+        window.open(roomUrlWithRedirect, "_blank");
+    };
+
     const handleCreateNewMessage = () => {
-        // Redirect to My Connections to start a new chat with a connection
         router.push("/my_connections");
     };
 
@@ -280,7 +297,6 @@ function MessagingPage() {
         setShowMenu(false);
     };
 
-    // Filter users based on search query
     const filteredConversations = conversations.filter(
         (user) =>
             user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,7 +305,6 @@ function MessagingPage() {
 
     return (
         <div className={styles.container}>
-            {/* Sidebar */}
             <div className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
                     <div className={styles.headerTop}>
@@ -301,7 +316,6 @@ function MessagingPage() {
                                 position: "relative",
                             }}
                         >
-                            {/* Edit Icon: Create New Message */}
                             <button
                                 className={styles.iconBtn}
                                 onClick={handleCreateNewMessage}
@@ -310,7 +324,6 @@ function MessagingPage() {
                                 <EditIcon />
                             </button>
 
-                            {/* More Icon: Dropdown Menu */}
                             <button
                                 className={styles.iconBtn}
                                 onClick={() => setShowMenu(!showMenu)}
@@ -319,7 +332,6 @@ function MessagingPage() {
                                 <MoreIcon />
                             </button>
 
-                            {/* Dropdown Menu */}
                             {showMenu && (
                                 <div className={styles.dropdownMenu}>
                                     <div
@@ -414,7 +426,6 @@ function MessagingPage() {
                 </div>
             </div>
 
-            {/* Chat Area */}
             <div className={styles.chatArea}>
                 {activeChat ? (
                     <>
@@ -468,18 +479,10 @@ function MessagingPage() {
                                 </div>
                             </div>
                             <div className={styles.headerActions}>
-                                {/* Video Call Button */}
                                 <button
                                     className={styles.iconBtn}
                                     title="Video Call"
-                                    onClick={() => {
-                                        // Just redirect to My Connections where calls are initiated, or start a call directly if you have the logic here
-                                        // For consistency with your My Connections logic:
-                                        alert(
-                                            "Please go to 'My Network' to start a video call with this user."
-                                        );
-                                        router.push("/my_connections");
-                                    }}
+                                    onClick={handleStartVideoCall}
                                 >
                                     <VideoIcon />
                                 </button>

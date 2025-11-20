@@ -9,7 +9,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import User from "./models/user.model.js"; // Import User Model
+import User from "./models/user.model.js";
 
 dotenv.config();
 
@@ -38,22 +38,15 @@ app.use(postRoutes);
 app.use(userRoutes);
 app.use(messagingRoutes);
 
-// --- SOCKET.IO LOGIC ---
 const userSocketMap = new Map();
 
 io.on("connection", (socket) => {
-    console.log(`[SERVER] Socket connected: ${socket.id}`);
-
     socket.on("register-user", async (userId) => {
         if (userId) {
             userSocketMap.set(userId, socket.id);
-
-            // 1. Update DB to Online
             try {
                 await User.findByIdAndUpdate(userId, { isOnline: true });
-                // 2. Broadcast to everyone that this user is Online
                 io.emit("user-status-change", { userId, isOnline: true });
-                console.log(`[SERVER] User Online: ${userId}`);
             } catch (error) {
                 console.error("Error updating online status:", error);
             }
@@ -79,27 +72,21 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", async () => {
-        console.log(`[SERVER] Socket disconnected: ${socket.id}`);
         for (let [userId, socketId] of userSocketMap.entries()) {
             if (socketId === socket.id) {
                 userSocketMap.delete(userId);
 
                 const lastSeen = new Date();
-
-                // 1. Update DB to Offline + Time
                 try {
                     await User.findByIdAndUpdate(userId, {
                         isOnline: false,
                         lastSeen: lastSeen,
                     });
-
-                    // 2. Broadcast offline status
                     io.emit("user-status-change", {
                         userId,
                         isOnline: false,
                         lastSeen: lastSeen,
                     });
-                    console.log(`[SERVER] User Offline: ${userId}`);
                 } catch (error) {
                     console.error("Error updating offline status:", error);
                 }

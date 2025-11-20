@@ -6,7 +6,7 @@ import {
     deletePost,
     get_comments_by_post,
     delete_comment_of_user,
-    toggleReactionOnPost, // Updated import
+    toggleReactionOnPost,
     getPostById,
     toggleCommentLike,
 } from "../controllers/posts.controller.js";
@@ -27,7 +27,6 @@ router.route("/comment").post(commentPost);
 router.route("/get_comments").get(get_comments_by_post);
 router.route("/delete_comment").post(delete_comment_of_user);
 
-// Updated Route
 router.route("/toggle_like").post(toggleReactionOnPost);
 router.route("/toggle_comment_like").post(toggleCommentLike);
 export default router;

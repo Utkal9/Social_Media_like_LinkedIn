@@ -13,7 +13,7 @@ import {
     whatAreMyConnections,
     acceptConnectionRequest,
     getUserProfileAndUserBasedOnUername,
-    forgotPassword, // <--- Import this
+    forgotPassword,
 } from "../controllers/user.controller.js";
 
 import upload from "../config/cloudinary.config.js";
@@ -26,7 +26,7 @@ router
 
 router.route("/register").post(register);
 router.route("/login").post(login);
-router.route("/forgot_password").post(forgotPassword); // <--- New Route
+router.route("/forgot_password").post(forgotPassword);
 
 router.route("/user_update").post(updateUserProfile);
 router.route("/get_user_and_profile").get(getUserAndProfile);
