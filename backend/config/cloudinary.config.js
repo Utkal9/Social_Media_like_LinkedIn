@@ -16,9 +16,18 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: "pro-connect-uploads", // The name of the folder in Cloudinary
-        allowed_formats: ["jpg", "png", "jpeg", "gif"],
-        // You can add transformations here if you want
+        folder: "pro-connect-uploads",
+        resource_type: "auto", // Important: Detects if it's an image or video
+        allowed_formats: [
+            "jpg",
+            "png",
+            "jpeg",
+            "gif",
+            "mp4",
+            "webm",
+            "ogg",
+            "mov",
+        ],
     },
 });
 
