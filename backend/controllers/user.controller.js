@@ -11,13 +11,11 @@ import { v2 as cloudinary } from "cloudinary";
 import request from "request";
 
 // --- HELPER: Fetch Image Buffer ---
-// We fetch the image BEFORE starting the PDF to prevent Cloudinary timeouts
 const fetchImageBuffer = (url) => {
     return new Promise((resolve) => {
         if (!url || !url.startsWith("http")) {
             return resolve(null);
         }
-        // Set a timeout of 4 seconds to avoid hanging forever
         request({ url, encoding: null, timeout: 4000 }, (err, res, body) => {
             if (err || res.statusCode !== 200) {
                 console.log(
@@ -30,101 +28,6 @@ const fetchImageBuffer = (url) => {
         });
     });
 };
-// --- PDF GENERATOR: Buffer PDF in memory, then upload ---
-// const convertUserDataTOPDF = async (userData) => {
-//     // 1. Pre-fetch the image buffer
-//     const profilePicUrl = userData.userId.profilePicture;
-//     const imageBuffer = await fetchImageBuffer(profilePicUrl);
-
-//     // 2. Create a new Promise to buffer the PDF in memory
-//     const pdfBuffer = await new Promise((resolve, reject) => {
-//         const doc = new PDFDocument();
-//         const buffers = [];
-
-//         doc.on("data", buffers.push.bind(buffers));
-//         doc.on("end", () => {
-//             resolve(Buffer.concat(buffers));
-//         });
-//         doc.on("error", reject);
-
-//         // --- 3. Build PDF Content ---
-//         if (imageBuffer) {
-//             try {
-//                 doc.image(imageBuffer, {
-//                     fit: [100, 100],
-//                     align: "center",
-//                 });
-//                 doc.moveDown();
-//             } catch (imgErr) {
-//                 console.error("Error embedding image in PDF:", imgErr.message);
-//                 return reject(imgErr);
-//             }
-//         }
-
-//         doc.fontSize(20).text(userData.userId.name || "Name Not Provided", {
-//             align: "center",
-//         });
-//         doc.fontSize(12).text(`@${userData.userId.username || "username"}`, {
-//             align: "center",
-//         });
-//         doc.fontSize(10).text(userData.userId.email || "", {
-//             align: "center",
-//         });
-//         doc.moveDown();
-
-//         doc.fontSize(14).text("About", { underline: true });
-//         doc.fontSize(12).text(userData.bio || "No bio provided.");
-//         doc.moveDown();
-
-//         doc.fontSize(14).text("Current Position", { underline: true });
-//         doc.fontSize(12).text(userData.currentPost || "Not specified.");
-//         doc.moveDown();
-
-//         doc.addPage();
-//         doc.fontSize(16).text("Work History", { underline: true });
-//         doc.moveDown();
-
-//         if (userData.pastWork && userData.pastWork.length > 0) {
-//             userData.pastWork.forEach((work) => {
-//                 doc.fontSize(14).text(work.company || "Unknown Company", {
-//                     bold: true,
-//                 });
-//                 doc.fontSize(12).text(`Position: ${work.position || "N/A"}`);
-//                 doc.fontSize(12).text(`Experience: ${work.years || "0"} years`);
-//                 doc.moveDown();
-//             });
-//         } else {
-//             doc.fontSize(12).text("No work history provided.");
-//         }
-
-//         // Finalize the PDF
-//         doc.end();
-//     });
-
-//     // 4. Upload the buffered PDF to Cloudinary
-//     return new Promise((resolve, reject) => {
-//         const uploadStream = cloudinary.uploader.upload_stream(
-//             {
-//                 folder: "pro-connect-resumes",
-//                 resource_type: "raw",
-//                 access_mode: "public",
-//                 format: "pdf",
-//             },
-//             (error, result) => {
-//                 if (error) {
-//                     console.error("Cloudinary upload error:", error);
-//                     return reject(error);
-//                 }
-//                 resolve(result.secure_url);
-//             }
-//         );
-
-//         // Write the buffer to the upload stream
-//         const bufferStream = new stream.PassThrough();
-//         bufferStream.end(pdfBuffer);
-//         bufferStream.pipe(uploadStream);
-//     });
-// };
 
 export const register = async (req, res) => {
     try {
@@ -273,9 +176,6 @@ export const getAllUserProfile = async (req, res) => {
     }
 };
 
-// ... (keep all your other controller functions like register, login, etc.)
-
-// REPLACE the old downloadProfile function with this one
 export const downloadProfile = async (req, res) => {
     try {
         const user_id = req.query.id;
@@ -295,19 +195,16 @@ export const downloadProfile = async (req, res) => {
         // --- Start PDF Generation ---
         const doc = new PDFDocument();
 
-        // Set HTTP headers to tell the browser it's a PDF download
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
             "Content-Disposition",
             `attachment; filename="${userProfile.userId.username}_resume.pdf"`
         );
 
-        // Pipe the PDF document directly to the response stream
         doc.pipe(res);
 
-        // --- Fetch image (if it exists) ---
         const profilePicUrl = userProfile.userId.profilePicture;
-        const imageBuffer = await fetchImageBuffer(profilePicUrl); // We still need your fetchImageBuffer helper
+        const imageBuffer = await fetchImageBuffer(profilePicUrl);
 
         if (imageBuffer) {
             try {
@@ -318,11 +215,9 @@ export const downloadProfile = async (req, res) => {
                 doc.moveDown();
             } catch (imgErr) {
                 console.error("Error embedding image in PDF:", imgErr.message);
-                // If image fails, just skip it and continue
             }
         }
 
-        // --- Build PDF Content (same as before) ---
         doc.fontSize(20).text(userProfile.userId.name || "Name Not Provided", {
             align: "center",
         });
@@ -359,18 +254,14 @@ export const downloadProfile = async (req, res) => {
             doc.fontSize(12).text("No work history provided.");
         }
 
-        // Finalize the PDF
         doc.end();
     } catch (error) {
         console.error("Error in downloadProfile:", error);
-        // If an error happens before the stream starts, send JSON
         if (!res.headersSent) {
             res.status(500).json({ message: "Failed to generate PDF." });
         }
     }
 };
-
-// ... (keep all your other controller functions)
 
 export const sendConnectionRequest = async (req, res) => {
     const { token, connectionId } = req.body;
@@ -507,6 +398,42 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
             return res.status(404).json({ message: "Profile not found" });
         }
         return res.json({ profile: userProfile });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// --- UPDATED: Forgot Password Handler ---
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email)
+            return res.status(400).json({ message: "Email is required" });
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res
+                .status(200)
+                .json({
+                    message:
+                        "If that email exists, a reset link has been sent.",
+                });
+        }
+
+        // Use environment variable for the frontend URL, fallback to localhost for dev
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
+        console.log(`[MOCK EMAIL] Password reset requested for: ${email}`);
+        console.log(
+            `[MOCK EMAIL] Reset Link: ${frontendUrl}/reset-password?email=${email}`
+        );
+
+        return res
+            .status(200)
+            .json({
+                message:
+                    "Reset link sent! (Check server console for mock link)",
+            });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

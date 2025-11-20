@@ -45,9 +45,7 @@ export default function MyConnectionsPage() {
         if (!currentUser || !connectionUserId || !socket) return;
         const roomId = [currentUser._id, connectionUserId].sort().join("-");
         const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
-        const returnUrl = process.env.FRONTEND_URL
-            ? `${process.env.FRONTEND_URL}/dashboard`
-            : "http://localhost:3000/dashboard";
+        const returnUrl = `${window.location.origin}/dashboard`;
         const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
             returnUrl
         )}`;

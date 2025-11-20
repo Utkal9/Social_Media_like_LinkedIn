@@ -8,25 +8,109 @@ import { useSocket } from "@/context/SocketContext";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 
-// --- UPDATED HELPER ---
+// --- ICONS ---
+const SearchIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        className={styles.searchIcon}
+    >
+        <path
+            fillRule="evenodd"
+            d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const MoreIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ width: 24, height: 24 }}
+    >
+        <path
+            fillRule="evenodd"
+            d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const EditIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ width: 20, height: 20 }}
+    >
+        <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+    </svg>
+);
+const VideoIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ width: 24, height: 24, color: "#666" }}
+    >
+        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+    </svg>
+);
+const SendIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ width: 18, height: 18 }}
+    >
+        <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+    </svg>
+);
+const EmptyStateIllustration = () => (
+    <svg
+        width="160"
+        height="160"
+        viewBox="0 0 200 200"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <circle cx="100" cy="100" r="90" fill="#F3F6F8" />
+        <path
+            d="M65 75C65 66.7157 71.7157 60 80 60H120C128.284 60 135 66.7157 135 75V105C135 113.284 128.284 120 120 120H85L65 140V75Z"
+            fill="white"
+            stroke="#E0E0E0"
+            strokeWidth="4"
+        />
+        <path
+            d="M80 85H120"
+            stroke="#A0A0A0"
+            strokeWidth="4"
+            strokeLinecap="round"
+        />
+        <path
+            d="M80 100H105"
+            stroke="#A0A0A0"
+            strokeWidth="4"
+            strokeLinecap="round"
+        />
+    </svg>
+);
+
+// --- HELPER ---
 function getTimeAgo(dateString) {
     if (!dateString) return "Offline";
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
 
-    // Precise seconds logic
-    if (diffInSeconds < 60) {
-        return `${diffInSeconds} second${diffInSeconds !== 1 ? "s" : ""} ago`;
-    }
-
+    if (diffInSeconds < 60) return "Just now";
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
 }
-// ----------------------
 
 function MessagingPage() {
     const router = useRouter();
@@ -37,6 +121,8 @@ function MessagingPage() {
     const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showMenu, setShowMenu] = useState(false); // For 3-dots menu
     const messagesEndRef = useRef(null);
 
     const fetchConversations = async () => {
@@ -47,6 +133,7 @@ function MessagingPage() {
                 });
                 setConversations(res.data);
 
+                // Update online statuses based on fetched data
                 const initialStatuses = {};
                 res.data.forEach((user) => {
                     initialStatuses[user._id] = {
@@ -70,6 +157,7 @@ function MessagingPage() {
         fetchConversations();
     }, [auth.isTokenThere]);
 
+    // Handle direct link to chat
     useEffect(() => {
         if (!router.isReady || !auth.isTokenThere) return;
         const { chatWith } = router.query;
@@ -84,9 +172,7 @@ function MessagingPage() {
                     try {
                         const res = await clientServer.get(
                             "/user/get_profile_based_on_username",
-                            {
-                                params: { username: chatWith },
-                            }
+                            { params: { username: chatWith } }
                         );
                         const targetUser = res.data.profile.userId;
                         setConversations((prev) => {
@@ -102,7 +188,7 @@ function MessagingPage() {
                 fetchTargetUser();
             }
         }
-    }, [router.isReady, router.query, auth.isTokenThere]);
+    }, [router.isReady, router.query, auth.isTokenThere, conversations.length]);
 
     useEffect(() => {
         if (!activeChat) return;
@@ -179,14 +265,99 @@ function MessagingPage() {
         }
     };
 
+    // --- NEW FUNCTIONALITY HANDLERS ---
+    const handleCreateNewMessage = () => {
+        // Redirect to My Connections to start a new chat with a connection
+        router.push("/my_connections");
+    };
+
+    const handleMenuOption = (option) => {
+        if (option === "refresh") {
+            fetchConversations();
+        } else if (option === "network") {
+            router.push("/my_connections");
+        }
+        setShowMenu(false);
+    };
+
+    // Filter users based on search query
+    const filteredConversations = conversations.filter(
+        (user) =>
+            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className={styles.container}>
+            {/* Sidebar */}
             <div className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
-                    <h3>Messaging</h3>
+                    <div className={styles.headerTop}>
+                        <h3>Messaging</h3>
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "5px",
+                                position: "relative",
+                            }}
+                        >
+                            {/* Edit Icon: Create New Message */}
+                            <button
+                                className={styles.iconBtn}
+                                onClick={handleCreateNewMessage}
+                                title="Start new conversation"
+                            >
+                                <EditIcon />
+                            </button>
+
+                            {/* More Icon: Dropdown Menu */}
+                            <button
+                                className={styles.iconBtn}
+                                onClick={() => setShowMenu(!showMenu)}
+                                title="Options"
+                            >
+                                <MoreIcon />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {showMenu && (
+                                <div className={styles.dropdownMenu}>
+                                    <div
+                                        className={styles.dropdownItem}
+                                        onClick={() =>
+                                            handleMenuOption("refresh")
+                                        }
+                                    >
+                                        Refresh List
+                                    </div>
+                                    <div
+                                        className={styles.dropdownItem}
+                                        onClick={() =>
+                                            handleMenuOption("network")
+                                        }
+                                    >
+                                        Manage Connections
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className={styles.searchContainer}>
+                        <SearchIcon />
+                        <input
+                            type="text"
+                            placeholder="Search messages"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
                 </div>
+
                 <div className={styles.conversationList}>
-                    {conversations.map((user) => {
+                    {filteredConversations.length === 0 && searchQuery && (
+                        <p className={styles.noResults}>No results found.</p>
+                    )}
+                    {filteredConversations.map((user) => {
                         const statusData =
                             onlineStatuses && onlineStatuses[user._id]
                                 ? onlineStatuses[user._id]
@@ -224,15 +395,16 @@ function MessagingPage() {
                                         <p
                                             className={`${styles.statusText} ${styles.online}`}
                                         >
-                                            Available
+                                            Active now
                                         </p>
                                     ) : (
                                         <p className={styles.statusText}>
+                                            Last seen{" "}
                                             {statusData.lastSeen
                                                 ? getTimeAgo(
                                                       statusData.lastSeen
                                                   )
-                                                : "Offline"}
+                                                : ""}
                                         </p>
                                     )}
                                 </div>
@@ -241,19 +413,39 @@ function MessagingPage() {
                     })}
                 </div>
             </div>
+
+            {/* Chat Area */}
             <div className={styles.chatArea}>
                 {activeChat ? (
                     <>
                         <div className={styles.chatHeader}>
                             <div className={styles.chatHeaderInfo}>
-                                <div>
+                                <div
+                                    className={styles.avatarContainer}
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        cursor: "pointer",
+                                    }}
+                                    onClick={() =>
+                                        router.push(
+                                            `/view_profile/${activeChat.username}`
+                                        )
+                                    }
+                                >
+                                    <img
+                                        src={activeChat.profilePicture}
+                                        alt=""
+                                        className={styles.avatar}
+                                    />
+                                </div>
+                                <div className={styles.headerText}>
                                     <h3
                                         onClick={() =>
                                             router.push(
                                                 `/view_profile/${activeChat.username}`
                                             )
                                         }
-                                        style={{ cursor: "pointer" }}
                                     >
                                         {activeChat.name}
                                     </h3>
@@ -261,31 +453,39 @@ function MessagingPage() {
                                     onlineStatuses[activeChat._id]?.isOnline ? (
                                         <span
                                             style={{
-                                                fontSize: "0.8rem",
                                                 color: "#057642",
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
                                             }}
                                         >
                                             Active now
                                         </span>
                                     ) : (
-                                        <span
-                                            style={{
-                                                fontSize: "0.8rem",
-                                                color: "#666",
-                                            }}
-                                        >
-                                            Last seen{" "}
-                                            {getTimeAgo(
-                                                onlineStatuses &&
-                                                    onlineStatuses[
-                                                        activeChat._id
-                                                    ]?.lastSeen
-                                            )}
+                                        <span className={styles.headerStatus}>
+                                            @{activeChat.username}
                                         </span>
                                     )}
                                 </div>
                             </div>
+                            <div className={styles.headerActions}>
+                                {/* Video Call Button */}
+                                <button
+                                    className={styles.iconBtn}
+                                    title="Video Call"
+                                    onClick={() => {
+                                        // Just redirect to My Connections where calls are initiated, or start a call directly if you have the logic here
+                                        // For consistency with your My Connections logic:
+                                        alert(
+                                            "Please go to 'My Network' to start a video call with this user."
+                                        );
+                                        router.push("/my_connections");
+                                    }}
+                                >
+                                    <VideoIcon />
+                                </button>
+                            </div>
                         </div>
+
                         <div className={styles.messagesList}>
                             {messages.map((msg, index) => {
                                 const isMe =
@@ -297,7 +497,7 @@ function MessagingPage() {
                                             isMe ? styles.sent : styles.received
                                         }`}
                                     >
-                                        {msg.message}
+                                        <p>{msg.message}</p>
                                         <span className={styles.timestamp}>
                                             {new Date(
                                                 msg.createdAt
@@ -311,6 +511,7 @@ function MessagingPage() {
                             })}
                             <div ref={messagesEndRef} />
                         </div>
+
                         <div className={styles.inputArea}>
                             <textarea
                                 value={inputText}
@@ -325,21 +526,20 @@ function MessagingPage() {
                             <button
                                 onClick={handleSendMessage}
                                 className={styles.sendButton}
+                                disabled={!inputText.trim()}
                             >
-                                Send
+                                Send <SendIcon />
                             </button>
                         </div>
                     </>
                 ) : (
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            height: "100%",
-                        }}
-                    >
-                        <h3>Select a conversation to start messaging</h3>
+                    <div className={styles.emptyState}>
+                        <EmptyStateIllustration />
+                        <h3>Select a conversation</h3>
+                        <p>
+                            Choose a connection from the left list to start
+                            chatting.
+                        </p>
                     </div>
                 )}
             </div>

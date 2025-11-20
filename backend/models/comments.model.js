@@ -13,6 +13,18 @@ const CommentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    // --- NEW FIELDS ---
+    likes: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+    ],
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
 });
+
 const Comment = mongoose.model("Comment", CommentSchema);
 export default Comment;
