@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import postRoutes from "./routes/posts.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import messagingRoutes from "./routes/messaging.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer } from "http";
@@ -26,6 +27,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 const httpServer = createServer(app);
+app.use(messagingRoutes);
 
 // 2. Apply the *same* CORS options to Socket.IO
 const io = new Server(httpServer, {
@@ -89,6 +91,18 @@ io.on("connection", (socket) => {
             }
         }
         console.log("[SERVER] Current user map:", userSocketMap);
+    });
+    socket.on("send-chat-message", ({ senderId, receiverId, message }) => {
+        const receiverSocketId = userSocketMap.get(receiverId);
+
+        // Emit to receiver if online
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("receive-chat-message", {
+                sender: senderId,
+                message: message,
+                createdAt: new Date().toISOString(),
+            });
+        }
     });
 });
 // --- END SOCKET.IO LOGIC ---

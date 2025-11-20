@@ -166,6 +166,10 @@ export default function ViewProfilePage({ userProfile }) {
             alert("Error: Could not generate resume.");
         }
     };
+    const handleMessage = () => {
+        // Redirect to messaging page with the username in query
+        router.push(`/messaging?chatWith=${userProfile.userId.username}`);
+    };
 
     // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
     return (
@@ -190,6 +194,20 @@ export default function ViewProfilePage({ userProfile }) {
                             <DownloadIcon />
                             <span>Download Resume</span>
                         </button>
+                        {!isOwnProfile && (
+                            <button
+                                onClick={handleMessage}
+                                className={styles.connectBtn} // Re-use connect style or make a new one
+                                style={{
+                                    marginLeft: "0.5rem",
+                                    backgroundColor: "white",
+                                    color: "#0a66c2",
+                                    border: "1px solid #0a66c2",
+                                }}
+                            >
+                                Message
+                            </button>
+                        )}
                         {!isOwnProfile && (
                             <button
                                 onClick={handleConnect}
@@ -280,17 +298,24 @@ export default function ViewProfilePage({ userProfile }) {
 
 // Server-side props remains the same
 export async function getServerSideProps(context) {
-    console.log("From View");
-    console.log(context.query.username);
-    const request = await clientServer.get(
-        "/user/get_profile_based_on_username",
-        {
-            params: {
-                username: context.query.username,
-            },
-        }
-    );
-    return { props: { userProfile: request.data.profile } };
+    try {
+        const request = await clientServer.get(
+            "/user/get_profile_based_on_username",
+            {
+                params: {
+                    username: context.query.username,
+                },
+            }
+        );
+        return { props: { userProfile: request.data.profile } };
+    } catch (error) {
+        console.error("Error fetching profile:", error?.message);
+        // If the API fails (e.g., 404 or 500), return 'notFound: true'
+        // This prevents the page from crashing with a 500 error
+        return {
+            notFound: true,
+        };
+    }
 }
 
 // ADDED THIS:

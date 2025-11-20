@@ -5,3 +5,5 @@ backend/.env
 backend/api.http
 backend/uploads
 .vscode
+Dockerfile
+docker-compose.yml
