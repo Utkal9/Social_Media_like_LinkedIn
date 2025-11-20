@@ -2,6 +2,7 @@ import { getAboutUser, getAllUsers } from "@/config/redux/action/authAction";
 import {
     createPost,
     deletePost,
+    updatePost,
     getAllComments,
     getAllPosts,
     toggleLike,
@@ -17,7 +18,6 @@ import styles from "./index.module.css";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
 
-// --- HELPER: TIME AGO ---
 function getTimeAgo(dateString) {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -34,7 +34,16 @@ function getTimeAgo(dateString) {
     return `${Math.floor(diffInDays / 7)}w`;
 }
 
-// --- Helper for Reaction Icons ---
+// --- Helper to check if media is video ---
+const isVideo = (fileType, mediaUrl) => {
+    if (fileType && fileType.startsWith("video/")) return true;
+    if (mediaUrl) {
+        const ext = mediaUrl.split(".").pop().toLowerCase();
+        return ["mp4", "webm", "ogg", "mov"].includes(ext);
+    }
+    return false;
+};
+
 const getReactionIcon = (type) => {
     switch (type) {
         case "Like":
@@ -63,7 +72,7 @@ const getReactionColor = (type) => {
         case "Funny":
             return "#E67E22";
         default:
-            return "#0a66c2"; // Like Blue
+            return "#0a66c2";
     }
 };
 
@@ -78,7 +87,6 @@ const ImageIcon = () => (
         <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
     </svg>
 );
-
 const CommentIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -95,7 +103,6 @@ const CommentIcon = () => (
         />
     </svg>
 );
-
 const ShareIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +119,6 @@ const ShareIcon = () => (
         />
     </svg>
 );
-
 const DeleteIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -129,8 +135,22 @@ const DeleteIcon = () => (
         />
     </svg>
 );
-
-// Clean, simple "Like" outline icon for unliked state
+const EditIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        style={{ width: "18px", height: "18px" }}
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+        />
+    </svg>
+);
 const LikeIconOutline = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -157,10 +177,17 @@ export default function Dashboard() {
     const [postError, setPostError] = useState("");
     const [postContent, setPostContent] = useState("");
     const [fileContent, setFileContent] = useState(null);
+    const [filePreview, setFilePreview] = useState(null); // For preview
     const [commentText, setCommentText] = useState("");
     const [showReactionListModal, setShowReactionListModal] = useState(false);
     const [currentReactionList, setCurrentReactionList] = useState([]);
     const commentInputRef = useRef(null);
+
+    // --- Editing State ---
+    const [editingPost, setEditingPost] = useState(null);
+    const [editBody, setEditBody] = useState("");
+    const [editFile, setEditFile] = useState(null);
+    const [editFilePreview, setEditFilePreview] = useState(null);
 
     useEffect(() => {
         if (authState.isTokenThere) {
@@ -172,15 +199,43 @@ export default function Dashboard() {
         }
     }, [authState.isTokenThere, dispatch]);
 
-    const handleUpload = async () => {
-        if (fileContent && fileContent.size > 10 * 1024 * 1024) {
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && file.size > 10 * 1024 * 1024) {
             setPostError("File is too large. Max 10MB.");
-            return;
+            setFileContent(null);
+            setFilePreview(null);
+            e.target.value = null;
+        } else if (file) {
+            setFileContent(file);
+            setFilePreview(URL.createObjectURL(file));
+            setPostError("");
+        } else {
+            setFileContent(null);
+            setFilePreview(null);
+            setPostError("");
         }
+    };
+
+    const handleUpload = async () => {
         await dispatch(createPost({ file: fileContent, body: postContent }));
         setPostContent("");
         setFileContent(null);
+        setFilePreview(null);
         setPostError("");
+    };
+
+    const handleEditFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && file.size > 10 * 1024 * 1024) {
+            alert("File is too large. Max 10MB.");
+            setEditFile(null);
+            setEditFilePreview(null);
+            e.target.value = null;
+        } else if (file) {
+            setEditFile(file);
+            setEditFilePreview(URL.createObjectURL(file));
+        }
     };
 
     const handleReaction = (postId, type) => {
@@ -199,6 +254,28 @@ export default function Dashboard() {
             await dispatch(deletePost({ post_id: postId }));
             dispatch(getAllPosts());
         }
+    };
+
+    const handleEditClick = (post) => {
+        setEditingPost(post);
+        setEditBody(post.body);
+        setEditFile(null);
+        setEditFilePreview(null);
+    };
+
+    const handleUpdateSubmit = async () => {
+        if (!editingPost) return;
+        await dispatch(
+            updatePost({
+                post_id: editingPost._id,
+                body: editBody,
+                file: editFile,
+            })
+        );
+        setEditingPost(null);
+        setEditBody("");
+        setEditFile(null);
+        setEditFilePreview(null);
     };
 
     const handleOpenComments = (postId) => {
@@ -266,6 +343,7 @@ export default function Dashboard() {
     return (
         <>
             <div className={styles.feedContainer}>
+                {/* Create Post */}
                 <div className={styles.createPostContainer}>
                     <div className={styles.createPostTop}>
                         <div
@@ -291,6 +369,35 @@ export default function Dashboard() {
                     {postError && (
                         <p className={styles.errorMessage}>{postError}</p>
                     )}
+
+                    {/* File Preview in Create Post */}
+                    {filePreview && (
+                        <div style={{ marginTop: "10px" }}>
+                            {fileContent &&
+                            fileContent.type.startsWith("video/") ? (
+                                <video
+                                    src={filePreview}
+                                    controls
+                                    style={{
+                                        maxWidth: "100%",
+                                        maxHeight: "200px",
+                                        borderRadius: "8px",
+                                    }}
+                                />
+                            ) : (
+                                <img
+                                    src={filePreview}
+                                    alt="Preview"
+                                    style={{
+                                        maxWidth: "100%",
+                                        maxHeight: "200px",
+                                        borderRadius: "8px",
+                                    }}
+                                />
+                            )}
+                        </div>
+                    )}
+
                     <div className={styles.createPostBottom}>
                         <label
                             htmlFor="fileUpload"
@@ -299,23 +406,11 @@ export default function Dashboard() {
                             <ImageIcon /> <span>Media</span>
                         </label>
                         <input
-                            onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file && file.size > 10 * 1024 * 1024) {
-                                    setPostError("File is too large.");
-                                    setFileContent(null);
-                                    e.target.value = null;
-                                } else if (file) {
-                                    setFileContent(file);
-                                    setPostError("");
-                                } else {
-                                    setFileContent(null);
-                                    setPostError("");
-                                }
-                            }}
+                            onChange={handleFileChange}
                             type="file"
                             hidden
                             id="fileUpload"
+                            accept="image/*,video/*" // Accept videos
                         />
                         {fileContent && (
                             <span className={styles.fileName}>
@@ -333,6 +428,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
+                {/* Feed */}
                 <div className={styles.postsContainer}>
                     {postState.posts.map((post) => (
                         <div key={post._id} className={styles.postCard}>
@@ -379,12 +475,31 @@ export default function Dashboard() {
                                 </div>
                                 {post.userId._id ===
                                     authState.user.userId._id && (
-                                    <button
-                                        onClick={() => handleDelete(post._id)}
-                                        className={styles.deleteButton}
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            gap: "0.5rem",
+                                        }}
                                     >
-                                        <DeleteIcon />
-                                    </button>
+                                        <button
+                                            onClick={() =>
+                                                handleEditClick(post)
+                                            }
+                                            className={styles.deleteButton}
+                                            title="Edit Post"
+                                        >
+                                            <EditIcon />
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleDelete(post._id)
+                                            }
+                                            className={styles.deleteButton}
+                                            title="Delete Post"
+                                        >
+                                            <DeleteIcon />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 
@@ -396,10 +511,21 @@ export default function Dashboard() {
                                             styles.postCardImageContainer
                                         }
                                     >
-                                        <img
-                                            src={post.media}
-                                            alt="Post media"
-                                        />
+                                        {isVideo(post.fileType, post.media) ? (
+                                            <video
+                                                src={post.media}
+                                                controls
+                                                style={{
+                                                    width: "100%",
+                                                    maxHeight: "600px",
+                                                }}
+                                            />
+                                        ) : (
+                                            <img
+                                                src={post.media}
+                                                alt="Post media"
+                                            />
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -533,7 +659,6 @@ export default function Dashboard() {
                                                 const icon = getReactionIcon(
                                                     myReaction.type
                                                 );
-                                                // NOW: ALL reactions (including Like) show the Emoji + Text
                                                 return (
                                                     <>
                                                         <span
@@ -558,7 +683,6 @@ export default function Dashboard() {
                                                     </>
                                                 );
                                             }
-                                            // Default Unliked State (Grey Outline)
                                             return (
                                                 <>
                                                     <LikeIconOutline />
@@ -588,6 +712,153 @@ export default function Dashboard() {
                     ))}
                 </div>
             </div>
+
+            {/* --- EDIT POST MODAL --- */}
+            {editingPost && (
+                <div
+                    className={styles.commentModalBackdrop}
+                    onClick={() => setEditingPost(null)}
+                >
+                    <div
+                        className={styles.commentModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            height: "auto",
+                            maxHeight: "80vh",
+                            maxWidth: "600px",
+                        }}
+                    >
+                        <div className={styles.commentModalHeader}>
+                            <h3>Edit Post</h3>
+                            <button
+                                onClick={() => setEditingPost(null)}
+                                className={styles.closeModalButton}
+                            >
+                                &times;
+                            </button>
+                        </div>
+                        <div
+                            style={{
+                                padding: "1.5rem",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "1rem",
+                            }}
+                        >
+                            <textarea
+                                className={styles.textAreaOfContent}
+                                style={{ height: "120px", borderRadius: "8px" }}
+                                value={editBody}
+                                onChange={(e) => setEditBody(e.target.value)}
+                                placeholder="What do you want to talk about?"
+                            />
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.5rem",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        fontSize: "0.9rem",
+                                        fontWeight: "600",
+                                    }}
+                                >
+                                    Current Media:
+                                </p>
+                                {/* Show existing media or new preview */}
+                                {editFilePreview ? (
+                                    isVideo(editFile?.type, editFilePreview) ? (
+                                        <video
+                                            src={editFilePreview}
+                                            controls
+                                            style={{
+                                                maxHeight: "150px",
+                                                borderRadius: "8px",
+                                            }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={editFilePreview}
+                                            alt="New Preview"
+                                            style={{
+                                                maxHeight: "150px",
+                                                objectFit: "contain",
+                                                borderRadius: "8px",
+                                            }}
+                                        />
+                                    )
+                                ) : editingPost.media ? (
+                                    isVideo(
+                                        editingPost.fileType,
+                                        editingPost.media
+                                    ) ? (
+                                        <video
+                                            src={editingPost.media}
+                                            controls
+                                            style={{
+                                                maxHeight: "150px",
+                                                borderRadius: "8px",
+                                            }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={editingPost.media}
+                                            alt="Current"
+                                            style={{
+                                                maxHeight: "150px",
+                                                objectFit: "contain",
+                                                borderRadius: "8px",
+                                                border: "1px solid #eee",
+                                            }}
+                                        />
+                                    )
+                                ) : (
+                                    <p
+                                        style={{
+                                            fontSize: "0.8rem",
+                                            color: "#666",
+                                        }}
+                                    >
+                                        No media uploaded.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className={styles.createPostBottom}>
+                                <label
+                                    htmlFor="editFileUpload"
+                                    className={styles.mediaButton}
+                                >
+                                    <ImageIcon /> <span>Change Media</span>
+                                </label>
+                                <input
+                                    id="editFileUpload"
+                                    type="file"
+                                    hidden
+                                    accept="image/*,video/*"
+                                    onChange={handleEditFileChange}
+                                />
+                                {editFile && (
+                                    <span className={styles.fileName}>
+                                        {editFile.name}
+                                    </span>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={handleUpdateSubmit}
+                                className={styles.uploadButton}
+                                style={{ alignSelf: "flex-end" }}
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* --- REACTION LIST MODAL --- */}
             {showReactionListModal && (

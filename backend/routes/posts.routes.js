@@ -9,6 +9,7 @@ import {
     toggleReactionOnPost,
     getPostById,
     toggleCommentLike,
+    updatePost,
 } from "../controllers/posts.controller.js";
 
 import upload from "../config/cloudinary.config.js";
@@ -18,6 +19,7 @@ const router = Router();
 
 router.route("/").get(activeCheck);
 router.route("/post").post(upload.single("media"), createPost);
+router.route("/update_post").post(upload.single("media"), updatePost);
 
 router.route("/posts").get(getAllPosts);
 router.route("/get_post").get(getPostById);

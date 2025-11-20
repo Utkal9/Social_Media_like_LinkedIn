@@ -40,7 +40,32 @@ export const createPost = createAsyncThunk(
         }
     }
 );
+export const updatePost = createAsyncThunk(
+    "post/updatePost",
+    async (payload, thunkAPI) => {
+        try {
+            const formData = new FormData();
+            formData.append("token", localStorage.getItem("token"));
+            formData.append("post_id", payload.post_id);
+            formData.append("body", payload.body);
+            if (payload.file) {
+                formData.append("media", payload.file);
+            }
 
+            const response = await clientServer.post("/update_post", formData, {
+                headers: {
+                    "Content-type": "multipart/form-data",
+                },
+            });
+
+            // Refresh posts after update
+            await thunkAPI.dispatch(getAllPosts());
+            return thunkAPI.fulfillWithValue(response.data);
+        } catch (error) {
+            return thunkAPI.rejectWithValue("Update failed");
+        }
+    }
+);
 export const deletePost = createAsyncThunk(
     "post/deletePost",
     async (payload, thunkAPI) => {

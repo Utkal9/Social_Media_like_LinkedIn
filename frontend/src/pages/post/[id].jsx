@@ -9,12 +9,21 @@ import {
     getAllComments,
     postComment,
     deletePost,
+    updatePost, // Import update
 } from "@/config/redux/action/postAction";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
-
-// We can reuse the CSS module from dashboard to keep it consistent
 import styles from "../dashboard/index.module.css";
+
+// --- HELPER: Video Detection ---
+const isVideo = (fileType, mediaUrl) => {
+    if (fileType && fileType.startsWith("video/")) return true;
+    if (mediaUrl) {
+        const ext = mediaUrl.split(".").pop().toLowerCase();
+        return ["mp4", "webm", "ogg", "mov"].includes(ext);
+    }
+    return false;
+};
 
 // --- Icons ---
 const LikeIcon = ({ isLiked }) => (
@@ -81,6 +90,47 @@ const DeleteIcon = () => (
         />
     </svg>
 );
+const EditIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        style={{ width: "18px", height: "18px" }}
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+        />
+    </svg>
+);
+const ImageIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ color: "#378fe9", width: "24px", height: "24px" }}
+    >
+        <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
+    </svg>
+);
+
+function getTimeAgo(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
+    if (diffInSeconds < 60) return "Just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d`;
+    return `${Math.floor(diffInDays / 7)}w`;
+}
 
 export default function PostPage({ postData }) {
     const router = useRouter();
@@ -92,7 +142,12 @@ export default function PostPage({ postData }) {
     const [localPost, setLocalPost] = useState(postData);
     const [commentText, setCommentText] = useState("");
 
-    // Sync local post state when props change (on navigation)
+    // Editing State
+    const [editingPost, setEditingPost] = useState(null);
+    const [editBody, setEditBody] = useState("");
+    const [editFile, setEditFile] = useState(null);
+    const [editFilePreview, setEditFilePreview] = useState(null);
+
     useEffect(() => {
         setLocalPost(postData);
     }, [postData]);
@@ -108,8 +163,6 @@ export default function PostPage({ postData }) {
         const response = await dispatch(
             toggleLike({ post_id: localPost._id, token })
         );
-
-        // Update local state optimistically or based on response
         if (response.payload && response.payload.likes) {
             setLocalPost((prev) => ({
                 ...prev,
@@ -123,6 +176,42 @@ export default function PostPage({ postData }) {
             await dispatch(deletePost({ post_id: localPost._id }));
             router.push("/dashboard");
         }
+    };
+
+    const handleEditClick = () => {
+        setEditingPost(localPost);
+        setEditBody(localPost.body);
+        setEditFile(null);
+        setEditFilePreview(null);
+    };
+
+    const handleEditFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file && file.size > 10 * 1024 * 1024) {
+            alert("File is too large. Max 10MB.");
+            setEditFile(null);
+            setEditFilePreview(null);
+            e.target.value = null;
+        } else if (file) {
+            setEditFile(file);
+            setEditFilePreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleUpdateSubmit = async () => {
+        if (!editingPost) return;
+        await dispatch(
+            updatePost({
+                post_id: editingPost._id,
+                body: editBody,
+                file: editFile,
+            })
+        );
+        setEditingPost(null);
+        setEditBody("");
+        setEditFile(null);
+        setEditFilePreview(null);
+        router.replace(router.asPath); // Refresh current page data
     };
 
     const handleOpenComments = () => {
@@ -205,12 +294,22 @@ export default function PostPage({ postData }) {
                     </div>
                     {authState.user &&
                         localPost.userId._id === authState.user.userId._id && (
-                            <button
-                                onClick={handleDelete}
-                                className={styles.deleteButton}
-                            >
-                                <DeleteIcon />
-                            </button>
+                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <button
+                                    onClick={handleEditClick}
+                                    className={styles.deleteButton}
+                                    title="Edit Post"
+                                >
+                                    <EditIcon />
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className={styles.deleteButton}
+                                    title="Delete Post"
+                                >
+                                    <DeleteIcon />
+                                </button>
+                            </div>
                         )}
                 </div>
 
@@ -218,7 +317,18 @@ export default function PostPage({ postData }) {
                     <p>{localPost.body}</p>
                     {localPost.media && (
                         <div className={styles.postCardImageContainer}>
-                            <img src={localPost.media} alt="Post media" />
+                            {isVideo(localPost.fileType, localPost.media) ? (
+                                <video
+                                    src={localPost.media}
+                                    controls
+                                    style={{
+                                        width: "100%",
+                                        maxHeight: "600px",
+                                    }}
+                                />
+                            ) : (
+                                <img src={localPost.media} alt="Post media" />
+                            )}
                         </div>
                     )}
                 </div>
@@ -264,7 +374,150 @@ export default function PostPage({ postData }) {
                 </div>
             </div>
 
-            {/* Comments Section (Inline or Modal depending on preference, reusing Modal for consistency) */}
+            {/* --- EDIT POST MODAL --- */}
+            {editingPost && (
+                <div
+                    className={styles.commentModalBackdrop}
+                    onClick={() => setEditingPost(null)}
+                >
+                    <div
+                        className={styles.commentModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            height: "auto",
+                            maxHeight: "80vh",
+                            maxWidth: "600px",
+                        }}
+                    >
+                        <div className={styles.commentModalHeader}>
+                            <h3>Edit Post</h3>
+                            <button
+                                onClick={() => setEditingPost(null)}
+                                className={styles.closeModalButton}
+                            >
+                                &times;
+                            </button>
+                        </div>
+                        <div
+                            style={{
+                                padding: "1.5rem",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "1rem",
+                            }}
+                        >
+                            <textarea
+                                className={styles.textAreaOfContent}
+                                style={{ height: "120px", borderRadius: "8px" }}
+                                value={editBody}
+                                onChange={(e) => setEditBody(e.target.value)}
+                                placeholder="What do you want to talk about?"
+                            />
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "0.5rem",
+                                }}
+                            >
+                                <p
+                                    style={{
+                                        fontSize: "0.9rem",
+                                        fontWeight: "600",
+                                    }}
+                                >
+                                    Current Media:
+                                </p>
+                                {editFilePreview ? (
+                                    isVideo(editFile?.type, editFilePreview) ? (
+                                        <video
+                                            src={editFilePreview}
+                                            controls
+                                            style={{
+                                                maxHeight: "150px",
+                                                borderRadius: "8px",
+                                            }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={editFilePreview}
+                                            alt="New Preview"
+                                            style={{
+                                                maxHeight: "150px",
+                                                objectFit: "contain",
+                                                borderRadius: "8px",
+                                            }}
+                                        />
+                                    )
+                                ) : editingPost.media ? (
+                                    isVideo(
+                                        editingPost.fileType,
+                                        editingPost.media
+                                    ) ? (
+                                        <video
+                                            src={editingPost.media}
+                                            controls
+                                            style={{
+                                                maxHeight: "150px",
+                                                borderRadius: "8px",
+                                            }}
+                                        />
+                                    ) : (
+                                        <img
+                                            src={editingPost.media}
+                                            alt="Current"
+                                            style={{
+                                                maxHeight: "150px",
+                                                objectFit: "contain",
+                                                borderRadius: "8px",
+                                                border: "1px solid #eee",
+                                            }}
+                                        />
+                                    )
+                                ) : (
+                                    <p
+                                        style={{
+                                            fontSize: "0.8rem",
+                                            color: "#666",
+                                        }}
+                                    >
+                                        No media uploaded.
+                                    </p>
+                                )}
+                            </div>
+                            <div className={styles.createPostBottom}>
+                                <label
+                                    htmlFor="editFileUpload"
+                                    className={styles.mediaButton}
+                                >
+                                    <ImageIcon /> <span>Change Media</span>
+                                </label>
+                                <input
+                                    id="editFileUpload"
+                                    type="file"
+                                    hidden
+                                    accept="image/*,video/*"
+                                    onChange={handleEditFileChange}
+                                />
+                                {editFile && (
+                                    <span className={styles.fileName}>
+                                        {editFile.name}
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                onClick={handleUpdateSubmit}
+                                className={styles.uploadButton}
+                                style={{ alignSelf: "flex-end" }}
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Comments Section */}
             {postState.postId === localPost._id && (
                 <div
                     className={styles.commentModalBackdrop}
@@ -365,7 +618,6 @@ export default function PostPage({ postData }) {
     );
 }
 
-// Fetch data on server side
 export async function getServerSideProps(context) {
     const { id } = context.query;
     try {
