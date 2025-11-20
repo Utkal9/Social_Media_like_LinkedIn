@@ -7,6 +7,7 @@ import {
     get_comments_by_post,
     delete_comment_of_user,
     toggleLikeOnPost,
+    getPostById,
 } from "../controllers/posts.controller.js";
 
 // --- CHANGED ---
@@ -39,6 +40,7 @@ router.route("/post").post(upload.single("media"), createPost);
 
 // --- All other routes are unchanged ---
 router.route("/posts").get(getAllPosts);
+router.route("/get_post").get(getPostById);
 router.route("/delete_post").post(deletePost);
 router.route("/comment").post(commentPost);
 router.route("/get_comments").get(get_comments_by_post);

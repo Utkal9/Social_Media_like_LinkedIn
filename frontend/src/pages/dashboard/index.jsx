@@ -7,22 +7,22 @@ import {
     toggleLike,
     postComment,
 } from "@/config/redux/action/postAction";
-import DashboardLayout from "@/layout/DashboardLayout"; // Import
-import UserLayout from "@/layout/UserLayout"; // Import
+import DashboardLayout from "@/layout/DashboardLayout";
+import UserLayout from "@/layout/UserLayout";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
-// import { BASE_URL } from "@/config"; // <-- No longer needed
 import { resetPostId } from "@/config/redux/reducer/postReducer";
+import { useSocket } from "@/context/SocketContext";
 
-// --- SVG Icons (for better UI) ---
+// --- SVG Icons ---
 const ImageIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
-        style={{ color: "#378fe9" }}
+        style={{ color: "#378fe9", width: "24px", height: "24px" }}
     >
         <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
     </svg>
@@ -30,10 +30,11 @@ const ImageIcon = () => (
 const LikeIcon = ({ isLiked }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill={isLiked ? "#0a66c2" : "none"}
+        fill={isLiked ? "currentColor" : "none"}
         viewBox="0 0 24 24"
         strokeWidth={1.5}
-        stroke={isLiked ? "#0a66c2" : "currentColor"}
+        stroke="currentColor"
+        style={{ width: "20px", height: "20px" }}
     >
         <path
             strokeLinecap="round"
@@ -49,11 +50,12 @@ const CommentIcon = () => (
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
+        style={{ width: "20px", height: "20px" }}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
         />
     </svg>
 );
@@ -64,6 +66,7 @@ const ShareIcon = () => (
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
+        style={{ width: "20px", height: "20px" }}
     >
         <path
             strokeLinecap="round"
@@ -79,6 +82,7 @@ const DeleteIcon = () => (
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
+        style={{ width: "18px", height: "18px" }}
     >
         <path
             strokeLinecap="round"
@@ -93,7 +97,11 @@ export default function Dashboard() {
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
     const postState = useSelector((state) => state.postReducer);
+    const { onlineStatuses } = useSocket() || {};
     const [postError, setPostError] = useState("");
+    const [postContent, setPostContent] = useState("");
+    const [fileContent, setFileContent] = useState(null);
+    const [commentText, setCommentText] = useState("");
 
     useEffect(() => {
         if (authState.isTokenThere) {
@@ -103,16 +111,11 @@ export default function Dashboard() {
         if (!authState.all_profiles_fetched) {
             dispatch(getAllUsers());
         }
-    }, [authState.isTokenThere, dispatch]); // Added dispatch to dependency array
-
-    const [postContent, setPostContent] = useState("");
-    const [fileContent, setFileContent] = useState(null); // Use null for initial state
-    const [commentText, setCommentText] = useState("");
+    }, [authState.isTokenThere, dispatch]);
 
     const handleUpload = async () => {
         if (fileContent && fileContent.size > 10 * 1024 * 1024) {
-            // 10MB limit
-            setPostError("File is too large. Please select a file under 10MB.");
+            setPostError("File is too large. Max 10MB.");
             return;
         }
         await dispatch(createPost({ file: fileContent, body: postContent }));
@@ -121,22 +124,16 @@ export default function Dashboard() {
         setPostError("");
     };
 
-    // ---- CHANGE IT TO THIS ----
     const handleLike = (postId) => {
-        // You need the token to send with the like
         const token = localStorage.getItem("token");
-
-        dispatch(
-            toggleLike({
-                post_id: postId,
-                token: token,
-            })
-        );
+        dispatch(toggleLike({ post_id: postId, token: token }));
     };
 
     const handleDelete = async (postId) => {
-        await dispatch(deletePost({ post_id: postId }));
-        dispatch(getAllPosts()); // Refresh posts after deletion
+        if (confirm("Are you sure you want to delete this post?")) {
+            await dispatch(deletePost({ post_id: postId }));
+            dispatch(getAllPosts());
+        }
     };
 
     const handleOpenComments = (postId) => {
@@ -145,87 +142,78 @@ export default function Dashboard() {
 
     const handleShare = (postBody) => {
         const text = encodeURIComponent(postBody);
-        const url = encodeURIComponent("proconnect.com"); // Placeholder URL
+        const url = encodeURIComponent("proconnect.com");
         const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
         window.open(twitterUrl, "_blank");
     };
 
     const handlePostComment = async () => {
+        if (!commentText.trim()) return;
         await dispatch(
-            postComment({
-                post_id: postState.postId,
-                body: commentText,
-            })
+            postComment({ post_id: postState.postId, body: commentText })
         );
-        await dispatch(
-            getAllComments({
-                post_id: postState.postId,
-            })
-        );
-        setCommentText(""); // Clear comment input after posting
+        await dispatch(getAllComments({ post_id: postState.postId }));
+        setCommentText("");
+    };
+
+    const isUserOnline = (uid, defaultStatus) => {
+        return onlineStatuses && onlineStatuses[uid]
+            ? onlineStatuses[uid].isOnline
+            : defaultStatus;
     };
 
     if (!authState.user) {
-        // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
         return <div className={styles.loading}>Loading feed...</div>;
     }
 
-    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
     return (
         <>
             <div className={styles.feedContainer}>
                 {/* --- Create Post Box --- */}
                 <div className={styles.createPostContainer}>
                     <div className={styles.createPostTop}>
-                        <img
-                            className={styles.userProfilePic}
-                            src={authState.user.userId.profilePicture}
-                            alt="Your profile"
-                        />
-                        <textarea
-                            onChange={(e) => setPostContent(e.target.value)}
-                            value={postContent}
-                            className={styles.textAreaOfContent}
-                            placeholder={`What's on your mind, ${authState.user.userId.name}?`}
-                        ></textarea>
+                        <div
+                            className={styles.avatarContainer}
+                            onClick={() => router.push("/profile")}
+                        >
+                            <img
+                                className={styles.userProfilePic}
+                                src={authState.user.userId.profilePicture}
+                                alt="Your profile"
+                            />
+                            <span className={styles.onlineDot}></span>
+                        </div>
+                        <div className={styles.inputWrapper}>
+                            <textarea
+                                onChange={(e) => setPostContent(e.target.value)}
+                                value={postContent}
+                                className={styles.textAreaOfContent}
+                                placeholder="Start a post"
+                            ></textarea>
+                        </div>
                     </div>
                     {postError && (
-                        <p
-                            style={{
-                                color: "red",
-                                fontSize: "0.9rem",
-                                textAlign: "center",
-                                marginTop: "0.5rem",
-                            }}
-                        >
-                            {postError}
-                        </p>
+                        <p className={styles.errorMessage}>{postError}</p>
                     )}
+
                     <div className={styles.createPostBottom}>
                         <label
                             htmlFor="fileUpload"
-                            className={styles.postActionButton}
+                            className={styles.mediaButton}
                         >
-                            <ImageIcon /> <span>Photo</span>
+                            <ImageIcon /> <span>Media</span>
                         </label>
                         <input
                             onChange={(e) => {
                                 const file = e.target.files[0];
-                                const TEN_MB = 10 * 1024 * 1024;
-
-                                if (file && file.size > TEN_MB) {
-                                    // File is too large
-                                    setPostError(
-                                        "File is too large. Please select a file under 10MB."
-                                    );
+                                if (file && file.size > 10 * 1024 * 1024) {
+                                    setPostError("File is too large.");
                                     setFileContent(null);
-                                    e.target.value = null; // Clear the file input
+                                    e.target.value = null;
                                 } else if (file) {
-                                    // File is valid
                                     setFileContent(file);
-                                    setPostError(""); // Clear any previous error
+                                    setPostError("");
                                 } else {
-                                    // No file selected
                                     setFileContent(null);
                                     setPostError("");
                                 }
@@ -239,10 +227,13 @@ export default function Dashboard() {
                                 {fileContent.name}
                             </span>
                         )}
+
+                        <div className={styles.spacer}></div>
+
                         <button
                             onClick={handleUpload}
                             className={styles.uploadButton}
-                            disabled={postContent.length === 0}
+                            disabled={!postContent.trim() && !fileContent}
                         >
                             Post
                         </button>
@@ -254,29 +245,43 @@ export default function Dashboard() {
                     {postState.posts.map((post) => (
                         <div key={post._id} className={styles.postCard}>
                             <div className={styles.postCardHeader}>
-                                {/* --- FIX: Removed ${BASE_URL}/ --- */}
-                                <img
-                                    className={styles.userProfilePic}
-                                    src={post.userId.profilePicture}
-                                    alt={`${post.userId.name}'s profile`}
+                                <div
+                                    className={styles.avatarContainer}
                                     onClick={() =>
                                         router.push(
                                             `/view_profile/${post.userId.username}`
                                         )
                                     }
-                                />
-                                {/* --- END FIX --- */}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <img
+                                        className={styles.userProfilePic}
+                                        src={post.userId.profilePicture}
+                                        alt={`${post.userId.name}'s profile`}
+                                    />
+                                    {isUserOnline(
+                                        post.userId._id,
+                                        post.userId.isOnline
+                                    ) && (
+                                        <span
+                                            className={styles.onlineDot}
+                                        ></span>
+                                    )}
+                                </div>
                                 <div className={styles.postCardHeaderInfo}>
-                                    <p
-                                        className={styles.postCardUser}
-                                        onClick={() =>
-                                            router.push(
-                                                `/view_profile/${post.userId.username}`
-                                            )
-                                        }
-                                    >
-                                        {post.userId.name}
-                                    </p>
+                                    <div className={styles.headerTopRow}>
+                                        <p
+                                            className={styles.postCardUser}
+                                            onClick={() =>
+                                                router.push(
+                                                    `/view_profile/${post.userId.username}`
+                                                )
+                                            }
+                                        >
+                                            {post.userId.name}
+                                        </p>
+                                        {/* Simulated Time/Follow logic could go here */}
+                                    </div>
                                     <p className={styles.postCardUsername}>
                                         @{post.userId.username}
                                     </p>
@@ -291,6 +296,7 @@ export default function Dashboard() {
                                     </button>
                                 )}
                             </div>
+
                             <div className={styles.postCardBody}>
                                 <p>{post.body}</p>
                                 {post.media && (
@@ -306,17 +312,21 @@ export default function Dashboard() {
                                     </div>
                                 )}
                             </div>
+
                             <div className={styles.postCardStats}>
-                                <span>
-                                    {Array.isArray(post.likes)
-                                        ? post.likes.length
-                                        : 0}{" "}
-                                    Likes
-                                </span>
+                                {post.likes && post.likes.length > 0 && (
+                                    <span className={styles.likeCount}>
+                                        <div className={styles.likeIconSmall}>
+                                            <LikeIcon isLiked={true} />
+                                        </div>
+                                        {post.likes.length}
+                                    </span>
+                                )}
+                                {/* Comments count could go here */}
                             </div>
+
                             <div className={styles.postCardActions}>
                                 {(() => {
-                                    // --- REPLACE WITH THIS ---
                                     const isLiked =
                                         Array.isArray(post.likes) &&
                                         post.likes.includes(
@@ -325,35 +335,32 @@ export default function Dashboard() {
                                     return (
                                         <button
                                             onClick={() => handleLike(post._id)}
-                                            className={styles.postActionButton}
-                                            // Optional: Add a style to make the text blue too
-                                            style={{
-                                                color: isLiked
-                                                    ? "#0a66c2"
-                                                    : "inherit",
-                                            }}
+                                            className={`${
+                                                styles.actionButton
+                                            } ${
+                                                isLiked
+                                                    ? styles.activeAction
+                                                    : ""
+                                            }`}
                                         >
-                                            {/* Pass the 'isLiked' prop to the icon */}
                                             <LikeIcon isLiked={isLiked} />
-
-                                            {/* Change the text based on the 'isLiked' state */}
-                                            <span>
-                                                {isLiked ? "Liked" : "Like"}
-                                            </span>
+                                            <span>Like</span>
                                         </button>
                                     );
                                 })()}
                                 <button
                                     onClick={() => handleOpenComments(post._id)}
-                                    className={styles.postActionButton}
+                                    className={styles.actionButton}
                                 >
-                                    <CommentIcon /> <span>Comment</span>
+                                    <CommentIcon />
+                                    <span>Comment</span>
                                 </button>
                                 <button
                                     onClick={() => handleShare(post.body)}
-                                    className={styles.postActionButton}
+                                    className={styles.actionButton}
                                 >
-                                    <ShareIcon /> <span>Share</span>
+                                    <ShareIcon />
+                                    <span>Share</span>
                                 </button>
                             </div>
                         </div>
@@ -383,51 +390,82 @@ export default function Dashboard() {
                         <div className={styles.allCommentsContainer}>
                             {postState.comments.length === 0 && (
                                 <p className={styles.noComments}>
-                                    No comments yet.
+                                    Be the first to comment!
                                 </p>
                             )}
-
                             {postState.comments.map((postComment) => (
                                 <div
                                     className={styles.singleComment}
                                     key={postComment._id}
                                 >
-                                    <img
-                                        src={postComment.userId.profilePicture}
-                                        alt={postComment.userId.name}
-                                        className={styles.userProfilePic}
-                                    />
+                                    <div className={styles.avatarContainer}>
+                                        <img
+                                            src={
+                                                postComment.userId
+                                                    .profilePicture
+                                            }
+                                            alt={postComment.userId.name}
+                                            className={styles.userProfilePic}
+                                        />
+                                        {isUserOnline(
+                                            postComment.userId._id,
+                                            postComment.userId.isOnline
+                                        ) && (
+                                            <span
+                                                className={styles.onlineDot}
+                                            ></span>
+                                        )}
+                                    </div>
                                     <div className={styles.singleCommentBody}>
-                                        <p className={styles.commentUser}>
-                                            {postComment.userId.name}
-                                            <span>
-                                                @{postComment.userId.username}
+                                        <div className={styles.commentHeader}>
+                                            <span
+                                                className={styles.commentUser}
+                                            >
+                                                {postComment.userId.name}
                                             </span>
+                                            <span
+                                                className={styles.commentTime}
+                                            >
+                                                • @{postComment.userId.username}
+                                            </span>
+                                        </div>
+                                        <p className={styles.commentText}>
+                                            {postComment.body}
                                         </p>
-                                        <p>{postComment.body}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                         <div className={styles.postCommentContainer}>
-                            <img
-                                className={styles.userProfilePic}
-                                src={authState.user.userId.profilePicture}
-                                alt="Your profile"
-                            />
-                            <input
-                                type="text"
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                placeholder="Add a comment..."
-                            />
-                            <button
-                                onClick={handlePostComment}
-                                className={styles.postCommentButton}
-                                disabled={commentText.length === 0}
-                            >
-                                Post
-                            </button>
+                            <div className={styles.avatarContainer}>
+                                <img
+                                    className={styles.userProfilePic}
+                                    src={authState.user.userId.profilePicture}
+                                    alt="Your profile"
+                                />
+                                <span className={styles.onlineDot}></span>
+                            </div>
+                            <div className={styles.commentInputWrapper}>
+                                <input
+                                    type="text"
+                                    value={commentText}
+                                    onChange={(e) =>
+                                        setCommentText(e.target.value)
+                                    }
+                                    placeholder="Add a comment..."
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" && handlePostComment()
+                                    }
+                                />
+                                {commentText.length > 0 && (
+                                    <button
+                                        onClick={handlePostComment}
+                                        className={styles.postCommentButton}
+                                    >
+                                        Post
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -436,7 +474,6 @@ export default function Dashboard() {
     );
 }
 
-// ADDED THIS:
 Dashboard.getLayout = function getLayout(page) {
     return (
         <UserLayout>

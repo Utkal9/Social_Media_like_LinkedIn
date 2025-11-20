@@ -1,5 +1,3 @@
-// frontend/src/pages/my_connections/index.jsx
-
 import {
     AcceptConnection,
     getMyConnectionRequests,
@@ -7,8 +5,8 @@ import {
 } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
-import React, { useEffect, useState, useContext } from "react";
-import { useSocket } from "@/context/SocketContext"; // Import useSocket
+import React, { useEffect, useState } from "react";
+import { useSocket } from "@/context/SocketContext";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
@@ -19,17 +17,14 @@ const VIDEO_CALL_URL =
 export default function MyConnectionsPage() {
     const dispatch = useDispatch();
     const router = useRouter();
-    const socket = useSocket(); // Get socket from context
+    const { socket, onlineStatuses } = useSocket() || {};
     const authState = useSelector((state) => state.auth);
-
     const [activeTab, setActiveTab] = useState("received");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-            // 1. Fetch requests sent TO me
             dispatch(getMyConnectionRequests({ token }));
-            // 2. Fetch requests sent BY me
             dispatch(getConnectionsRequest({ token }));
         }
     }, [dispatch]);
@@ -44,98 +39,59 @@ export default function MyConnectionsPage() {
         );
     };
 
-    // --- NEW CALL HANDLER FUNCTION ---
     const handleStartOneOnOneCall = (connectionUser) => {
         const currentUser = authState.user?.userId;
         const connectionUserId = connectionUser._id;
-
-        // 1. Check if the socket and user are ready
-        if (!currentUser || !connectionUserId) {
-            console.error("[CALLER] User IDs not found, cannot start call.");
-            return;
-        }
-        if (!socket) {
-            console.error("[CALLER] Socket not connected, cannot start call.");
-            return;
-        }
-
-        console.log(`[CALLER] Starting 1-on-1 call...`);
-
-        // 2. Create the unique room link
+        if (!currentUser || !connectionUserId || !socket) return;
         const roomId = [currentUser._id, connectionUserId].sort().join("-");
         const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
-
-        // --- THIS IS THE NEW PART ---
-        // Define the exact URL you want to return to
-        const returnUrl = "https://linkupfrontend-qs7g.onrender.com/dashboard";
-
-        // Add the returnUrl as a query parameter
-        // encodeURIComponent ensures the URL is safely passed
+        const returnUrl = process.env.FRONTEND_URL
+            ? `${process.env.FRONTEND_URL}/dashboard`
+            : "http://localhost:3000/dashboard";
         const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
             returnUrl
         )}`;
-        // --- END NEW PART ---
-
-        // 3. THIS IS THE NEW NOTIFICATION:
-        console.log(
-            `[CALLER] Emitting 'start-call' to user: ${connectionUserId}`
-        );
         socket.emit("start-call", {
-            fromUser: currentUser, // Your user object
-            toUserId: connectionUserId, // The ID of the person you're calling
-            roomUrl: roomUrlWithRedirect, // Send the new URL
+            fromUser: currentUser,
+            toUserId: connectionUserId,
+            roomUrl: roomUrlWithRedirect,
         });
-
-        // 4. Open the call for yourself
         window.open(roomUrlWithRedirect, "_blank");
     };
-    // --- END NEW FUNCTION ---
 
-    // --- LOGIC START ---
-
-    // 1. Pending Requests (Received Only)
-    const pendingRequests = authState.connectionRequest.filter(
-        (connection) => connection.status_accepted === null
-    );
-
-    // 2. Accepted Connections (Both directions)
-    // Direction A: Someone sent to me, I accepted
-    const receivedAccepted = authState.connectionRequest.filter(
-        (connection) => connection.status_accepted === true
-    );
-    // Direction B: I sent to someone, they accepted
-    const sentAccepted = authState.connections.filter(
-        (connection) => connection.status_accepted === true
-    );
-
-    // 3. Merge into a unique Map to remove duplicates
-    // We use the User ID as the key
-    const networkMap = new Map();
-
-    receivedAccepted.forEach((req) => {
-        if (req.userId) {
-            networkMap.set(req.userId._id, req.userId);
-        }
-    });
-
-    sentAccepted.forEach((req) => {
-        if (req.connectionId) {
-            networkMap.set(req.connectionId._id, req.connectionId);
-        }
-    });
-
-    // Convert Map values back to an array for rendering
-    const myNetworkList = Array.from(networkMap.values());
     const handleMessageUser = (username) => {
         router.push(`/messaging?chatWith=${username}`);
     };
 
-    // --- LOGIC END ---
+    const isUserOnline = (uid, defaultStatus) => {
+        return onlineStatuses && onlineStatuses[uid]
+            ? onlineStatuses[uid].isOnline
+            : defaultStatus;
+    };
+
+    const pendingRequests = authState.connectionRequest.filter(
+        (connection) => connection.status_accepted === null
+    );
+    const receivedAccepted = authState.connectionRequest.filter(
+        (connection) => connection.status_accepted === true
+    );
+    const sentAccepted = authState.connections.filter(
+        (connection) => connection.status_accepted === true
+    );
+
+    const networkMap = new Map();
+    receivedAccepted.forEach((req) => {
+        if (req.userId) networkMap.set(req.userId._id, req.userId);
+    });
+    sentAccepted.forEach((req) => {
+        if (req.connectionId)
+            networkMap.set(req.connectionId._id, req.connectionId);
+    });
+    const myNetworkList = Array.from(networkMap.values());
 
     return (
         <div className={styles.connectionsContainer}>
             <h2>Manage Connections</h2>
-
             <div className={styles.tabContainer}>
                 <button
                     className={
@@ -171,16 +127,31 @@ export default function MyConnectionsPage() {
                                     className={styles.requestCard}
                                     key={req._id}
                                 >
-                                    <img
-                                        src={req.userId.profilePicture}
-                                        alt=""
-                                        className={styles.profilePicture}
+                                    <div
+                                        className={styles.avatarContainer}
                                         onClick={() =>
                                             router.push(
                                                 `/view_profile/${req.userId.username}`
                                             )
                                         }
-                                    />
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        <img
+                                            src={req.userId.profilePicture}
+                                            alt=""
+                                            className={styles.profilePicture}
+                                        />
+                                        {isUserOnline(
+                                            req.userId._id,
+                                            req.userId.isOnline
+                                        ) && (
+                                            <span
+                                                className={
+                                                    styles.onlineDotLarge
+                                                }
+                                            ></span>
+                                        )}
+                                    </div>
                                     <div className={styles.userInfo}>
                                         <h3
                                             onClick={() =>
@@ -236,39 +207,42 @@ export default function MyConnectionsPage() {
                                 <div
                                     className={styles.networkCard}
                                     key={user._id}
+                                    onClick={() =>
+                                        router.push(
+                                            `/view_profile/${user.username}`
+                                        )
+                                    }
                                 >
-                                    {/* --- 1. This new wrapper div keeps the profile link behavior --- */}
-                                    <div
-                                        className={styles.networkCardInfo}
-                                        onClick={() =>
-                                            router.push(
-                                                `/view_profile/${user.username}`
-                                            )
-                                        }
-                                    >
-                                        <img
-                                            src={user.profilePicture}
-                                            alt=""
-                                            className={
-                                                styles.profilePictureSmall
-                                            }
-                                        />
+                                    <div className={styles.networkCardInfo}>
+                                        <div className={styles.avatarContainer}>
+                                            <img
+                                                src={user.profilePicture}
+                                                alt=""
+                                                className={
+                                                    styles.profilePictureSmall
+                                                }
+                                            />
+                                            {isUserOnline(
+                                                user._id,
+                                                user.isOnline
+                                            ) && (
+                                                <span
+                                                    className={
+                                                        styles.onlineDotSmall
+                                                    }
+                                                ></span>
+                                            )}
+                                        </div>
                                         <div className={styles.userInfo}>
                                             <h3>{user.name}</h3>
                                             <p>@{user.username}</p>
                                         </div>
                                     </div>
-                                    <div
-                                        style={{ display: "flex", gap: "10px" }}
-                                    >
-                                        {/* --- NEW MESSAGE BUTTON --- */}
+                                    <div className={styles.actionsGroup}>
                                         <button
-                                            className={styles.callButton}
-                                            style={{
-                                                backgroundColor: "white",
-                                                color: "#0a66c2",
-                                                border: "1px solid #0a66c2",
-                                            }}
+                                            className={
+                                                styles.actionBtnSecondary
+                                            }
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleMessageUser(
@@ -278,13 +252,11 @@ export default function MyConnectionsPage() {
                                         >
                                             Message
                                         </button>
-
-                                        {/* --- 2. THIS IS THE NEW BUTTON THAT WAS ADDED --- */}
                                         <button
-                                            className={styles.callButton}
+                                            className={styles.actionBtnPrimary}
                                             onClick={(e) => {
-                                                e.stopPropagation(); // Prevents the profile click
-                                                handleStartOneOnOneCall(user); // Triggers the new function
+                                                e.stopPropagation();
+                                                handleStartOneOnOneCall(user);
                                             }}
                                         >
                                             Call
@@ -299,7 +271,6 @@ export default function MyConnectionsPage() {
         </div>
     );
 }
-
 MyConnectionsPage.getLayout = function getLayout(page) {
     return (
         <UserLayout>

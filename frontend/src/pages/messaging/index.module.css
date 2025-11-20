@@ -1,33 +1,32 @@
 .container {
     display: flex;
-    height: 85vh; /* Fit within layout */
+    height: 85vh;
     background: #fff;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
     overflow: hidden;
     margin-top: 1rem;
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",
+        Roboto;
 }
 
 /* --- Left Sidebar --- */
 .sidebar {
-    width: 350px;
+    width: 320px;
     border-right: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
+    background-color: #fff;
 }
 
 .sidebarHeader {
-    padding: 10px 16px;
+    padding: 12px 16px;
     border-bottom: 1px solid #e0e0e0;
 }
-
-.searchBar {
-    width: 100%;
-    padding: 8px;
-    background: #eef3f8;
-    border: none;
-    border-radius: 4px;
-    margin-top: 8px;
+.sidebarHeader h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #191919;
 }
 
 .conversationList {
@@ -38,11 +37,11 @@
 .conversationItem {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 12px 16px;
     cursor: pointer;
     border-left: 4px solid transparent;
-    transition: background 0.2s;
+    transition: background 0.1s;
 }
 
 .conversationItem:hover {
@@ -51,31 +50,59 @@
 
 .conversationItem.active {
     background-color: #eef3f8;
-    border-left-color: #01754f; /* LinkedIn Green */
+    border-left-color: #01754f;
+}
+
+/* --- Avatar and Online Status --- */
+.avatarContainer {
+    position: relative;
+    width: 56px;
+    height: 56px;
 }
 
 .avatar {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+.onlineDot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background-color: #057642; /* LinkedIn green */
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+.info {
+    flex: 1;
+    min-width: 0;
 }
 
 .info h4 {
     font-size: 1rem;
     font-weight: 600;
-    margin: 0;
-    color: rgba(0, 0, 0, 0.9);
+    margin: 0 0 2px 0;
+    color: #191919;
 }
 
-.info p {
-    font-size: 0.85rem;
-    color: rgba(0, 0, 0, 0.6);
+.statusText {
+    font-size: 0.8rem;
+    color: #666;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+}
+
+.statusText.online {
+    color: #057642;
+    font-weight: 500;
 }
 
 /* --- Right Chat Area --- */
@@ -92,7 +119,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 60px;
 }
+
 .chatHeaderInfo h3 {
     margin: 0;
     font-size: 1.1rem;
@@ -109,35 +138,36 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background: #f9fafb;
+    background: #fff;
 }
 
 .messageBubble {
-    max-width: 70%;
+    max-width: 65%;
     padding: 10px 14px;
     border-radius: 12px;
     font-size: 0.95rem;
     line-height: 1.4;
     position: relative;
+    word-wrap: break-word;
 }
 
 .received {
     align-self: flex-start;
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: #f2f2f2;
+    color: #191919;
     border-bottom-left-radius: 2px;
 }
 
 .sent {
     align-self: flex-end;
-    background: #eef3f8; /* LinkedIn light blue/grey for self */
-    color: #1d2226;
+    background: #d3e3fd;
+    color: #191919;
     border-bottom-right-radius: 2px;
 }
 
 .timestamp {
     font-size: 0.7rem;
-    color: #666;
+    color: rgba(0, 0, 0, 0.5);
     margin-top: 4px;
     display: block;
     text-align: right;

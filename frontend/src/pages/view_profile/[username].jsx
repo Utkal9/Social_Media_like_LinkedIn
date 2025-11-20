@@ -1,8 +1,6 @@
-// frontend/src/pages/view_profile/[username].jsx
-
-import clientServer from "@/config"; // <-- BASE_URL not needed for images
-import DashboardLayout from "@/layout/DashboardLayout"; // Import
-import UserLayout from "@/layout/UserLayout"; // Import
+import clientServer from "@/config";
+import DashboardLayout from "@/layout/DashboardLayout";
+import UserLayout from "@/layout/UserLayout";
 import React, { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
@@ -13,11 +11,12 @@ import {
     getMyConnectionRequests,
     sendConnectionRequest,
 } from "@/config/redux/action/authAction";
+import { useSocket } from "@/context/SocketContext";
 
 // --- Icons ---
 const DownloadIcon = () => (
     <svg
-        style={{ width: "1.2em" }}
+        style={{ width: "1.2em", height: "1.2em" }}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -31,18 +30,60 @@ const DownloadIcon = () => (
         />
     </svg>
 );
+
+const MessageIcon = () => (
+    <svg
+        style={{ width: "1.2em", height: "1.2em" }}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+        />
+    </svg>
+);
 // --- End Icons ---
+
+// --- Helper Component for Text Truncation ---
+const TruncatedText = ({ content, postId }) => {
+    const router = useRouter();
+    // Limit set to 300 characters (approx 40-60 words) for a clean preview card
+    const MAX_LENGTH = 300;
+
+    if (content.length <= MAX_LENGTH) {
+        return <p className={styles.postCardBody}>{content}</p>;
+    }
+
+    return (
+        <p className={styles.postCardBody}>
+            {content.substring(0, MAX_LENGTH)}...
+            <span
+                className={styles.readMore}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/post/${postId}`);
+                }}
+            >
+                more
+            </span>
+        </p>
+    );
+};
 
 export default function ViewProfilePage({ userProfile }) {
     const router = useRouter();
     const postReducer = useSelector((state) => state.postReducer);
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
+    const { onlineStatuses } = useSocket() || {};
 
     const [userPosts, setUserPosts] = useState([]);
-
-    // State to hold the connection status
-    const [connectStatus, setConnectStatus] = useState("Connect"); // 'Connect', 'Pending', 'Connected'
+    const [connectStatus, setConnectStatus] = useState("Connect");
     const isOwnProfile =
         authState.user && authState.user.userId._id === userProfile.userId._id;
 
@@ -55,7 +96,6 @@ export default function ViewProfilePage({ userProfile }) {
         }
     };
 
-    // Filter posts for this user
     useEffect(() => {
         let post = postReducer.posts.filter((post) => {
             return post.userId.username === router.query.username;
@@ -63,12 +103,8 @@ export default function ViewProfilePage({ userProfile }) {
         setUserPosts(post);
     }, [postReducer.posts, router.query.username]);
 
-    // Determine connection status
     useEffect(() => {
-        // If it's my profile, don't waste time calculating status
         if (isOwnProfile) return;
-
-        // 1. Connected? (Reciprocal)
         const isConnectedRec = authState.connectionRequest.some(
             (req) =>
                 req.userId._id === userProfile.userId._id &&
@@ -79,13 +115,10 @@ export default function ViewProfilePage({ userProfile }) {
                 req.connectionId._id === userProfile.userId._id &&
                 req.status_accepted === true
         );
-
         if (isConnectedRec || isConnectedSent) {
             setConnectStatus("Connected");
             return;
         }
-
-        // 2. Pending? (I sent)
         const isPending = authState.connections.some(
             (req) =>
                 req.connectionId._id === userProfile.userId._id &&
@@ -95,18 +128,15 @@ export default function ViewProfilePage({ userProfile }) {
             setConnectStatus("Pending");
             return;
         }
-
-        // 3. They requested? (I received)
         const hasRequested = authState.connectionRequest.some(
             (req) =>
                 req.userId._id === userProfile.userId._id &&
                 req.status_accepted === null
         );
         if (hasRequested) {
-            setConnectStatus("Pending"); // Or "Accept" but keeping it simple
+            setConnectStatus("Pending");
             return;
         }
-
         setConnectStatus("Connect");
     }, [
         authState.connections,
@@ -115,12 +145,10 @@ export default function ViewProfilePage({ userProfile }) {
         isOwnProfile,
     ]);
 
-    // Fetch all posts and connection data on load
     useEffect(() => {
         getUsersPost();
-    }, [dispatch]); // Added dispatch
+    }, [dispatch]);
 
-    // Handle sending a connection request
     const handleConnect = () => {
         dispatch(
             sendConnectionRequest({
@@ -128,38 +156,25 @@ export default function ViewProfilePage({ userProfile }) {
                 user_id: userProfile.userId._id,
             })
         );
-        setConnectStatus("Pending"); // Optimistically update UI
+        setConnectStatus("Pending");
     };
 
-    // Handle resume download
     const handleDownloadResume = async () => {
         try {
             const response = await clientServer.get(
                 `/user/download_resume?id=${userProfile.userId._id}`,
-                {
-                    responseType: "blob", // <-- Tell axios to expect a file blob
-                }
+                { responseType: "blob" }
             );
-
-            // Create a URL for the blob in the browser's memory
             const url = window.URL.createObjectURL(new Blob([response.data]));
-
-            // Create a temporary link element
             const link = document.createElement("a");
             link.href = url;
-
-            // Set the download filename
             link.setAttribute(
                 "download",
                 `${userProfile.userId.username}_resume.pdf`
             );
-
-            // Append to DOM, click it, and remove it
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
-
-            // Clean up the object URL
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Failed to download resume:", error);
@@ -167,45 +182,43 @@ export default function ViewProfilePage({ userProfile }) {
         }
     };
     const handleMessage = () => {
-        // Redirect to messaging page with the username in query
         router.push(`/messaging?chatWith=${userProfile.userId.username}`);
     };
 
-    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
+    const isOnline =
+        onlineStatuses && onlineStatuses[userProfile.userId._id]
+            ? onlineStatuses[userProfile.userId._id].isOnline
+            : userProfile.userId.isOnline;
+
     return (
         <div className={styles.container}>
-            {/* --- 1. Profile Header Card --- */}
             <div className={styles.profileHeaderCard}>
                 <div className={styles.backDropContainer}>
-                    {/* --- FIX: Removed ${BASE_URL}/ --- */}
-                    <img
-                        src={userProfile.userId.profilePicture}
-                        alt="backDrop"
-                        className={styles.profilePic}
-                    />
-                    {/* --- END FIX --- */}
+                    <div className={styles.avatarWrapper}>
+                        <img
+                            src={userProfile.userId.profilePicture}
+                            alt="backDrop"
+                            className={styles.profilePic}
+                        />
+                        {isOnline && <span className={styles.onlineDot}></span>}
+                    </div>
                 </div>
                 <div className={styles.profileHeaderContent}>
                     <div className={styles.profileHeaderActions}>
                         <button
-                            className={styles.downloadButton}
+                            className={styles.iconActionButton}
                             onClick={handleDownloadResume}
+                            title="Download Resume"
                         >
                             <DownloadIcon />
-                            <span>Download Resume</span>
                         </button>
                         {!isOwnProfile && (
                             <button
+                                className={styles.iconActionButton}
                                 onClick={handleMessage}
-                                className={styles.connectBtn} // Re-use connect style or make a new one
-                                style={{
-                                    marginLeft: "0.5rem",
-                                    backgroundColor: "white",
-                                    color: "#0a66c2",
-                                    border: "1px solid #0a66c2",
-                                }}
+                                title="Message"
                             >
-                                Message
+                                <MessageIcon />
                             </button>
                         )}
                         {!isOwnProfile && (
@@ -222,7 +235,6 @@ export default function ViewProfilePage({ userProfile }) {
                             </button>
                         )}
                     </div>
-
                     <h2 className={styles.nameDisplay}>
                         {userProfile.userId.name}
                     </h2>
@@ -232,8 +244,7 @@ export default function ViewProfilePage({ userProfile }) {
                     <p className={styles.bioDisplay}>{userProfile.bio}</p>
                 </div>
             </div>
-
-            {/* --- 2. Work History Card --- */}
+            {/* ... sections for Work History and Activity ... */}
             <div className={styles.profileSectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Work History</h4>
@@ -253,7 +264,6 @@ export default function ViewProfilePage({ userProfile }) {
                                         {work.years} years
                                     </p>
                                 </div>
-                                {/* No Edit/Delete buttons */}
                             </div>
                         ))
                     ) : (
@@ -261,8 +271,6 @@ export default function ViewProfilePage({ userProfile }) {
                     )}
                 </div>
             </div>
-
-            {/* --- 3. Recent Activity Card --- */}
             <div className={styles.profileSectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Recent Activity</h4>
@@ -273,17 +281,17 @@ export default function ViewProfilePage({ userProfile }) {
                             <div className={styles.postCard} key={post._id}>
                                 <div className={styles.card}>
                                     {post.media && (
-                                        /* --- FIX: Removed ${BASE_URL}/ --- */
                                         <img
                                             src={post.media}
                                             alt="Post media"
                                             className={styles.postCardImage}
                                         />
-                                        /* --- END FIX --- */
                                     )}
-                                    <p className={styles.postCardBody}>
-                                        {post.body}
-                                    </p>
+                                    {/* Use the TruncatedText component here */}
+                                    <TruncatedText
+                                        content={post.body}
+                                        postId={post._id}
+                                    />
                                 </div>
                             </div>
                         ))
@@ -295,30 +303,17 @@ export default function ViewProfilePage({ userProfile }) {
         </div>
     );
 }
-
-// Server-side props remains the same
 export async function getServerSideProps(context) {
     try {
         const request = await clientServer.get(
             "/user/get_profile_based_on_username",
-            {
-                params: {
-                    username: context.query.username,
-                },
-            }
+            { params: { username: context.query.username } }
         );
         return { props: { userProfile: request.data.profile } };
     } catch (error) {
-        console.error("Error fetching profile:", error?.message);
-        // If the API fails (e.g., 404 or 500), return 'notFound: true'
-        // This prevents the page from crashing with a 500 error
-        return {
-            notFound: true,
-        };
+        return { notFound: true };
     }
 }
-
-// ADDED THIS:
 ViewProfilePage.getLayout = function getLayout(page) {
     return (
         <UserLayout>
