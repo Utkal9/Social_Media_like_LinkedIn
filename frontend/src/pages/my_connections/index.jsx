@@ -126,6 +126,9 @@ export default function MyConnectionsPage() {
 
     // Convert Map values back to an array for rendering
     const myNetworkList = Array.from(networkMap.values());
+    const handleMessageUser = (username) => {
+        router.push(`/messaging?chatWith=${username}`);
+    };
 
     // --- LOGIC END ---
 
@@ -255,17 +258,38 @@ export default function MyConnectionsPage() {
                                             <p>@{user.username}</p>
                                         </div>
                                     </div>
-
-                                    {/* --- 2. THIS IS THE NEW BUTTON THAT WAS ADDED --- */}
-                                    <button
-                                        className={styles.callButton}
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Prevents the profile click
-                                            handleStartOneOnOneCall(user); // Triggers the new function
-                                        }}
+                                    <div
+                                        style={{ display: "flex", gap: "10px" }}
                                     >
-                                        Call
-                                    </button>
+                                        {/* --- NEW MESSAGE BUTTON --- */}
+                                        <button
+                                            className={styles.callButton}
+                                            style={{
+                                                backgroundColor: "white",
+                                                color: "#0a66c2",
+                                                border: "1px solid #0a66c2",
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleMessageUser(
+                                                    user.username
+                                                );
+                                            }}
+                                        >
+                                            Message
+                                        </button>
+
+                                        {/* --- 2. THIS IS THE NEW BUTTON THAT WAS ADDED --- */}
+                                        <button
+                                            className={styles.callButton}
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevents the profile click
+                                                handleStartOneOnOneCall(user); // Triggers the new function
+                                            }}
+                                        >
+                                            Call
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         )}
