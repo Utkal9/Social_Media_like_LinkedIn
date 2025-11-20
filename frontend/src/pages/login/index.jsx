@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import styles from "./style.module.css";
 import { loginUser, registerUser } from "@/config/redux/action/authAction";
 import { emptyMessage } from "@/config/redux/reducer/authReducer";
+import clientServer, { BASE_URL } from "@/config"; // Import BASE_URL
 
 // --- Icons ---
 const GoogleIcon = () => (
@@ -31,32 +32,19 @@ const GoogleIcon = () => (
     </svg>
 );
 
+// --- LOGO ---
 const LogoIcon = () => (
-    <svg
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <path
-            d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM12 10.5c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm0 6c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
-            fill="url(#logoGradient)"
-        />
-        <defs>
-            <linearGradient
-                id="logoGradient"
-                x1="2"
-                y1="2"
-                x2="22"
-                y2="22"
-                gradientUnits="userSpaceOnUse"
-            >
-                <stop stopColor="#0a66c2" />
-                <stop offset="1" stopColor="#004182" />
-            </linearGradient>
-        </defs>
-    </svg>
+    <img
+        src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/A3Q7xGO4EOc9ZVJo/chatgpt-image-aug-11-2025-10_04_14-pm-YleQ8RV01OtW9GKv.png"
+        alt="Logo"
+        style={{
+            width: "48px",
+            height: "48px",
+            objectFit: "cover",
+            borderRadius: "8px",
+            marginBottom: "10px",
+        }}
+    />
 );
 // --- End Icons ---
 
@@ -65,9 +53,10 @@ function LoginComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // Single state to toggle between Login and Sign Up
-    const [isLoginView, setIsLoginView] = useState(true);
+    // States: "login", "register", "forgot"
+    const [viewState, setViewState] = useState("login");
 
+    // Form Data
     const [signInData, setSignInData] = useState({ email: "", password: "" });
     const [signUpData, setSignUpData] = useState({
         name: "",
@@ -75,6 +64,8 @@ function LoginComponent() {
         email: "",
         password: "",
     });
+    const [forgotEmail, setForgotEmail] = useState("");
+    const [forgotMessage, setForgotMessage] = useState("");
 
     // Redirect if already logged in
     useEffect(() => {
@@ -86,7 +77,8 @@ function LoginComponent() {
     // Clear messages when switching forms
     useEffect(() => {
         dispatch(emptyMessage());
-    }, [isLoginView, dispatch]);
+        setForgotMessage("");
+    }, [viewState, dispatch]);
 
     const handleSignInChange = (e) => {
         setSignInData({ ...signInData, [e.target.name]: e.target.value });
@@ -106,39 +98,77 @@ function LoginComponent() {
         dispatch(registerUser(signUpData));
     };
 
-    // Toggle the view
-    const toggleView = () => {
-        setIsLoginView(!isLoginView);
+    // --- Feature: Forgot Password Submit ---
+    const handleForgotSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            // Call Backend API
+            const response = await clientServer.post("/forgot_password", {
+                email: forgotEmail,
+            });
+            setForgotMessage(response.data.message); // "Reset link sent"
+        } catch (error) {
+            setForgotMessage(
+                error.response?.data?.message || "Something went wrong"
+            );
+        }
     };
 
-    // Get the correct message to display
-    const authMessage = authState.message?.message || authState.message;
+    // --- Feature: Google Sign In ---
+    const handleGoogleSignIn = () => {
+        // This uses the BASE_URL which is environment-aware (localhost or production)
+        // Ensure your backend has a route handling /auth/google
+        // window.location.href = `${BASE_URL}/auth/google`;
+
+        alert(`To enable Google Sign-In, you need to configure a Google Cloud Project and set up backend routes.
+        
+        If configured, this button would redirect to:
+        ${BASE_URL || "http://localhost:9090"}/auth/google`);
+    };
+
+    // Get the correct message to display (Auth Redux or Local Forgot State)
+    const authMessage =
+        viewState === "forgot"
+            ? forgotMessage
+            : authState.message?.message || authState.message;
     const messageIsError =
         authState.isError ||
         (authMessage &&
             typeof authMessage === "string" &&
-            !authMessage.includes("Success"));
+            !authMessage.toLowerCase().includes("success") &&
+            !authMessage.toLowerCase().includes("sent"));
 
     return (
         <div className={styles.pageContainer}>
             <div className={styles.formCard}>
                 <div className={styles.formHeader}>
                     <LogoIcon />
-                    <h1>{isLoginView ? "Welcome Back" : "Create Account"}</h1>
+                    <h1>
+                        {viewState === "login" && "Welcome Back"}
+                        {viewState === "register" && "Create Account"}
+                        {viewState === "forgot" && "Reset Password"}
+                    </h1>
                     <p>
-                        {isLoginView
-                            ? "Sign in to your Pro Connect account"
-                            : "Join the next-gen professional network"}
+                        {viewState === "login" &&
+                            "Sign in to your Pro Connect account"}
+                        {viewState === "register" &&
+                            "Join the next-gen professional network"}
+                        {viewState === "forgot" &&
+                            "Enter your email to recover your account"}
                     </p>
                 </div>
 
-                {isLoginView ? (
-                    /* --- Sign In Form --- */
+                {/* --- LOGIN VIEW --- */}
+                {viewState === "login" && (
                     <form
                         className={styles.formContent}
                         onSubmit={handleSignInSubmit}
                     >
-                        <button type="button" className={styles.socialButton}>
+                        <button
+                            type="button"
+                            className={styles.socialButton}
+                            onClick={handleGoogleSignIn}
+                        >
                             <GoogleIcon />
                             Sign in with Google
                         </button>
@@ -171,7 +201,7 @@ function LoginComponent() {
                             />
                         </div>
 
-                        {authMessage && isLoginView && (
+                        {authMessage && (
                             <p
                                 className={
                                     messageIsError
@@ -183,9 +213,13 @@ function LoginComponent() {
                             </p>
                         )}
 
-                        <a href="#" className={styles.forgotPassword}>
+                        <span
+                            className={styles.forgotPassword}
+                            onClick={() => setViewState("forgot")}
+                            style={{ cursor: "pointer" }}
+                        >
                             Forgot your password?
-                        </a>
+                        </span>
 
                         <button
                             type="submit"
@@ -195,8 +229,10 @@ function LoginComponent() {
                             {authState.isLoading ? "Signing In..." : "Sign In"}
                         </button>
                     </form>
-                ) : (
-                    /* --- Sign Up Form --- */
+                )}
+
+                {/* --- REGISTER VIEW --- */}
+                {viewState === "register" && (
                     <form
                         className={styles.formContent}
                         onSubmit={handleSignUpSubmit}
@@ -250,7 +286,7 @@ function LoginComponent() {
                             />
                         </div>
 
-                        {authMessage && !isLoginView && (
+                        {authMessage && (
                             <p
                                 className={
                                     messageIsError
@@ -274,16 +310,81 @@ function LoginComponent() {
                     </form>
                 )}
 
+                {/* --- FORGOT PASSWORD VIEW --- */}
+                {viewState === "forgot" && (
+                    <form
+                        className={styles.formContent}
+                        onSubmit={handleForgotSubmit}
+                    >
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="forgot-email">Email</label>
+                            <input
+                                id="forgot-email"
+                                type="email"
+                                name="email"
+                                placeholder="you@example.com"
+                                value={forgotEmail}
+                                onChange={(e) => setForgotEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {authMessage && (
+                            <p
+                                className={
+                                    messageIsError
+                                        ? styles.errorMessage
+                                        : styles.successMessage
+                                }
+                            >
+                                {authMessage}
+                            </p>
+                        )}
+
+                        <button type="submit" className={styles.submitButton}>
+                            Send Reset Link
+                        </button>
+
+                        <div style={{ textAlign: "center", marginTop: "10px" }}>
+                            <span
+                                onClick={() => setViewState("login")}
+                                style={{
+                                    color: "#0a66c2",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    fontSize: "0.9rem",
+                                }}
+                            >
+                                Back to Login
+                            </span>
+                        </div>
+                    </form>
+                )}
+
+                {/* Footer Links */}
                 <div className={styles.formFooter}>
-                    {isLoginView ? (
+                    {viewState === "login" && (
                         <p>
                             Don't have an account?{" "}
-                            <span onClick={toggleView}>Sign Up</span>
+                            <span onClick={() => setViewState("register")}>
+                                Sign Up
+                            </span>
                         </p>
-                    ) : (
+                    )}
+                    {viewState === "register" && (
                         <p>
                             Already have an account?{" "}
-                            <span onClick={toggleView}>Sign In</span>
+                            <span onClick={() => setViewState("login")}>
+                                Sign In
+                            </span>
+                        </p>
+                    )}
+                    {viewState === "forgot" && (
+                        <p>
+                            Remembered your password?{" "}
+                            <span onClick={() => setViewState("login")}>
+                                Sign In
+                            </span>
                         </p>
                     )}
                 </div>

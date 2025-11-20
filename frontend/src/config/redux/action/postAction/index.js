@@ -12,6 +12,7 @@ export const getAllPosts = createAsyncThunk(
         }
     }
 );
+
 export const createPost = createAsyncThunk(
     "post/createPost",
     async (userData, thunkAPI) => {
@@ -39,6 +40,7 @@ export const createPost = createAsyncThunk(
         }
     }
 );
+
 export const deletePost = createAsyncThunk(
     "post/deletePost",
     async (payload, thunkAPI) => {
@@ -53,25 +55,25 @@ export const deletePost = createAsyncThunk(
         }
     }
 );
+
 export const toggleLike = createAsyncThunk(
     "post/toggleLike",
     async (data, thunkAPI) => {
-        const { token, post_id } = data;
+        const { token, post_id, reactionType = "Like" } = data;
         try {
-            // This is the new endpoint we made
             const response = await clientServer.post("/toggle_like", {
                 token: token,
                 post_id: post_id,
+                reactionType: reactionType,
             });
             thunkAPI.dispatch(getAllPosts());
-            // The response.data will be { message, post_id, likes }
-            // thanks to our backend fix.
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
         }
     }
 );
+
 export const getAllComments = createAsyncThunk(
     "post/getAllComments",
     async (postData, thunkAPI) => {
@@ -90,14 +92,11 @@ export const getAllComments = createAsyncThunk(
         }
     }
 );
+
 export const postComment = createAsyncThunk(
     "post/postComment",
     async (commentData, thunkAPI) => {
         try {
-            console.log({
-                post_id: commentData.post_id,
-                body: commentData.body,
-            });
             const response = await clientServer.post("/comment", {
                 token: localStorage.getItem("token"),
                 post_id: commentData.post_id,
@@ -106,6 +105,24 @@ export const postComment = createAsyncThunk(
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue("Something went wrong !");
+        }
+    }
+);
+
+// --- NEW ACTION ---
+export const toggleCommentLike = createAsyncThunk(
+    "post/toggleCommentLike",
+    async (data, thunkAPI) => {
+        try {
+            const response = await clientServer.post("/toggle_comment_like", {
+                token: data.token,
+                comment_id: data.comment_id,
+            });
+            // Refresh comments to show updated likes
+            thunkAPI.dispatch(getAllComments({ post_id: data.post_id }));
+            return thunkAPI.fulfillWithValue(response.data);
+        } catch (error) {
+            return thunkAPI.rejectWithValue(error.response.data);
         }
     }
 );
