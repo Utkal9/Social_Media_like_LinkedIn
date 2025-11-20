@@ -4,10 +4,11 @@ import React, { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import { getAboutUser } from "@/config/redux/action/authAction";
-import clientServer from "@/config"; // <-- BASE_URL not needed for images
-import UserLayout from "@/layout/UserLayout"; // Import
-import DashboardLayout from "@/layout/DashboardLayout"; // Import
+import clientServer from "@/config";
+import UserLayout from "@/layout/UserLayout";
+import DashboardLayout from "@/layout/DashboardLayout";
 import { getAllPosts } from "@/config/redux/action/postAction";
+import { useRouter } from "next/router"; // <--- Added Import
 
 // --- Icons ---
 const AddIcon = () => (
@@ -42,17 +43,43 @@ const DeleteIcon = () => (
 );
 // --- End Icons ---
 
+// --- Helper Component for Text Truncation ---
+const TruncatedText = ({ content, postId }) => {
+    const router = useRouter();
+    const MAX_LENGTH = 300;
+
+    if (content.length <= MAX_LENGTH) {
+        return <p className={styles.postCardBody}>{content}</p>;
+    }
+
+    return (
+        <p className={styles.postCardBody}>
+            {content.substring(0, MAX_LENGTH)}...
+            <span
+                className={styles.readMore}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/post/${postId}`);
+                }}
+            >
+                more
+            </span>
+        </p>
+    );
+};
+
 export default function Profilepage() {
     const dispatch = useDispatch();
+    const router = useRouter(); // Initialize router
     const authState = useSelector((state) => state.auth);
     const postReducer = useSelector((state) => state.postReducer);
 
-    const [userProfile, setUserProfile] = useState(null); // Start as null
+    const [userProfile, setUserProfile] = useState(null);
     const [userPosts, setUserPosts] = useState([]);
 
     // Modal State
-    const [modalMode, setModalMode] = useState(null); // null, 'add-work', 'edit-work'
-    const [selectedWorkItem, setSelectedWorkItem] = useState(null); // For editing
+    const [modalMode, setModalMode] = useState(null);
+    const [selectedWorkItem, setSelectedWorkItem] = useState(null);
     const [workInput, setWorkInput] = useState({
         company: "",
         position: "",
@@ -97,12 +124,10 @@ export default function Profilepage() {
 
     // Handler for saving name, bio, etc.
     const updateProfileData = async () => {
-        // 1. Update User (name)
         await clientServer.post("/user_update", {
             token: localStorage.getItem("token"),
             name: userProfile.userId.name,
         });
-        // 2. Update Profile (bio, work, etc.)
         await clientServer.post("/update_profile_data", {
             token: localStorage.getItem("token"),
             bio: userProfile.bio,
@@ -113,10 +138,8 @@ export default function Profilepage() {
         alert("Profile Updated!");
     };
 
-    // Generic handler for text input changes
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
-        // This is complex because name is nested
         if (name === "name") {
             setUserProfile({
                 ...userProfile,
@@ -131,7 +154,7 @@ export default function Profilepage() {
     const openModal = (mode, item = null, index = -1) => {
         setModalMode(mode);
         if (mode === "edit-work" && item) {
-            setSelectedWorkItem({ ...item, index }); // Store item and its index
+            setSelectedWorkItem({ ...item, index });
             setWorkInput(item);
         } else {
             setSelectedWorkItem(null);
@@ -152,10 +175,8 @@ export default function Profilepage() {
     const handleWorkSave = () => {
         let updatedPastWork = [...userProfile.pastWork];
         if (modalMode === "edit-work") {
-            // Update existing item
             updatedPastWork[selectedWorkItem.index] = workInput;
         } else {
-            // Add new item
             updatedPastWork.push(workInput);
         }
         setUserProfile({ ...userProfile, pastWork: updatedPastWork });
@@ -176,11 +197,9 @@ export default function Profilepage() {
     };
 
     if (!userProfile) {
-        // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
         return <h2>Loading Profile...</h2>;
     }
 
-    // <UserLayout><DashboardLayout> ... </DashboardLayout></UserLayout> <-- REMOVED
     return (
         <>
             <div className={styles.container}>
@@ -197,30 +216,27 @@ export default function Profilepage() {
                             onChange={(e) => {
                                 const file = e.target.files[0];
                                 const TEN_MB = 10 * 1024 * 1024;
-
                                 if (file && file.size > TEN_MB) {
                                     setProfilePicError(
                                         "File is too large. Please select a file under 10MB."
                                     );
-                                    e.target.value = null; // reset input
+                                    e.target.value = null;
                                 } else if (file) {
-                                    setProfilePicError(""); // Clear error
-                                    updateProfilePicture(file); // Upload immediately
+                                    setProfilePicError("");
+                                    updateProfilePicture(file);
                                 } else {
-                                    setProfilePicError(""); // Clear error
+                                    setProfilePicError("");
                                 }
                             }}
                             hidden
                             type="file"
                             id="profilePictureUpload"
                         />
-                        {/* --- FIX: Removed ${BASE_URL}/ --- */}
                         <img
                             src={userProfile.userId.profilePicture}
                             alt="backDrop"
                             className={styles.profilePic}
                         />
-                        {/* --- END FIX --- */}
                     </div>
                     {profilePicError && (
                         <p
@@ -322,17 +338,17 @@ export default function Profilepage() {
                                 <div className={styles.postCard} key={post._id}>
                                     <div className={styles.card}>
                                         {post.media && (
-                                            /* --- FIX: Removed ${BASE_URL}/ --- */
                                             <img
                                                 src={post.media}
                                                 alt="Post media"
                                                 className={styles.postCardImage}
                                             />
-                                            /* --- END FIX --- */
                                         )}
-                                        <p className={styles.postCardBody}>
-                                            {post.body}
-                                        </p>
+                                        {/* --- UPDATED: Use TruncatedText --- */}
+                                        <TruncatedText
+                                            content={post.body}
+                                            postId={post._id}
+                                        />
                                     </div>
                                 </div>
                             ))
@@ -392,7 +408,6 @@ export default function Profilepage() {
     );
 }
 
-// ADDED THIS:
 Profilepage.getLayout = function getLayout(page) {
     return (
         <UserLayout>

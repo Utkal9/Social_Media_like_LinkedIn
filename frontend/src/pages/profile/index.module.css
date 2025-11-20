@@ -207,9 +207,21 @@
 .postCardBody {
     padding: 1rem;
     font-size: 0.9rem;
+    line-height: 1.4;
 }
 
-/* --- Modal Styles (Re-used from old CSS, but renamed) --- */
+/* --- Read More Link --- */
+.readMore {
+    color: #0a66c2;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 5px;
+}
+.readMore:hover {
+    text-decoration: underline;
+}
+
+/* --- Modal Styles --- */
 .modalBackdrop {
     position: fixed;
     width: 100vw;
