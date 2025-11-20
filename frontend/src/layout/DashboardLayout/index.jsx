@@ -3,7 +3,7 @@ import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { setTokenIsThere } from "@/config/redux/reducer/authReducer";
-import { getAboutUser, getAllUsers } from "@/config/redux/action/authAction"; // 1. Import fetch actions
+import { getAboutUser, getAllUsers } from "@/config/redux/action/authAction";
 import { useSocket } from "@/context/SocketContext";
 
 export default function DashboardLayout({ children }) {
@@ -19,17 +19,14 @@ export default function DashboardLayout({ children }) {
         } else {
             dispatch(setTokenIsThere());
 
-            // 2. FIX: Fetch User Profile on reload if missing
             if (!authState.profileFetched) {
                 dispatch(getAboutUser({ token }));
             }
 
-            // 3. FIX: Fetch All Users (for Right Sidebar) on reload if missing
             if (!authState.all_profiles_fetched) {
                 dispatch(getAllUsers());
             }
         }
-        // Adding deps to ensure it runs if state is missing
     }, [
         router,
         dispatch,
@@ -37,7 +34,6 @@ export default function DashboardLayout({ children }) {
         authState.all_profiles_fetched,
     ]);
 
-    // Fallback for profile picture
     const user = authState.user?.userId;
     const userFallback = user?.name ? user.name.charAt(0).toUpperCase() : "?";
     const isUserOnline = (uid, defaultStatus) => {
@@ -46,29 +42,23 @@ export default function DashboardLayout({ children }) {
             : defaultStatus;
     };
 
-    // --- RANDOMIZE PROFILES LOGIC (From previous fix) ---
     const randomProfiles = useMemo(() => {
         if (!authState.all_profiles_fetched || !authState.all_users) return [];
 
-        // Filter out invalid profiles and the current user
         const filtered = authState.all_users.filter((profile) => {
             if (!profile.userId) return false;
             if (!authState.user || !authState.user.userId) return true;
             return profile.userId._id !== authState.user.userId._id;
         });
 
-        // Shuffle randomly
         const shuffled = [...filtered].sort(() => 0.5 - Math.random());
 
-        // Return top 5
         return shuffled.slice(0, 5);
     }, [authState.all_users, authState.user, authState.all_profiles_fetched]);
-    // --------------------------------
 
     return (
         <div className={styles.pageContainer}>
             <div className={styles.homeContainer}>
-                {/* --- 1. Left Sidebar (Profile Summary) --- */}
                 <div className={styles.leftSidebar}>
                     {authState.profileFetched && user ? (
                         <div className={styles.profileCard}>
@@ -113,7 +103,6 @@ export default function DashboardLayout({ children }) {
                             </button>
                         </div>
                     ) : (
-                        // Skeleton Loader
                         <div className={styles.profileCard}>
                             <div className={styles.profileCardHeader}></div>
                             <div
@@ -131,10 +120,8 @@ export default function DashboardLayout({ children }) {
                     )}
                 </div>
 
-                {/* --- 2. Main Feed (Page Content) --- */}
                 <div className={styles.feedContainer}>{children}</div>
 
-                {/* --- 3. Right Sidebar (Widgets) --- */}
                 <div className={styles.rightSidebar}>
                     <div className={styles.widgetCard}>
                         <h4>Top Profiles to Follow</h4>

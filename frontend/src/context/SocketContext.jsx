@@ -20,11 +20,8 @@ const IncomingCallHandler = ({ socket }) => {
 
     useEffect(() => {
         if (!socket) return;
-        console.log("[RECEIVER] IncomingCallHandler is listening...");
 
         socket.on("incoming-call", ({ fromUser, roomUrl }) => {
-            console.log("[RECEIVER] *** INCOMING CALL DETECTED ***");
-            console.log("[RECEIVER] From user:", fromUser);
             setCall({ fromUser, roomUrl });
         });
 
@@ -74,32 +71,23 @@ export const SocketProvider = ({ children }) => {
     const socketInstance = useRef(null);
 
     useEffect(() => {
-        console.log("[RECEIVER] SocketContext: useSocket hook is active.");
-        // Connect only once
         if (socketInstance.current) return;
 
-        // Connect to the correct port 9090
         const newSocket = io(
             process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090",
             {
                 transports: ["polling", "websocket"],
-                autoConnect: false, // We will connect manually
+                autoConnect: false,
             }
         );
 
         socketInstance.current = newSocket;
         setSocket(newSocket);
 
-        // Manually connect
         newSocket.connect();
 
         newSocket.on("connect", () => {
-            console.log("[RECEIVER] Socket connected:", newSocket.id);
-            // Now that we are connected, register the user if available
             if (auth.user?.userId?._id) {
-                console.log(
-                    `[RECEIVER] SocketContext: Emitting 'register-user' for ${auth.user.userId._id}`
-                );
                 newSocket.emit("register-user", auth.user.userId._id);
             }
         });
@@ -114,22 +102,16 @@ export const SocketProvider = ({ children }) => {
             newSocket.disconnect();
             socketInstance.current = null;
         };
-    }, []); // Run only once on mount
+    }, []);
 
-    // This separate effect handles user registration
-    // when the user logs in *after* the socket connects
     useEffect(() => {
         if (socket && auth.user?.userId?._id) {
-            console.log(
-                `[RECEIVER] User logged in, emitting 'register-user' for ${auth.user.userId._id}`
-            );
             if (!socket.connected) {
-                console.log("[SOCKET] Reconnecting socket...");
                 socket.connect();
             }
             socket.emit("register-user", auth.user.userId._id);
         }
-    }, [socket, auth.user]); // Re-run when user or socket changes
+    }, [socket, auth.user]);
 
     return (
         <SocketContext.Provider

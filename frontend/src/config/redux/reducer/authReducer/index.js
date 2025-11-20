@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-// const { default: axios } = require("axios");
 import {
     getAboutUser,
     getAllUsers,
