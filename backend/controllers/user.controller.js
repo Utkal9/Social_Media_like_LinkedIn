@@ -19,47 +19,67 @@ import {
     AlignmentType,
     HeadingLevel,
     TabStopType,
-    TabStopPosition,
+    ExternalHyperlink, // <--- ADDED THIS
 } from "docx";
 
 // --- HELPER: Smart Bullet Points ---
-// Automatically converts a paragraph of text into a clean list of bullet points
 const createSmartBullets = (text) => {
     if (!text) return [];
 
     let points = [];
-    // 1. If user used newlines, split by them
     if (text.includes("\n")) {
         points = text
             .split("\n")
             .map((line) => line.trim())
             .filter((l) => l.length > 0);
-    }
-    // 2. Fallback: If it's a solid block, split by sentences
-    else {
+    } else {
         points = text
             .split(". ")
             .map((s) => s.trim())
             .filter((s) => s.length > 2);
     }
 
-    // Create DOCX Paragraphs for each point
     return points.map(
         (point) =>
             new Paragraph({
                 text: point.endsWith(".") ? point : point + ".",
-                bullet: { level: 0 }, // Adds the bullet dot
-                style: "Normal", // Uses our 10pt font style
-                spacing: { after: 0 }, // Tight spacing
+                bullet: { level: 0 },
+                style: "Normal",
+                spacing: { after: 0 },
             })
     );
 };
 
 // --- HELPER: Clean URL ---
-// Removes https:// and trailing slashes for a cleaner look on the resume
 const cleanUrl = (url) => {
     if (!url) return "";
     return url.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
+};
+
+// --- HELPER: Create Section Header (Left Aligned + Bottom Line) ---
+const createSectionHeader = (title) => {
+    return new Paragraph({
+        alignment: AlignmentType.LEFT,
+        border: {
+            bottom: {
+                color: "BFBFBF", // Subtle Grey Line
+                space: 1, // Space between text and line
+                style: BorderStyle.SINGLE,
+                size: 6, // Thin line
+            },
+        },
+        spacing: { before: 200, after: 100 }, // Nice spacing around header
+        children: [
+            new TextRun({
+                text: title,
+                font: "Arial",
+                size: 22, // 11pt
+                bold: true,
+                smallCaps: true, // Advanced Small Caps look
+                color: "2E74B5", // Dark Blue/Purple accent
+            }),
+        ],
+    });
 };
 
 // ================= EXISTING LOGIC STARTS HERE ================= //
@@ -214,11 +234,11 @@ export const downloadProfile = async (req, res) => {
                     document: {
                         run: {
                             font: "Arial",
-                            size: 20, // 10pt (docx size is in half-points, so 20 = 10pt)
+                            size: 20, // 10pt
                             color: "000000",
                         },
                         paragraph: {
-                            spacing: { after: 40 }, // Minimal spacing to keep it 1 page
+                            spacing: { after: 40 },
                         },
                     },
                 },
@@ -227,9 +247,8 @@ export const downloadProfile = async (req, res) => {
                 {
                     properties: {
                         page: {
-                            // Narrow margins to fit content on one page
                             margin: {
-                                top: 500, // ~0.8cm
+                                top: 500,
                                 right: 500,
                                 bottom: 500,
                                 left: 500,
@@ -237,21 +256,21 @@ export const downloadProfile = async (req, res) => {
                         },
                     },
                     children: [
-                        // --- 1. NAME (Left Aligned, Bold, Larger) ---
+                        // --- 1. NAME ---
                         new Paragraph({
                             text: user.name,
                             heading: HeadingLevel.HEADING_1,
                             alignment: AlignmentType.LEFT,
-                            spacing: { after: 100 },
+                            spacing: { after: 50 },
                             run: {
                                 font: "Arial",
                                 size: 36, // 18pt
                                 bold: true,
-                                color: "000000",
+                                color: "2E74B5", // Dark Blue/Purple
                             },
                         }),
 
-                        // --- 2. HEADER TABLE (Left: Links, Right: Contact) ---
+                        // --- 2. CONTACT INFO (Header Table) ---
                         new Table({
                             width: { size: 100, type: WidthType.PERCENTAGE },
                             borders: {
@@ -265,7 +284,7 @@ export const downloadProfile = async (req, res) => {
                             rows: [
                                 new TableRow({
                                     children: [
-                                        // Left Column (Links)
+                                        // Links
                                         new TableCell({
                                             width: {
                                                 size: 60,
@@ -295,7 +314,7 @@ export const downloadProfile = async (req, res) => {
                                                 }),
                                             ],
                                         }),
-                                        // Right Column (Email/Mobile)
+                                        // Contact Details
                                         new TableCell({
                                             width: {
                                                 size: 40,
@@ -320,27 +339,10 @@ export const downloadProfile = async (req, res) => {
                             ],
                         }),
 
-                        new Paragraph({ text: "" }), // Spacer
+                        new Paragraph({ text: "" }),
 
                         // --- 3. SKILLS SECTION ---
-                        new Paragraph({
-                            text: "SKILLS",
-                            spacing: { before: 150, after: 50 },
-                            border: {
-                                bottom: {
-                                    color: "000000",
-                                    space: 1,
-                                    value: "single",
-                                    size: 6,
-                                },
-                            },
-                            run: {
-                                font: "Arial",
-                                size: 22,
-                                bold: true,
-                                allCaps: true,
-                            }, // 11pt Bold
-                        }),
+                        createSectionHeader("SKILLS"),
                         new Table({
                             width: { size: 100, type: WidthType.PERCENTAGE },
                             borders: {
@@ -357,7 +359,7 @@ export const downloadProfile = async (req, res) => {
                                         children: [
                                             new TableCell({
                                                 width: {
-                                                    size: 20,
+                                                    size: 25,
                                                     type: WidthType.PERCENTAGE,
                                                 },
                                                 children: [
@@ -462,33 +464,35 @@ export const downloadProfile = async (req, res) => {
                         // --- 4. PROJECTS SECTION ---
                         ...(userProfile.projects.length > 0
                             ? [
-                                  new Paragraph({
-                                      text: "PROJECTS",
-                                      spacing: { before: 150, after: 50 },
-                                      border: {
-                                          bottom: {
-                                              color: "000000",
-                                              space: 1,
-                                              value: "single",
-                                              size: 6,
-                                          },
-                                      },
-                                      run: {
-                                          font: "Arial",
-                                          size: 22,
-                                          bold: true,
-                                          allCaps: true,
-                                      },
-                                  }),
+                                  createSectionHeader("PROJECTS"),
                                   ...userProfile.projects.flatMap((proj) => [
-                                      // Title (Left) ......... Date (Right)
                                       new Paragraph({
                                           children: [
                                               new TextRun({
                                                   text: proj.title,
                                                   bold: true,
                                                   size: 22,
-                                              }), // 11pt Bold
+                                              }),
+                                              // --- Hyperlink Logic: "Link" Word ---
+                                              ...(proj.link
+                                                  ? [
+                                                        new TextRun({
+                                                            text: "  :  ",
+                                                        }), // Separator
+                                                        new ExternalHyperlink({
+                                                            children: [
+                                                                new TextRun({
+                                                                    text: "Link",
+                                                                    style: "Hyperlink",
+                                                                    color: "0563C1",
+                                                                    underline: true,
+                                                                    bold: true,
+                                                                }),
+                                                            ],
+                                                            link: proj.link,
+                                                        }),
+                                                    ]
+                                                  : []),
                                               new TextRun({
                                                   text: `\t${
                                                       proj.duration || ""
@@ -501,33 +505,9 @@ export const downloadProfile = async (req, res) => {
                                                   type: TabStopType.RIGHT,
                                                   position: 10500,
                                               },
-                                          ], // Align right margin
+                                          ],
                                           spacing: { after: 0 },
                                       }),
-                                      // Link (Next line)
-                                      ...(proj.link
-                                          ? [
-                                                new Paragraph({
-                                                    children: [
-                                                        new TextRun({
-                                                            text: "Link: ",
-                                                            bold: true,
-                                                            size: 18,
-                                                        }),
-                                                        new TextRun({
-                                                            text: cleanUrl(
-                                                                proj.link
-                                                            ),
-                                                            color: "0563C1",
-                                                            underline: true,
-                                                            size: 18,
-                                                        }),
-                                                    ],
-                                                    spacing: { after: 30 },
-                                                }),
-                                            ]
-                                          : []),
-                                      // Description Bullets
                                       ...createSmartBullets(proj.description),
                                   ]),
                               ]
@@ -536,24 +516,7 @@ export const downloadProfile = async (req, res) => {
                         // --- 5. CERTIFICATES SECTION ---
                         ...(userProfile.certificates.length > 0
                             ? [
-                                  new Paragraph({
-                                      text: "CERTIFICATES",
-                                      spacing: { before: 150, after: 50 },
-                                      border: {
-                                          bottom: {
-                                              color: "000000",
-                                              space: 1,
-                                              value: "single",
-                                              size: 6,
-                                          },
-                                      },
-                                      run: {
-                                          font: "Arial",
-                                          size: 22,
-                                          bold: true,
-                                          allCaps: true,
-                                      },
-                                  }),
+                                  createSectionHeader("CERTIFICATES"),
                                   ...userProfile.certificates.flatMap(
                                       (cert) => [
                                           new Paragraph({
@@ -562,6 +525,29 @@ export const downloadProfile = async (req, res) => {
                                                       text: cert.name,
                                                       bold: true,
                                                   }),
+                                                  ...(cert.link
+                                                      ? [
+                                                            new TextRun({
+                                                                text: "  :  ",
+                                                            }),
+                                                            new ExternalHyperlink(
+                                                                {
+                                                                    children: [
+                                                                        new TextRun(
+                                                                            {
+                                                                                text: "Link",
+                                                                                style: "Hyperlink",
+                                                                                color: "0563C1",
+                                                                                underline: true,
+                                                                                bold: true,
+                                                                            }
+                                                                        ),
+                                                                    ],
+                                                                    link: cert.link,
+                                                                }
+                                                            ),
+                                                        ]
+                                                      : []),
                                                   new TextRun({
                                                       text: `\t${
                                                           cert.date || ""
@@ -576,28 +562,6 @@ export const downloadProfile = async (req, res) => {
                                               ],
                                               spacing: { after: 0 },
                                           }),
-                                          ...(cert.link
-                                              ? [
-                                                    new Paragraph({
-                                                        children: [
-                                                            new TextRun({
-                                                                text: "Link: ",
-                                                                bold: true,
-                                                                size: 18,
-                                                            }),
-                                                            new TextRun({
-                                                                text: cleanUrl(
-                                                                    cert.link
-                                                                ),
-                                                                color: "0563C1",
-                                                                underline: true,
-                                                                size: 18,
-                                                            }),
-                                                        ],
-                                                        spacing: { after: 50 },
-                                                    }),
-                                                ]
-                                              : []),
                                       ]
                                   ),
                               ]
@@ -606,24 +570,7 @@ export const downloadProfile = async (req, res) => {
                         // --- 6. ACHIEVEMENTS SECTION ---
                         ...(userProfile.achievements.length > 0
                             ? [
-                                  new Paragraph({
-                                      text: "ACHIEVEMENTS",
-                                      spacing: { before: 150, after: 50 },
-                                      border: {
-                                          bottom: {
-                                              color: "000000",
-                                              space: 1,
-                                              value: "single",
-                                              size: 6,
-                                          },
-                                      },
-                                      run: {
-                                          font: "Arial",
-                                          size: 22,
-                                          bold: true,
-                                          allCaps: true,
-                                      },
-                                  }),
+                                  createSectionHeader("ACHIEVEMENTS"),
                                   ...userProfile.achievements.flatMap((ach) => [
                                       new Paragraph({
                                           children: [
@@ -648,29 +595,11 @@ export const downloadProfile = async (req, res) => {
                               ]
                             : []),
 
-                        // --- 7. EDUCATION SECTION (4-Corner Layout) ---
+                        // --- 7. EDUCATION SECTION ---
                         ...(userProfile.education.length > 0
                             ? [
-                                  new Paragraph({
-                                      text: "EDUCATION",
-                                      spacing: { before: 150, after: 50 },
-                                      border: {
-                                          bottom: {
-                                              color: "000000",
-                                              space: 1,
-                                              value: "single",
-                                              size: 6,
-                                          },
-                                      },
-                                      run: {
-                                          font: "Arial",
-                                          size: 22,
-                                          bold: true,
-                                          allCaps: true,
-                                      },
-                                  }),
+                                  createSectionHeader("EDUCATION"),
                                   ...userProfile.education.flatMap((edu) => [
-                                      // Line 1: School (Left) ... Location (Right)
                                       new Paragraph({
                                           children: [
                                               new TextRun({
@@ -693,7 +622,6 @@ export const downloadProfile = async (req, res) => {
                                           ],
                                           spacing: { after: 0 },
                                       }),
-                                      // Line 2: Degree (Left) ... Years (Right)
                                       new Paragraph({
                                           children: [
                                               new TextRun({
@@ -719,27 +647,10 @@ export const downloadProfile = async (req, res) => {
                               ]
                             : []),
 
-                        // --- 8. EXPERIENCE SECTION (If any) ---
+                        // --- 8. EXPERIENCE SECTION ---
                         ...(userProfile.pastWork.length > 0
                             ? [
-                                  new Paragraph({
-                                      text: "EXPERIENCE",
-                                      spacing: { before: 150, after: 50 },
-                                      border: {
-                                          bottom: {
-                                              color: "000000",
-                                              space: 1,
-                                              value: "single",
-                                              size: 6,
-                                          },
-                                      },
-                                      run: {
-                                          font: "Arial",
-                                          size: 22,
-                                          bold: true,
-                                          allCaps: true,
-                                      },
-                                  }),
+                                  createSectionHeader("EXPERIENCE"),
                                   ...userProfile.pastWork.flatMap((work) => [
                                       new Paragraph({
                                           children: [
@@ -774,9 +685,7 @@ export const downloadProfile = async (req, res) => {
             ],
         });
 
-        // --- GENERATE & SEND DOCX ---
         const buffer = await Packer.toBuffer(doc);
-
         res.setHeader(
             "Content-Type",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
