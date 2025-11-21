@@ -100,6 +100,7 @@ const start = async () => {
     try {
         await mongoose.connect(URL);
         console.log("✅ MongoDB connected successfully");
+        await User.updateMany({}, { $set: { isOnline: false } });
         httpServer.listen(PORT, () => {
             console.log(`🚀 Server is running on http://localhost:${PORT}`);
         });
