@@ -3,6 +3,8 @@
     flex-direction: column;
     gap: 1.5rem;
     padding-bottom: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 /* --- Profile Header --- */
@@ -12,6 +14,7 @@
     border: 1px solid #e0e0e0;
     overflow: hidden;
     position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .backDropContainer {
@@ -21,6 +24,28 @@
     background-position: center;
     position: relative;
     background-color: #a0b4b7;
+}
+
+.downloadResumeBtn {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: white;
+    border-radius: 50%;
+    padding: 8px;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    color: #333;
+    transition: all 0.2s;
+}
+.downloadResumeBtn:hover {
+    transform: scale(1.1);
+    color: #0a66c2;
 }
 
 .editCoverBtn {
@@ -58,6 +83,7 @@
     border: 4px solid white;
     object-fit: cover;
     background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .editPfpBtn {
@@ -73,6 +99,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .profileInfoSection {
@@ -89,11 +116,12 @@
     background: #0a66c2;
     color: white;
     border: none;
-    padding: 6px 16px;
-    border-radius: 20px;
+    padding: 8px 20px;
+    border-radius: 24px;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
+    font-size: 0.95rem;
 }
 .saveButton:hover {
     background: #004182;
@@ -113,6 +141,7 @@
     border-radius: 4px;
     width: 100%;
     outline: none;
+    color: #191919;
 }
 .nameInput:hover,
 .nameInput:focus {
@@ -165,6 +194,7 @@
     min-width: 200px;
     outline: none;
     padding: 2px;
+    background: transparent;
 }
 .emailInput:hover,
 .emailInput:focus {
@@ -176,17 +206,18 @@
     margin-top: 1rem;
     width: 100%;
     min-height: 80px;
-    padding: 8px;
-    border: 1px solid transparent;
-    border-radius: 4px;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
     resize: vertical;
     font-family: inherit;
     outline: none;
+    background-color: #fcfcfc;
+    transition: all 0.2s;
 }
-.bioInput:hover,
 .bioInput:focus {
-    border-color: #ccc;
-    background-color: #f9f9f9;
+    border-color: #0a66c2;
+    background-color: #fff;
 }
 
 /* --- Sections --- */
@@ -195,20 +226,22 @@
     border-radius: 10px;
     border: 1px solid #e0e0e0;
     padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .sectionHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
     border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.8rem;
 }
 .sectionHeader h4 {
     font-size: 1.25rem;
     margin: 0;
     color: #191919;
+    font-weight: 600;
 }
 
 .iconBtn {
@@ -216,7 +249,7 @@
     border: none;
     cursor: pointer;
     color: #555;
-    padding: 6px;
+    padding: 8px;
     border-radius: 50%;
     transition: background 0.2s;
     display: flex;
@@ -228,74 +261,23 @@
     color: #000;
 }
 
-/* --- Skills --- */
-.skillsContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+/* --- Resume Skills Form --- */
+.resumeSkillsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
-
-.skillChip {
-    background: #fff;
-    border: 1px solid #0a66c2;
-    color: #0a66c2;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.skillChip button {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: #0a66c2;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-}
-.skillChip button:hover {
-    background-color: rgba(10, 102, 194, 0.1);
-    border-radius: 50%;
-}
-
-.addSkillWrapper {
-    display: flex;
-    align-items: center;
-    border: 1px solid #666;
-    border-radius: 20px;
-    padding: 4px 10px;
-    transition: border 0.2s;
-}
-.addSkillWrapper:focus-within {
-    border-color: #0a66c2;
-}
-.addSkillWrapper input {
-    border: none;
-    outline: none;
-    font-size: 0.9rem;
-    background: transparent;
-}
-.addSkillWrapper button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #666;
-    display: flex;
-    align-items: center;
-}
-.addSkillWrapper button:hover {
-    color: #0a66c2;
+@media (max-width: 768px) {
+    .resumeSkillsGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* --- Lists (Work/Edu/Projects) --- */
 .listContainer {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 .listItem {
@@ -321,11 +303,13 @@
     color: #333;
     font-size: 0.95rem;
     white-space: pre-wrap;
+    line-height: 1.5;
 }
 .listInfo span {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: #666;
     display: block;
+    margin-top: 2px;
 }
 .listInfo a:hover {
     text-decoration: underline;
@@ -433,22 +417,23 @@
     padding: 2rem;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
+    max-width: 550px;
     display: flex;
     flex-direction: column;
     gap: 1.2rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    max-height: 85vh;
-    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modalBox h3 {
     margin: 0 0 0.5rem 0;
     color: #191919;
+    font-size: 1.3rem;
 }
 
 .modalInput {
-    padding: 10px 12px;
+    padding: 12px 14px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 1rem;
@@ -456,6 +441,7 @@
     transition: border 0.2s;
     width: 100%;
     font-family: inherit;
+    background-color: #fff;
 }
 .modalInput:focus {
     border-color: #0a66c2;
@@ -466,13 +452,15 @@
     background: #0a66c2;
     color: white;
     border: none;
-    padding: 10px;
-    border-radius: 24px;
+    padding: 12px;
+    border-radius: 30px;
     font-weight: 600;
     cursor: pointer;
     font-size: 1rem;
-    margin-top: 0.5rem;
+    margin-top: 1rem;
     transition: background 0.2s;
+    align-self: flex-end;
+    width: 100%;
 }
 .modalSaveBtn:hover {
     background: #004182;
@@ -492,9 +480,12 @@
     border: none;
     cursor: pointer;
     color: #666;
+    padding: 4px;
 }
 .closeIcon:hover {
     color: #000;
+    background-color: #f3f3f3;
+    border-radius: 50%;
 }
 
 .connectionsList {
@@ -544,4 +535,66 @@
     padding: 2rem;
     color: #666;
     font-style: italic;
+}
+/* --- Skills --- */
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skillChip {
+    background: #fff;
+    border: 1px solid #0a66c2;
+    color: #0a66c2;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.skillChip button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #0a66c2;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+.skillChip button:hover {
+    background-color: rgba(10, 102, 194, 0.1);
+    border-radius: 50%;
+}
+
+.addSkillWrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #666;
+    border-radius: 20px;
+    padding: 4px 10px;
+    transition: border 0.2s;
+}
+.addSkillWrapper:focus-within {
+    border-color: #0a66c2;
+}
+.addSkillWrapper input {
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    background: transparent;
+}
+.addSkillWrapper button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+}
+.addSkillWrapper button:hover {
+    color: #0a66c2;
 }

@@ -6,6 +6,8 @@ const educationSchema = new mongoose.Schema({
     fieldOfStudy: { type: String, default: "" },
     years: { type: String, default: "" },
     grade: { type: String, default: "" },
+    // --- NEW: Location for Resume ---
+    location: { type: String, default: "" },
 });
 
 const workSchema = new mongoose.Schema({
@@ -32,6 +34,8 @@ const certificateSchema = new mongoose.Schema({
 const achievementSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, default: "" },
+    // --- NEW: Date for Resume ---
+    date: { type: String, default: "" },
 });
 
 const ProfileSchema = new mongoose.Schema({
@@ -42,13 +46,13 @@ const ProfileSchema = new mongoose.Schema({
     bio: { type: String, default: "" },
     currentPost: { type: String, default: "" },
 
-    // --- NEW: Contact Info ---
+    // --- Contact Info ---
     phoneNumber: { type: String, default: "" },
     github: { type: String, default: "" },
     linkedin: { type: String, default: "" },
     leetcode: { type: String, default: "" },
 
-    // --- Existing & New Sections ---
+    // --- Sections ---
     pastWork: { type: [workSchema], default: [] },
     education: { type: [educationSchema], default: [] },
     projects: { type: [projectSchema], default: [] },
@@ -56,6 +60,13 @@ const ProfileSchema = new mongoose.Schema({
     achievements: { type: [achievementSchema], default: [] },
 
     skills: { type: [String], default: [] },
+
+    // --- NEW: Categorized Skills for Resume ---
+    skillLanguages: { type: String, default: "" },
+    skillCloudDevOps: { type: String, default: "" },
+    skillFrameworks: { type: String, default: "" },
+    skillTools: { type: String, default: "" },
+    skillSoft: { type: String, default: "" },
 });
 
 const Profile = mongoose.model("Profile", ProfileSchema);

@@ -6,120 +6,179 @@
         <style>
             @page {
                 size: A4;
-                margin: 15mm 20mm;
+                margin: 10mm 15mm;
             }
             body {
-                font-family: "Calibri", "Arial", sans-serif;
-                font-size: 11pt;
+                font-family: Arial, sans-serif;
+                font-size: 10pt;
                 line-height: 1.3;
                 color: #000;
             }
-            a { color: #0563C1; text-decoration: none; }
+            a { color: #000; text-decoration: none; }
 
-            /* HEADER */
-            .header { text-align: center; margin-bottom: 15px; }
+            /* HEADER LAYOUT */
+            .header { margin-bottom: 15px; }
             .name {
-                font-size: 24pt;
+                font-size: 20pt;
                 font-weight: bold;
                 margin-bottom: 5px;
-                color: #000;
                 text-transform: capitalize;
+                text-align: left; /* Left Align Name */
             }
-            .contact-info { font-size: 10pt; margin-bottom: 2px; }
-            .separator { margin: 0 5px; color: #000; }
+
+            /* Use a table for the Split Layout (Left/Right) */
+            .header-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 2px;
+            }
+            .header-table td {
+                padding: 1px 0;
+                vertical-align: top;
+            }
+            .align-left { text-align: left; }
+            .align-right { text-align: right; }
 
             /* SECTIONS */
             .section { margin-bottom: 12px; }
             .section-title {
-                font-size: 12pt;
+                font-size: 10pt;
                 font-weight: bold;
-                color: #2E74B5; /* Exact Word Blue */
-                border-bottom: 1px solid #2E74B5;
-                padding-bottom: 1px;
-                margin-bottom: 8px;
+                color: #000;
+                border-bottom: 1px solid #000;
+                padding-bottom: 2px;
+                margin-bottom: 6px;
                 text-transform: uppercase;
             }
 
-            /* CONTENT */
+            /* SKILLS TABLE STYLE */
+            .skills-table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+            .skills-table td { padding-bottom: 2px; vertical-align: top; font-size: 10pt; }
+            .skill-label { font-weight: bold; width: 140px; }
+
+            /* ITEMS GENERIC */
             .item { margin-bottom: 8px; }
+            .item-header { overflow: hidden; margin-bottom: 1px; }
+            .left-col { float: left; font-weight: bold; font-size: 10pt; }
+            .right-col { float: right; font-weight: bold; font-size: 10pt; }
+            .clear { clear: both; }
 
-            /* Flex-like header for items */
-            .item-header { overflow: hidden; font-size: 11pt; margin-bottom: 2px; }
-            .left-title { float: left; font-weight: bold; }
-            .right-date { float: right; font-style: normal; font-weight: normal; }
+            .item-link { color: #0000EE; text-decoration: none; font-weight: normal; font-size: 10pt;}
 
-            .item-subtitle { font-style: italic; font-size: 11pt; margin-bottom: 2px; clear: both; }
-
-            .description {
-                font-size: 10.5pt;
-                margin-top: 2px;
-                white-space: pre-line; /* Critical for bullet points */
-                text-align: justify;
-                clear: both;
+            .item-subtitle {
+                font-style: normal;
+                margin-bottom: 2px;
             }
 
-            /* SKILLS LIST */
-            .skills-container { margin-top: 2px; }
-            .skill-row { margin-bottom: 3px; }
-            .skill-label { font-weight: bold; width: 150px; display: inline-block; }
+            /* LISTS (Bullet Points) */
+            ul {
+                margin: 2px 0 0 0;
+                padding-left: 18px;
+            }
+            li {
+                margin-bottom: 1px;
+                text-align: justify;
+            }
         </style>
     </head>
     <body>
         <div class="header">
             <div class="name">{{user.name}}</div>
-            <div class="contact-info">
-                {{#if user.linkedin}}<a href="{{user.linkedin}}">LinkedIn</a
-                >{{/if}}
-                <span class="separator">|</span>
-                {{user.email}}
-            </div>
-            <div class="contact-info">
-                {{#if user.github}}<a href="{{user.github}}">GitHub</a>{{/if}}
-                <span class="separator">|</span>
-                {{user.mobile}} {{#if user.leetcode}}
-                <span class="separator">|</span>
-                <a href="{{user.leetcode}}">LeetCode</a>
-                {{/if}}
-            </div>
+
+            <table class="header-table">
+                <tr>
+                    <td class="align-left">
+                        {{#if user.linkedin}}LinkedIn: {{user.linkedin}}{{/if}}
+                    </td>
+                    <td class="align-right">Email: {{user.email}}</td>
+                </tr>
+                <tr>
+                    <td class="align-left">
+                        {{#if user.github}}GitHub: {{user.github}}{{/if}}
+                    </td>
+                    <td class="align-right">Mobile: {{user.mobile}}</td>
+                </tr>
+                <tr>
+                    <td class="align-left">
+                        {{#if user.leetcode}}LeetCode: {{user.leetcode}}{{/if}}
+                    </td>
+                    <td class="align-right"></td>
+                </tr>
+            </table>
         </div>
 
-        {{#if skills.length}}
         <div class="section">
             <div class="section-title">Skills</div>
-            <div class="description">
-                {{#each skills}}
-                <span>• {{this}}</span><br />
-                {{/each}}
-            </div>
+            <table class="skills-table">
+                {{#if skills.languages}}
+                <tr>
+                    <td class="skill-label">Languages :</td>
+                    <td>{{skills.languages}}</td>
+                </tr>
+                {{/if}} {{#if skills.cloud}}
+                <tr>
+                    <td class="skill-label">Cloud & DevOps:</td>
+                    <td>{{skills.cloud}}</td>
+                </tr>
+                {{/if}} {{#if skills.frameworks}}
+                <tr>
+                    <td class="skill-label">Frameworks :</td>
+                    <td>{{skills.frameworks}}</td>
+                </tr>
+                {{/if}} {{#if skills.tools}}
+                <tr>
+                    <td class="skill-label">Tools/Platforms :</td>
+                    <td>{{skills.tools}}</td>
+                </tr>
+                {{/if}} {{#if skills.soft}}
+                <tr>
+                    <td class="skill-label">Soft Skills :</td>
+                    <td>{{skills.soft}}</td>
+                </tr>
+                {{/if}}
+            </table>
         </div>
-        {{/if}} {{#if projects.length}}
+
+        {{#if projects.length}}
         <div class="section">
             <div class="section-title">Projects</div>
             {{#each projects}}
             <div class="item">
                 <div class="item-header">
-                    <span class="left-title">
-                        {{this.title}} {{#if this.link}} -
-                        <a href="{{this.link}}">Link</a>{{/if}}
+                    <span class="left-col">
+                        {{this.title}}{{#if this.link}}:
+                        <a href="{{this.link}}" class="item-link">Link</a
+                        >{{/if}}
                     </span>
-                    <span class="right-date">{{this.duration}}</span>
+                    <span class="right-col">{{this.duration}}</span>
                 </div>
-                <div class="description">{{this.description}}</div>
+                <div class="clear"></div>
+                {{#if this.points.length}}
+                <ul>
+                    {{#each this.points}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{else}}
+                <div style="text-align: justify;">{{this.description}}</div>
+                {{/if}}
             </div>
             {{/each}}
         </div>
         {{/if}} {{#if certificates.length}}
         <div class="section">
-            <div class="section-title">Certificates</div>
+            <div class="section-title">Certificates / Certifications</div>
             {{#each certificates}}
             <div class="item">
                 <div class="item-header">
-                    <span class="left-title">
-                        {{this.name}} {{#if this.link}} -
-                        <a href="{{this.link}}">Link</a>{{/if}}
+                    <span class="left-col">
+                        {{this.name}}{{#if this.link}}
+                        <a href="{{this.link}}" class="item-link">Link</a
+                        >{{/if}}
                     </span>
-                    <span class="right-date">{{this.date}}</span>
+                    <span class="right-col">{{this.date}}</span>
                 </div>
+                <div class="clear"></div>
             </div>
             {{/each}}
         </div>
@@ -128,10 +187,20 @@
             <div class="section-title">Achievements</div>
             {{#each achievements}}
             <div class="item">
-                <div class="description">
-                    <span style="font-weight: bold;">{{this.title}}:</span>
-                    {{this.description}}
+                <div class="item-header">
+                    <span class="left-col">{{this.title}}:</span>
+                    <span class="right-col">{{this.date}}</span>
                 </div>
+                <div class="clear"></div>
+                {{#if this.points.length}}
+                <ul>
+                    {{#each this.points}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{else}}
+                <div style="text-align: justify;">{{this.description}}</div>
+                {{/if}}
             </div>
             {{/each}}
         </div>
@@ -141,14 +210,20 @@
             {{#each education}}
             <div class="item">
                 <div class="item-header">
-                    <span class="left-title">{{this.school}}</span>
-                    <span class="right-date">{{this.years}}</span>
+                    <span class="left-col">{{this.school}}</span>
+                    <span class="right-col">{{this.location}}</span>
                 </div>
-                <div class="item-subtitle">
-                    {{this.degree}}{{#if this.fieldOfStudy}} -
-                    {{this.fieldOfStudy}}{{/if}} {{#if this.grade}};
-                    {{this.grade}}{{/if}}
+                <div class="clear"></div>
+                <div class="item-header">
+                    <span class="left-col" style="font-weight: normal;"
+                        >{{this.degree}}{{#if this.grade}};
+                        {{this.grade}}{{/if}}</span
+                    >
+                    <span class="right-col" style="font-weight: normal;"
+                        >{{this.years}}</span
+                    >
                 </div>
+                <div class="clear"></div>
             </div>
             {{/each}}
         </div>
@@ -158,11 +233,19 @@
             {{#each work}}
             <div class="item">
                 <div class="item-header">
-                    <span class="left-title">{{this.company}}</span>
-                    <span class="right-date">{{this.years}}</span>
+                    <span class="left-col">{{this.company}}</span>
+                    <span class="right-col">{{this.years}}</span>
                 </div>
                 <div class="item-subtitle">{{this.position}}</div>
-                <div class="description">{{this.description}}</div>
+                {{#if this.points.length}}
+                <ul>
+                    {{#each this.points}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+                {{else}}
+                <div style="text-align: justify;">{{this.description}}</div>
+                {{/if}}
             </div>
             {{/each}}
         </div>

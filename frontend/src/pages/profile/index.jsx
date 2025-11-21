@@ -235,6 +235,7 @@ export default function Profilepage() {
         alert("Profile updated!");
     };
 
+    // --- UPDATED DOWNLOAD HANDLER FOR DOCX ---
     const handleDownloadResume = async () => {
         if (!userProfile || !userProfile.userId?._id) return;
         try {
@@ -245,9 +246,10 @@ export default function Profilepage() {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
             link.href = url;
+            // Change extension to .docx
             link.setAttribute(
                 "download",
-                `${userProfile.userId.username}_resume.pdf`
+                `${userProfile.userId.username}_resume.docx`
             );
             document.body.appendChild(link);
             link.click();
@@ -300,6 +302,7 @@ export default function Profilepage() {
                     fieldOfStudy: "",
                     years: "",
                     grade: "",
+                    location: "", // NEW
                 }
             );
         else if (mode.includes("project"))
@@ -309,7 +312,7 @@ export default function Profilepage() {
         else if (mode.includes("cert"))
             setModalInput(item || { name: "", link: "", date: "" });
         else if (mode.includes("achieve"))
-            setModalInput(item || { title: "", description: "" });
+            setModalInput(item || { title: "", description: "", date: "" }); // NEW
     };
 
     const closeModal = () => {
@@ -387,21 +390,7 @@ export default function Profilepage() {
                     <button
                         onClick={handleDownloadResume}
                         title="Download Resume"
-                        style={{
-                            position: "absolute",
-                            top: "1rem",
-                            left: "1rem",
-                            background: "white",
-                            borderRadius: "50%",
-                            padding: "8px",
-                            cursor: "pointer",
-                            border: "none",
-                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            zIndex: 5,
-                        }}
+                        className={styles.downloadResumeBtn}
                     >
                         <DownloadIcon />
                     </button>
@@ -539,10 +528,67 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* Skills */}
+            {/* --- RESUME SPECIFIC SKILLS SECTION (NEW) --- */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
-                    <h4>Skills</h4>
+                    <h4>Resume Specific Skills</h4>
+                    <button
+                        className={styles.saveButton}
+                        style={{ fontSize: "0.8rem", padding: "4px 8px" }}
+                        onClick={handleSaveChanges}
+                    >
+                        Save
+                    </button>
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                    }}
+                >
+                    <input
+                        className={styles.modalInput}
+                        name="skillLanguages"
+                        placeholder="Languages (e.g. C++, Java)"
+                        value={userProfile.skillLanguages || ""}
+                        onChange={handleProfileChange}
+                    />
+                    <input
+                        className={styles.modalInput}
+                        name="skillCloudDevOps"
+                        placeholder="Cloud & DevOps (e.g. AWS, Docker)"
+                        value={userProfile.skillCloudDevOps || ""}
+                        onChange={handleProfileChange}
+                    />
+                    <input
+                        className={styles.modalInput}
+                        name="skillFrameworks"
+                        placeholder="Frameworks (e.g. React, Node)"
+                        value={userProfile.skillFrameworks || ""}
+                        onChange={handleProfileChange}
+                    />
+                    <input
+                        className={styles.modalInput}
+                        name="skillTools"
+                        placeholder="Tools (e.g. Git, Postman)"
+                        value={userProfile.skillTools || ""}
+                        onChange={handleProfileChange}
+                    />
+                    <input
+                        className={styles.modalInput}
+                        name="skillSoft"
+                        placeholder="Soft Skills (e.g. Leadership)"
+                        value={userProfile.skillSoft || ""}
+                        onChange={handleProfileChange}
+                    />
+                </div>
+            </div>
+
+            {/* General Skills (Legacy) */}
+            <div className={styles.sectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Profile Skills</h4>
                 </div>
                 <div className={styles.skillsContainer}>
                     {userProfile.skills.map((skill, idx) => (
@@ -637,6 +683,11 @@ export default function Profilepage() {
                                     {edu.degree}, {edu.fieldOfStudy}
                                 </p>
                                 <span>{edu.years}</span>
+                                {edu.location && (
+                                    <span style={{ color: "#333" }}>
+                                        {edu.location}
+                                    </span>
+                                )}
                             </div>
                             <div className={styles.listActions}>
                                 <button
@@ -796,6 +847,7 @@ export default function Profilepage() {
                         <div key={index} className={styles.listItem}>
                             <div className={styles.listInfo}>
                                 <h5>{achieve.title}</h5>
+                                <span>{achieve.date}</span>
                                 <p
                                     style={{
                                         fontSize: "0.85rem",
@@ -921,7 +973,7 @@ export default function Profilepage() {
                                     name="description"
                                     value={modalInput.description || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Description (Role details)"
+                                    placeholder="Description (Each line will be a bullet point)"
                                 />
                             </>
                         )}
@@ -935,6 +987,15 @@ export default function Profilepage() {
                                     onChange={handleModalInputChange}
                                     placeholder="School / University"
                                 />
+                                {/* NEW LOCATION INPUT */}
+                                <input
+                                    className={styles.modalInput}
+                                    name="location"
+                                    value={modalInput.location || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Location (e.g. Punjab, India)"
+                                />
+
                                 <input
                                     className={styles.modalInput}
                                     name="degree"
@@ -994,7 +1055,7 @@ export default function Profilepage() {
                                     name="description"
                                     value={modalInput.description || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Description"
+                                    placeholder="Description (Each line will be a bullet point)"
                                 />
                             </>
                         )}
@@ -1034,12 +1095,21 @@ export default function Profilepage() {
                                     onChange={handleModalInputChange}
                                     placeholder="Achievement Title"
                                 />
+                                {/* NEW DATE INPUT */}
+                                <input
+                                    className={styles.modalInput}
+                                    name="date"
+                                    value={modalInput.date || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Date (e.g. Nov 2024)"
+                                />
+
                                 <textarea
                                     className={styles.modalInput}
                                     name="description"
                                     value={modalInput.description || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Details"
+                                    placeholder="Details (Each line will be a bullet point)"
                                 />
                             </>
                         )}
