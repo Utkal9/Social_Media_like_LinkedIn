@@ -79,7 +79,9 @@ export const sendConnectionRequest = createAsyncThunk(
                     connectionId: user.user_id,
                 }
             );
+            // Refresh lists immediately
             thunkAPI.dispatch(getConnectionsRequest({ token: user.token }));
+            thunkAPI.dispatch(getMyConnectionRequests({ token: user.token }));
             return thunkAPI.fulfillWithValue(response.data);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message);
@@ -98,6 +100,7 @@ export const getConnectionsRequest = createAsyncThunk(
                     },
                 }
             );
+            // This returns 'connections' array for sent requests
             return thunkAPI.fulfillWithValue(response.data.connections);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message);
@@ -116,7 +119,8 @@ export const getMyConnectionRequests = createAsyncThunk(
                     },
                 }
             );
-            return thunkAPI.fulfillWithValue(response.data);
+            // --- FIX: Added .connections to extract the array ---
+            return thunkAPI.fulfillWithValue(response.data.connections);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message);
         }

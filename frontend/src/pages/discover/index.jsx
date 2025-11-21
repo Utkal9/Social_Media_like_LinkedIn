@@ -1,5 +1,3 @@
-// frontend/src/pages/discover/index.jsx
-
 import {
     getAllUsers,
     sendConnectionRequest,
@@ -42,30 +40,38 @@ export default function Discoverpage() {
     };
 
     const getConnectStatus = (targetUserId) => {
+        // --- FIX: Safety checks to prevent crashes if data is loading ---
+        const requestsReceived = Array.isArray(authState.connectionRequest)
+            ? authState.connectionRequest
+            : [];
+        const requestsSent = Array.isArray(authState.connections)
+            ? authState.connections
+            : [];
+
         // 1. Connected?
-        const connectedReceived = authState.connectionRequest.find(
+        const connectedReceived = requestsReceived.find(
             (req) =>
-                req.userId._id === targetUserId && req.status_accepted === true
+                req.userId?._id === targetUserId && req.status_accepted === true
         );
-        const connectedSent = authState.connections.find(
+        const connectedSent = requestsSent.find(
             (req) =>
-                req.connectionId._id === targetUserId &&
+                req.connectionId?._id === targetUserId &&
                 req.status_accepted === true
         );
         if (connectedReceived || connectedSent) return "Connected";
 
         // 2. Pending (Sent by me)?
-        const isPending = authState.connections.find(
+        const isPending = requestsSent.find(
             (req) =>
-                req.connectionId._id === targetUserId &&
+                req.connectionId?._id === targetUserId &&
                 req.status_accepted === null
         );
         if (isPending) return "Pending";
 
         // 3. Pending (Received from them)?
-        const hasRequested = authState.connectionRequest.find(
+        const hasRequested = requestsReceived.find(
             (req) =>
-                req.userId._id === targetUserId && req.status_accepted === null
+                req.userId?._id === targetUserId && req.status_accepted === null
         );
         if (hasRequested) return "Accept";
 
@@ -132,12 +138,9 @@ export default function Discoverpage() {
                             key={user._id}
                             className={styles.userCard}
                             variants={itemVariants}
-                            whileHover={{ y: -4 }} // Subtle lift
+                            whileHover={{ y: -4 }}
                         >
-                            {/* Banner Background */}
                             <div className={styles.cardHeaderBackground}></div>
-
-                            {/* Avatar with Online Dot */}
                             <div
                                 className={styles.avatarWrapper}
                                 onClick={() =>
@@ -157,7 +160,6 @@ export default function Discoverpage() {
                                 ) && <span className={styles.onlineDot}></span>}
                             </div>
 
-                            {/* User Info */}
                             <div className={styles.userInfoContent}>
                                 <h3
                                     onClick={() =>
@@ -172,7 +174,6 @@ export default function Discoverpage() {
                                     @{user.userId.username}
                                 </p>
 
-                                {/* Bio / Headline */}
                                 <div className={styles.bioContainer}>
                                     {user.currentPost ? (
                                         <p>{user.currentPost}</p>
@@ -190,7 +191,6 @@ export default function Discoverpage() {
                                     )}
                                 </div>
 
-                                {/* Connect Button */}
                                 <button
                                     onClick={() =>
                                         handleConnect(user.userId._id)
