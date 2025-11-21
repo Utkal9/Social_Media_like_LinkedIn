@@ -86,6 +86,22 @@ const CloseIcon = () => (
         />
     </svg>
 );
+const DownloadIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        width="24"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+        />
+    </svg>
+);
 
 const TruncatedText = ({ content, postId }) => {
     const router = useRouter();
@@ -142,10 +158,17 @@ export default function Profilepage() {
     }, [authState.user, postReducer.posts]);
 
     const acceptedConnectionsList = useMemo(() => {
-        const received = (authState.connections || [])
+        const connections = Array.isArray(authState.connections)
+            ? authState.connections
+            : [];
+        const connectionRequests = Array.isArray(authState.connectionRequest)
+            ? authState.connectionRequest
+            : [];
+
+        const received = connections
             .filter((req) => req.status_accepted)
             .map((req) => req.userId);
-        const sent = (authState.connectionRequest || [])
+        const sent = connectionRequests
             .filter((req) => req.status_accepted)
             .map((req) => req.connectionId);
         return [...received, ...sent].filter((u) => u);
@@ -161,7 +184,6 @@ export default function Profilepage() {
                 file
             );
             formData.append("token", localStorage.getItem("token"));
-
             const endpoint =
                 type === "profile"
                     ? "/update_profile_picture"
@@ -169,36 +191,24 @@ export default function Profilepage() {
             await clientServer.post(endpoint, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
-
-            // Refresh Global State
             dispatch(getAboutUser({ token: localStorage.getItem("token") }));
         } catch (error) {
             alert("Upload failed.");
         }
     };
 
-    // --- Central Update Function ---
     const syncProfileToBackend = async (updatedProfile) => {
         try {
-            // 1. Update User (Name, Email, Username)
             await clientServer.post("/user_update", {
                 token: localStorage.getItem("token"),
                 name: updatedProfile.userId.name,
                 username: updatedProfile.userId.username,
                 email: updatedProfile.userId.email,
             });
-
-            // 2. Update Profile (Bio, Skills, Work, Edu)
             await clientServer.post("/update_profile_data", {
                 token: localStorage.getItem("token"),
-                bio: updatedProfile.bio,
-                currentPost: updatedProfile.currentPost,
-                pastWork: updatedProfile.pastWork,
-                education: updatedProfile.education,
-                skills: updatedProfile.skills,
+                ...updatedProfile,
             });
-
-            // 3. Refresh Global State to prevent data loss on reload
             dispatch(getAboutUser({ token: localStorage.getItem("token") }));
         } catch (err) {
             console.error("Sync failed", err);
@@ -206,11 +216,9 @@ export default function Profilepage() {
         }
     };
 
-    // Handler for text inputs (Name, Headline, etc.)
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
         let updatedProfile;
-
         if (["name", "username", "email"].includes(name)) {
             updatedProfile = {
                 ...userProfile,
@@ -219,17 +227,37 @@ export default function Profilepage() {
         } else {
             updatedProfile = { ...userProfile, [name]: value };
         }
-
         setUserProfile(updatedProfile);
     };
 
-    // Save changes button action
     const handleSaveChanges = () => {
         syncProfileToBackend(userProfile);
         alert("Profile updated!");
     };
 
-    // --- Skills Logic ---
+    const handleDownloadResume = async () => {
+        if (!userProfile || !userProfile.userId?._id) return;
+        try {
+            const response = await clientServer.get(
+                `/user/download_resume?id=${userProfile.userId._id}`,
+                { responseType: "blob" }
+            );
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute(
+                "download",
+                `${userProfile.userId.username}_resume.pdf`
+            );
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            alert("Error: Could not generate resume.");
+        }
+    };
+
     const handleAddSkill = () => {
         if (
             skillInput.trim() &&
@@ -239,7 +267,6 @@ export default function Profilepage() {
             const updatedProfile = { ...userProfile, skills: updatedSkills };
             setUserProfile(updatedProfile);
             setSkillInput("");
-            // Auto-save for better UX
             syncProfileToBackend(updatedProfile);
         }
     };
@@ -253,14 +280,36 @@ export default function Profilepage() {
         syncProfileToBackend(updatedProfile);
     };
 
-    // --- Modal Logic for Work/Edu ---
     const openModal = (mode, item = null, index = -1) => {
         setModalMode(mode);
         setSelectedItem({ ...item, index });
         if (mode.includes("work"))
-            setModalInput(item || { company: "", position: "", years: "" });
+            setModalInput(
+                item || {
+                    company: "",
+                    position: "",
+                    years: "",
+                    description: "",
+                }
+            );
         else if (mode.includes("edu"))
-            setModalInput(item || { school: "", degree: "", fieldOfStudy: "" });
+            setModalInput(
+                item || {
+                    school: "",
+                    degree: "",
+                    fieldOfStudy: "",
+                    years: "",
+                    grade: "",
+                }
+            );
+        else if (mode.includes("project"))
+            setModalInput(
+                item || { title: "", link: "", duration: "", description: "" }
+            );
+        else if (mode.includes("cert"))
+            setModalInput(item || { name: "", link: "", date: "" });
+        else if (mode.includes("achieve"))
+            setModalInput(item || { title: "", description: "" });
     };
 
     const closeModal = () => {
@@ -276,44 +325,47 @@ export default function Profilepage() {
 
     const handleModalSave = () => {
         let updatedProfile = { ...userProfile };
+        const updateArray = (arrName) => {
+            let arr = [...(updatedProfile[arrName] || [])];
+            if (modalMode.includes("edit"))
+                arr[selectedItem.index] = modalInput;
+            else arr.push(modalInput);
+            updatedProfile[arrName] = arr;
+        };
 
-        if (modalMode.includes("work")) {
-            let updatedWork = [...userProfile.pastWork];
-            if (modalMode.includes("edit")) {
-                // Update existing
-                updatedWork[selectedItem.index] = modalInput;
-            } else {
-                // Add new
-                updatedWork.push(modalInput);
-            }
-            updatedProfile.pastWork = updatedWork;
-        } else {
-            let updatedEdu = [...userProfile.education];
-            if (modalMode.includes("edit")) {
-                updatedEdu[selectedItem.index] = modalInput;
-            } else {
-                updatedEdu.push(modalInput);
-            }
-            updatedProfile.education = updatedEdu;
-        }
+        if (modalMode.includes("work")) updateArray("pastWork");
+        else if (modalMode.includes("edu")) updateArray("education");
+        else if (modalMode.includes("project")) updateArray("projects");
+        else if (modalMode.includes("cert")) updateArray("certificates");
+        else if (modalMode.includes("achieve")) updateArray("achievements");
 
         setUserProfile(updatedProfile);
-        syncProfileToBackend(updatedProfile); // Auto-save to backend
+        syncProfileToBackend(updatedProfile);
         closeModal();
     };
 
     const handleItemDelete = (type, index) => {
         if (window.confirm("Delete this item?")) {
             let updatedProfile = { ...userProfile };
-            if (type === "work") {
+            if (type === "work")
                 updatedProfile.pastWork = updatedProfile.pastWork.filter(
                     (_, i) => i !== index
                 );
-            } else {
+            else if (type === "edu")
                 updatedProfile.education = updatedProfile.education.filter(
                     (_, i) => i !== index
                 );
-            }
+            else if (type === "projects")
+                updatedProfile.projects = updatedProfile.projects.filter(
+                    (_, i) => i !== index
+                );
+            else if (type === "certificates")
+                updatedProfile.certificates =
+                    updatedProfile.certificates.filter((_, i) => i !== index);
+            else if (type === "achievements")
+                updatedProfile.achievements =
+                    updatedProfile.achievements.filter((_, i) => i !== index);
+
             setUserProfile(updatedProfile);
             syncProfileToBackend(updatedProfile);
         }
@@ -332,6 +384,28 @@ export default function Profilepage() {
                         }")`,
                     }}
                 >
+                    <button
+                        onClick={handleDownloadResume}
+                        title="Download Resume"
+                        style={{
+                            position: "absolute",
+                            top: "1rem",
+                            left: "1rem",
+                            background: "white",
+                            borderRadius: "50%",
+                            padding: "8px",
+                            cursor: "pointer",
+                            border: "none",
+                            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: 5,
+                        }}
+                    >
+                        <DownloadIcon />
+                    </button>
+
                     <label htmlFor="bgUpload" className={styles.editCoverBtn}>
                         <CameraIcon />
                     </label>
@@ -392,8 +466,9 @@ export default function Profilepage() {
                             className={styles.headlineInput}
                             value={userProfile.currentPost}
                             onChange={handleProfileChange}
-                            placeholder="Headline (e.g. Software Engineer)"
+                            placeholder="Headline"
                         />
+
                         <div className={styles.metaInfo}>
                             <span className={styles.metaItem}>
                                 @{userProfile.userId.username}
@@ -414,6 +489,45 @@ export default function Profilepage() {
                                 placeholder="Email"
                             />
                         </div>
+
+                        <div
+                            style={{
+                                marginTop: "10px",
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
+                                gap: "10px",
+                            }}
+                        >
+                            <input
+                                className={styles.modalInput}
+                                name="phoneNumber"
+                                value={userProfile.phoneNumber || ""}
+                                onChange={handleProfileChange}
+                                placeholder="Phone Number"
+                            />
+                            <input
+                                className={styles.modalInput}
+                                name="linkedin"
+                                value={userProfile.linkedin || ""}
+                                onChange={handleProfileChange}
+                                placeholder="LinkedIn URL"
+                            />
+                            <input
+                                className={styles.modalInput}
+                                name="github"
+                                value={userProfile.github || ""}
+                                onChange={handleProfileChange}
+                                placeholder="GitHub URL"
+                            />
+                            <input
+                                className={styles.modalInput}
+                                name="leetcode"
+                                value={userProfile.leetcode || ""}
+                                onChange={handleProfileChange}
+                                placeholder="LeetCode URL"
+                            />
+                        </div>
+
                         <textarea
                             name="bio"
                             value={userProfile.bio}
@@ -425,7 +539,7 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* Skills Section */}
+            {/* Skills */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Skills</h4>
@@ -455,7 +569,7 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* Work History Section */}
+            {/* Work History */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Experience</h4>
@@ -472,7 +586,15 @@ export default function Profilepage() {
                             <div className={styles.listInfo}>
                                 <h5>{work.position}</h5>
                                 <p>{work.company}</p>
-                                <span>{work.years} years</span>
+                                <span>{work.years}</span>
+                                <p
+                                    style={{
+                                        fontSize: "0.85rem",
+                                        color: "#555",
+                                    }}
+                                >
+                                    {work.description}
+                                </p>
                             </div>
                             <div className={styles.listActions}>
                                 <button
@@ -495,7 +617,7 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* Education Section */}
+            {/* Education */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Education</h4>
@@ -514,6 +636,7 @@ export default function Profilepage() {
                                 <p>
                                     {edu.degree}, {edu.fieldOfStudy}
                                 </p>
+                                <span>{edu.years}</span>
                             </div>
                             <div className={styles.listActions}>
                                 <button
@@ -526,6 +649,177 @@ export default function Profilepage() {
                                 <button
                                     onClick={() =>
                                         handleItemDelete("edu", index)
+                                    }
+                                >
+                                    <DeleteIcon />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Projects Section */}
+            <div className={styles.sectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Projects</h4>
+                    <button
+                        className={styles.iconBtn}
+                        onClick={() => openModal("add-project")}
+                    >
+                        <AddIcon />
+                    </button>
+                </div>
+                <div className={styles.listContainer}>
+                    {(userProfile.projects || []).map((proj, index) => (
+                        <div key={index} className={styles.listItem}>
+                            <div className={styles.listInfo}>
+                                <h5>{proj.title}</h5>
+                                <p
+                                    style={{
+                                        fontSize: "0.85rem",
+                                        color: "#555",
+                                    }}
+                                >
+                                    {proj.description}
+                                </p>
+                                <span
+                                    style={{
+                                        fontSize: "0.8rem",
+                                        color: "#777",
+                                    }}
+                                >
+                                    {proj.duration}
+                                </span>
+                                {proj.link && (
+                                    <a
+                                        href={proj.link}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{
+                                            fontSize: "0.8rem",
+                                            color: "#0a66c2",
+                                            display: "block",
+                                        }}
+                                    >
+                                        Link
+                                    </a>
+                                )}
+                            </div>
+                            <div className={styles.listActions}>
+                                <button
+                                    onClick={() =>
+                                        openModal("edit-project", proj, index)
+                                    }
+                                >
+                                    <EditIcon />
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleItemDelete("projects", index)
+                                    }
+                                >
+                                    <DeleteIcon />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Certificates Section */}
+            <div className={styles.sectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Certificates</h4>
+                    <button
+                        className={styles.iconBtn}
+                        onClick={() => openModal("add-cert")}
+                    >
+                        <AddIcon />
+                    </button>
+                </div>
+                <div className={styles.listContainer}>
+                    {(userProfile.certificates || []).map((cert, index) => (
+                        <div key={index} className={styles.listItem}>
+                            <div className={styles.listInfo}>
+                                <h5>{cert.name}</h5>
+                                <span>{cert.date}</span>
+                                {cert.link && (
+                                    <a
+                                        href={cert.link}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={{
+                                            fontSize: "0.8rem",
+                                            color: "#0a66c2",
+                                            marginLeft: "10px",
+                                        }}
+                                    >
+                                        View
+                                    </a>
+                                )}
+                            </div>
+                            <div className={styles.listActions}>
+                                <button
+                                    onClick={() =>
+                                        openModal("edit-cert", cert, index)
+                                    }
+                                >
+                                    <EditIcon />
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleItemDelete("certificates", index)
+                                    }
+                                >
+                                    <DeleteIcon />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Achievements Section */}
+            <div className={styles.sectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Achievements</h4>
+                    <button
+                        className={styles.iconBtn}
+                        onClick={() => openModal("add-achieve")}
+                    >
+                        <AddIcon />
+                    </button>
+                </div>
+                <div className={styles.listContainer}>
+                    {(userProfile.achievements || []).map((achieve, index) => (
+                        <div key={index} className={styles.listItem}>
+                            <div className={styles.listInfo}>
+                                <h5>{achieve.title}</h5>
+                                <p
+                                    style={{
+                                        fontSize: "0.85rem",
+                                        color: "#555",
+                                    }}
+                                >
+                                    {achieve.description}
+                                </p>
+                            </div>
+                            <div className={styles.listActions}>
+                                <button
+                                    onClick={() =>
+                                        openModal(
+                                            "edit-achieve",
+                                            achieve,
+                                            index
+                                        )
+                                    }
+                                >
+                                    <EditIcon />
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        handleItemDelete("achievements", index)
                                     }
                                 >
                                     <DeleteIcon />
@@ -588,7 +882,7 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Main Edit Modal */}
             {modalMode && (
                 <div className={styles.modalOverlay} onClick={closeModal}>
                     <div
@@ -596,12 +890,10 @@ export default function Profilepage() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3>
-                            {modalMode.includes("add") ? "Add" : "Edit"}{" "}
-                            {modalMode.includes("work")
-                                ? "Experience"
-                                : "Education"}
+                            {modalMode.includes("add") ? "Add" : "Edit"} Item
                         </h3>
-                        {modalMode.includes("work") ? (
+
+                        {modalMode.includes("work") && (
                             <>
                                 <input
                                     className={styles.modalInput}
@@ -622,11 +914,19 @@ export default function Profilepage() {
                                     name="years"
                                     value={modalInput.years || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Years"
-                                    type="number"
+                                    placeholder="Years (e.g. 2020 - 2022)"
+                                />
+                                <textarea
+                                    className={styles.modalInput}
+                                    name="description"
+                                    value={modalInput.description || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Description (Role details)"
                                 />
                             </>
-                        ) : (
+                        )}
+
+                        {modalMode.includes("edu") && (
                             <>
                                 <input
                                     className={styles.modalInput}
@@ -649,8 +949,101 @@ export default function Profilepage() {
                                     onChange={handleModalInputChange}
                                     placeholder="Field of Study"
                                 />
+                                <input
+                                    className={styles.modalInput}
+                                    name="years"
+                                    value={modalInput.years || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Year (e.g. 2019 - 2023)"
+                                />
+                                <input
+                                    className={styles.modalInput}
+                                    name="grade"
+                                    value={modalInput.grade || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Grade/CGPA"
+                                />
                             </>
                         )}
+
+                        {modalMode.includes("project") && (
+                            <>
+                                <input
+                                    className={styles.modalInput}
+                                    name="title"
+                                    value={modalInput.title || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Project Title"
+                                />
+                                <input
+                                    className={styles.modalInput}
+                                    name="link"
+                                    value={modalInput.link || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Project Link"
+                                />
+                                <input
+                                    className={styles.modalInput}
+                                    name="duration"
+                                    value={modalInput.duration || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Duration (e.g. Oct 2023)"
+                                />
+                                <textarea
+                                    className={styles.modalInput}
+                                    name="description"
+                                    value={modalInput.description || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Description"
+                                />
+                            </>
+                        )}
+
+                        {modalMode.includes("cert") && (
+                            <>
+                                <input
+                                    className={styles.modalInput}
+                                    name="name"
+                                    value={modalInput.name || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Certificate Name"
+                                />
+                                <input
+                                    className={styles.modalInput}
+                                    name="link"
+                                    value={modalInput.link || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Credential URL"
+                                />
+                                <input
+                                    className={styles.modalInput}
+                                    name="date"
+                                    value={modalInput.date || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Date Issued"
+                                />
+                            </>
+                        )}
+
+                        {modalMode.includes("achieve") && (
+                            <>
+                                <input
+                                    className={styles.modalInput}
+                                    name="title"
+                                    value={modalInput.title || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Achievement Title"
+                                />
+                                <textarea
+                                    className={styles.modalInput}
+                                    name="description"
+                                    value={modalInput.description || ""}
+                                    onChange={handleModalInputChange}
+                                    placeholder="Details"
+                                />
+                            </>
+                        )}
+
                         <button
                             className={styles.modalSaveBtn}
                             onClick={handleModalSave}
@@ -672,7 +1065,7 @@ export default function Profilepage() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className={styles.modalHeader}>
-                            <h3>My Connections</h3>
+                            <h3>Connections</h3>
                             <button
                                 onClick={() => setShowConnectionsModal(false)}
                                 className={styles.closeIcon}

@@ -27,22 +27,6 @@ const isVideo = (fileType, mediaUrl) => {
 };
 
 // --- Icons ---
-const DownloadIcon = () => (
-    <svg
-        style={{ width: "1.2em", height: "1.2em" }}
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-        />
-    </svg>
-);
 const MessageIcon = () => (
     <svg
         style={{ width: "1.2em", height: "1.2em" }}
@@ -121,7 +105,7 @@ export default function ViewProfilePage({ userProfile }) {
     const [localProfile, setLocalProfile] = useState(userProfile);
     const [userPosts, setUserPosts] = useState([]);
     const [connectStatus, setConnectStatus] = useState("Connect");
-    const [showConnectionsModal, setShowConnectionsModal] = useState(false); // Modal state
+    const [showConnectionsModal, setShowConnectionsModal] = useState(false);
 
     const isOwnProfile =
         authState.user && authState.user.userId._id === localProfile.userId._id;
@@ -139,14 +123,23 @@ export default function ViewProfilePage({ userProfile }) {
 
     useEffect(() => {
         if (isOwnProfile) return;
-        const isConnectedRec = authState.connectionRequest.some(
+
+        // --- FIX: Safety Check for Arrays ---
+        const requestsReceived = Array.isArray(authState.connectionRequest)
+            ? authState.connectionRequest
+            : [];
+        const requestsSent = Array.isArray(authState.connections)
+            ? authState.connections
+            : [];
+
+        const isConnectedRec = requestsReceived.some(
             (req) =>
-                req.userId._id === localProfile.userId._id &&
+                req.userId?._id === localProfile.userId._id &&
                 req.status_accepted === true
         );
-        const isConnectedSent = authState.connections.some(
+        const isConnectedSent = requestsSent.some(
             (req) =>
-                req.connectionId._id === localProfile.userId._id &&
+                req.connectionId?._id === localProfile.userId._id &&
                 req.status_accepted === true
         );
         if (isConnectedRec || isConnectedSent) {
@@ -154,9 +147,9 @@ export default function ViewProfilePage({ userProfile }) {
             return;
         }
 
-        const isPending = authState.connections.some(
+        const isPending = requestsSent.some(
             (req) =>
-                req.connectionId._id === localProfile.userId._id &&
+                req.connectionId?._id === localProfile.userId._id &&
                 req.status_accepted === null
         );
         if (isPending) {
@@ -164,9 +157,9 @@ export default function ViewProfilePage({ userProfile }) {
             return;
         }
 
-        const hasRequested = authState.connectionRequest.some(
+        const hasRequested = requestsReceived.some(
             (req) =>
-                req.userId._id === localProfile.userId._id &&
+                req.userId?._id === localProfile.userId._id &&
                 req.status_accepted === null
         );
         if (hasRequested) {
@@ -226,28 +219,6 @@ export default function ViewProfilePage({ userProfile }) {
         }
     };
 
-    const handleDownloadResume = async () => {
-        try {
-            const response = await clientServer.get(
-                `/user/download_resume?id=${localProfile.userId._id}`,
-                { responseType: "blob" }
-            );
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute(
-                "download",
-                `${localProfile.userId.username}_resume.pdf`
-            );
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            alert("Error: Could not generate resume.");
-        }
-    };
-
     const handleMessage = () => {
         router.push(`/messaging?chatWith=${localProfile.userId.username}`);
     };
@@ -298,13 +269,6 @@ export default function ViewProfilePage({ userProfile }) {
                 </div>
                 <div className={styles.profileHeaderContent}>
                     <div className={styles.profileHeaderActions}>
-                        <button
-                            className={styles.iconActionButton}
-                            onClick={handleDownloadResume}
-                            title="Download Resume"
-                        >
-                            <DownloadIcon />
-                        </button>
                         {!isOwnProfile && (
                             <button
                                 className={styles.iconActionButton}
@@ -336,7 +300,6 @@ export default function ViewProfilePage({ userProfile }) {
                     </p>
 
                     <div className={styles.metaInfo}>
-                        {/* CLICKABLE CONNECTION COUNT */}
                         <span
                             className={styles.connectionCount}
                             onClick={() => setShowConnectionsModal(true)}
@@ -345,11 +308,66 @@ export default function ViewProfilePage({ userProfile }) {
                         </span>
                     </div>
 
+                    {/* Contact Info Display - Visible to everyone now */}
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: "15px",
+                            marginTop: "10px",
+                            fontSize: "0.9rem",
+                            color: "#555",
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        {localProfile.phoneNumber && (
+                            <span>📞 {localProfile.phoneNumber}</span>
+                        )}
+                        {localProfile.linkedin && (
+                            <a
+                                href={localProfile.linkedin}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                    color: "#0a66c2",
+                                    textDecoration: "none",
+                                }}
+                            >
+                                LinkedIn
+                            </a>
+                        )}
+                        {localProfile.github && (
+                            <a
+                                href={localProfile.github}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                    color: "#333",
+                                    textDecoration: "none",
+                                }}
+                            >
+                                GitHub
+                            </a>
+                        )}
+                        {localProfile.leetcode && (
+                            <a
+                                href={localProfile.leetcode}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                    color: "#e67e22",
+                                    textDecoration: "none",
+                                }}
+                            >
+                                LeetCode
+                            </a>
+                        )}
+                    </div>
+
                     <p className={styles.bioDisplay}>{localProfile.bio}</p>
                 </div>
             </div>
 
-            {/* --- Skills --- */}
+            {/* Skills */}
             {localProfile.skills && localProfile.skills.length > 0 && (
                 <div className={styles.profileSectionCard}>
                     <div className={styles.sectionHeader}>
@@ -365,7 +383,7 @@ export default function ViewProfilePage({ userProfile }) {
                 </div>
             )}
 
-            {/* --- Work History --- */}
+            {/* Work History */}
             <div className={styles.profileSectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Work History</h4>
@@ -382,8 +400,19 @@ export default function ViewProfilePage({ userProfile }) {
                                         {work.company}
                                     </p>
                                     <p className={styles.workYears}>
-                                        {work.years} years
+                                        {work.years}
                                     </p>
+                                    {work.description && (
+                                        <p
+                                            style={{
+                                                fontSize: "0.85rem",
+                                                color: "#555",
+                                                marginTop: "4px",
+                                            }}
+                                        >
+                                            {work.description}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -393,7 +422,7 @@ export default function ViewProfilePage({ userProfile }) {
                 </div>
             </div>
 
-            {/* --- Education --- */}
+            {/* Education */}
             <div className={styles.profileSectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Education</h4>
@@ -407,8 +436,24 @@ export default function ViewProfilePage({ userProfile }) {
                                         {edu.school}
                                     </p>
                                     <p className={styles.workCompany}>
-                                        {edu.degree} - {edu.fieldOfStudy}
+                                        {edu.degree}
+                                        {edu.fieldOfStudy
+                                            ? `, ${edu.fieldOfStudy}`
+                                            : ""}
                                     </p>
+                                    <p className={styles.workYears}>
+                                        {edu.years}
+                                    </p>
+                                    {edu.grade && (
+                                        <p
+                                            style={{
+                                                fontSize: "0.85rem",
+                                                color: "#555",
+                                            }}
+                                        >
+                                            Grade: {edu.grade}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         ))
@@ -418,7 +463,125 @@ export default function ViewProfilePage({ userProfile }) {
                 </div>
             </div>
 
-            {/* --- Recent Activity --- */}
+            {/* Projects Section (NEW) */}
+            <div className={styles.profileSectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Projects</h4>
+                </div>
+                <div className={styles.workHistoryContainer}>
+                    {localProfile.projects &&
+                    localProfile.projects.length > 0 ? (
+                        localProfile.projects.map((proj, index) => (
+                            <div key={index} className={styles.workHistoryCard}>
+                                <div className={styles.workInfo}>
+                                    <p className={styles.workPosition}>
+                                        {proj.title}
+                                    </p>
+                                    <p
+                                        style={{
+                                            fontSize: "0.9rem",
+                                            color: "#555",
+                                        }}
+                                    >
+                                        {proj.description}
+                                    </p>
+                                    <p className={styles.workYears}>
+                                        {proj.duration}
+                                    </p>
+                                    {proj.link && (
+                                        <a
+                                            href={proj.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{
+                                                fontSize: "0.85rem",
+                                                color: "#0a66c2",
+                                            }}
+                                        >
+                                            View Project
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No projects added.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Certificates Section (NEW) */}
+            <div className={styles.profileSectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Certificates</h4>
+                </div>
+                <div className={styles.workHistoryContainer}>
+                    {localProfile.certificates &&
+                    localProfile.certificates.length > 0 ? (
+                        localProfile.certificates.map((cert, index) => (
+                            <div key={index} className={styles.workHistoryCard}>
+                                <div className={styles.workInfo}>
+                                    <p className={styles.workPosition}>
+                                        {cert.name}
+                                    </p>
+                                    <p className={styles.workYears}>
+                                        {cert.date}
+                                    </p>
+                                    {cert.link && (
+                                        <a
+                                            href={cert.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{
+                                                fontSize: "0.85rem",
+                                                color: "#0a66c2",
+                                                marginLeft: "10px",
+                                            }}
+                                        >
+                                            View Credential
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No certificates added.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Achievements Section (NEW) */}
+            <div className={styles.profileSectionCard}>
+                <div className={styles.sectionHeader}>
+                    <h4>Achievements</h4>
+                </div>
+                <div className={styles.workHistoryContainer}>
+                    {localProfile.achievements &&
+                    localProfile.achievements.length > 0 ? (
+                        localProfile.achievements.map((achieve, index) => (
+                            <div key={index} className={styles.workHistoryCard}>
+                                <div className={styles.workInfo}>
+                                    <p className={styles.workPosition}>
+                                        {achieve.title}
+                                    </p>
+                                    <p
+                                        style={{
+                                            fontSize: "0.9rem",
+                                            color: "#555",
+                                        }}
+                                    >
+                                        {achieve.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No achievements added.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Recent Activity */}
             <div className={styles.profileSectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Recent Activity</h4>
@@ -468,7 +631,7 @@ export default function ViewProfilePage({ userProfile }) {
                 </div>
             </div>
 
-            {/* --- CONNECTIONS LIST MODAL --- */}
+            {/* Connections Modal */}
             {showConnectionsModal && (
                 <div
                     className={styles.modalOverlay}

@@ -67,13 +67,22 @@ export default function MyConnectionsPage() {
             : defaultStatus;
     };
 
-    const pendingRequests = authState.connectionRequest.filter(
+    // --- FIX: Safe Array Handling ---
+    const receivedRequests = Array.isArray(authState.connectionRequest)
+        ? authState.connectionRequest
+        : [];
+    const sentRequests = Array.isArray(authState.connections)
+        ? authState.connections
+        : [];
+
+    const pendingRequests = receivedRequests.filter(
         (connection) => connection.status_accepted === null
     );
-    const receivedAccepted = authState.connectionRequest.filter(
+
+    const receivedAccepted = receivedRequests.filter(
         (connection) => connection.status_accepted === true
     );
-    const sentAccepted = authState.connections.filter(
+    const sentAccepted = sentRequests.filter(
         (connection) => connection.status_accepted === true
     );
 
