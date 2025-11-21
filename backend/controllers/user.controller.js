@@ -828,17 +828,21 @@ export const commentPost = async (req, res) => {
     }
 };
 
+// backend/controllers/user.controller.js
+
 export const getUserProfileAndUserBasedOnUername = async (req, res) => {
     const { username } = req.query;
     try {
         const user = await User.findOne({ username });
         if (!user) return res.status(404).json({ message: "User not found" });
+
         const userProfile = await Profile.findOne({
             userId: user._id,
         }).populate(
             "userId",
             "name email username profilePicture backgroundPicture isOnline lastSeen"
         );
+
         if (!userProfile)
             return res.status(404).json({ message: "Profile not found" });
 
@@ -849,17 +853,29 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
             ],
         }).populate("userId connectionId", "name username profilePicture");
 
-        const connectionList = connections.map((conn) => {
-            if (conn.userId._id.toString() === user._id.toString())
-                return conn.connectionId;
-            return conn.userId;
-        });
+        // --- FIX START: Handle deleted users safely ---
+        const connectionList = connections
+            .map((conn) => {
+                // If a user was deleted, populate returns null. We must check for this.
+                if (!conn.userId || !conn.connectionId) {
+                    return null;
+                }
+
+                if (conn.userId._id.toString() === user._id.toString()) {
+                    return conn.connectionId;
+                }
+                return conn.userId;
+            })
+            .filter((conn) => conn !== null); // Remove the null entries
+        // --- FIX END ---
 
         const profileData = userProfile.toObject();
         profileData.connectionCount = connectionList.length;
         profileData.connectionList = connectionList;
+
         return res.json({ profile: profileData });
     } catch (error) {
+        console.error("Error fetching profile:", error); // Log error to server console
         return res.status(500).json({ message: error.message });
     }
 };
