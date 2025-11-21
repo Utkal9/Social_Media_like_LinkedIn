@@ -28,7 +28,12 @@ const UserSchema = mongoose.Schema({
         default:
             "https://res.cloudinary.com/dx28uxwrg/image/upload/v1762799986/default_dlizpg.jpg",
     },
-    // --- NEW FIELDS ---
+    // --- NEW: Background Cover Image ---
+    backgroundPicture: {
+        type: String,
+        default:
+            "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80",
+    },
     isOnline: {
         type: Boolean,
         default: false,
@@ -37,7 +42,6 @@ const UserSchema = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    // ------------------
     createdAt: {
         type: Date,
         default: Date.now,

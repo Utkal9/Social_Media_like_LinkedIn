@@ -159,7 +159,8 @@
     background: #fff;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
-    overflow: hidden;
+    overflow: visible; /* Allowed overflow for dropdown */
+    position: relative;
 }
 
 .postCardHeader {
@@ -198,19 +199,82 @@
     color: #666;
 }
 
-.deleteButton {
+/* --- NEW: More Options Dropdown --- */
+.moreOptionsWrapper {
+    position: relative;
+}
+
+.iconBtn {
     background: none;
     border: none;
     cursor: pointer;
     color: #666;
-    padding: 4px;
+    padding: 8px;
     border-radius: 50%;
     transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.deleteButton:hover {
-    background: #f3f3f3;
+.iconBtn:hover {
+    background-color: #f3f3f3;
+    color: #191919;
 }
 
+.optionsDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 160px;
+    z-index: 50;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.optionItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.optionItem:hover {
+    background-color: #f3f3f3;
+}
+.optionItem.delete {
+    color: #d11124;
+}
+.optionItem svg {
+    width: 18px;
+    height: 18px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Post Body --- */
 .postCardBody {
     padding: 8px 16px;
     font-size: 0.95rem;
@@ -228,7 +292,8 @@
     margin-top: 8px;
     background-color: #f8f8f8;
 }
-.postCardImageContainer img {
+.postCardImageContainer img,
+.postCardImageContainer video {
     width: 100%;
     height: auto;
     display: block;
@@ -394,24 +459,24 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.65); /* Slightly darker for focus */
+    background: rgba(0, 0, 0, 0.65);
     z-index: 1100;
     display: flex;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(2px); /* Modern blur effect */
+    backdrop-filter: blur(2px);
 }
 
 .commentModalContent {
     width: 100%;
     max-width: 600px;
-    height: 85vh; /* Taller */
+    height: 85vh;
     background: #fff;
-    border-radius: 12px; /* Softer corners */
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    overflow: hidden; /* Keeps content inside rounded corners */
+    overflow: hidden;
     animation: slideUp 0.3s ease-out;
 }
 
@@ -452,6 +517,45 @@
     color: #000;
 }
 
+/* --- Edit Modal Specifics --- */
+.editModalBody {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.previewContainer {
+    width: 100%;
+    background: #f3f3f3;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 1px dashed #ccc;
+    min-height: 100px;
+}
+
+.cancelButton {
+    background: transparent;
+    border: 1px solid #666;
+    color: #666;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cancelButton:hover {
+    background-color: #f3f3f3;
+    border-color: #333;
+    color: #333;
+}
+
 /* List Container */
 .allCommentsContainer {
     flex: 1;
@@ -460,7 +564,7 @@
     background: #fff;
     display: flex;
     flex-direction: column;
-    gap: 16px; /* Spacing between comments */
+    gap: 16px;
 }
 
 .noComments {
@@ -486,7 +590,7 @@
 
 .singleCommentBody {
     background: #f2f2f2;
-    border-radius: 0 12px 12px 12px; /* Chat bubble effect */
+    border-radius: 0 12px 12px 12px;
     padding: 10px 14px;
     position: relative;
 }

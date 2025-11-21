@@ -3,6 +3,7 @@ import {
     register,
     login,
     uploadProfilePicture,
+    uploadBackgroundPicture,
     updateUserProfile,
     getUserAndProfile,
     updateProfileData,
@@ -17,12 +18,44 @@ import {
 } from "../controllers/user.controller.js";
 
 import upload from "../config/cloudinary.config.js";
+import { MulterError } from "multer"; // Ensure you have multer installed
 
 const router = Router();
 
+// --- Middleware to handle Upload Errors gracefully ---
+const handleUpload = (fieldName) => (req, res, next) => {
+    upload.single(fieldName)(req, res, (err) => {
+        if (err) {
+            console.error(`[Upload Error] ${fieldName}:`, err);
+
+            // Handle specific Multer errors (like file size)
+            if (err instanceof MulterError) {
+                if (err.code === "LIMIT_FILE_SIZE") {
+                    return res
+                        .status(400)
+                        .json({ message: "File too large. Limit is 10MB." });
+                }
+                return res.status(400).json({ message: err.message });
+            }
+
+            // Handle other errors (Cloudinary, etc.)
+            return res
+                .status(500)
+                .json({ message: err.message || "File upload failed." });
+        }
+        next();
+    });
+};
+
+// Use the wrapper for profile picture
 router
     .route("/update_profile_picture")
-    .post(upload.single("profile_picture"), uploadProfilePicture);
+    .post(handleUpload("profile_picture"), uploadProfilePicture);
+
+// Use the wrapper for background picture
+router
+    .route("/update_background_picture")
+    .post(handleUpload("background_picture"), uploadBackgroundPicture);
 
 router.route("/register").post(register);
 router.route("/login").post(login);

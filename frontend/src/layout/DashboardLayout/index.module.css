@@ -34,8 +34,9 @@
 
 .profileCardHeader {
     height: 60px;
-    background: url("https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80");
     background-size: cover;
+    background-position: center;
+    background-color: #a0b4b7;
 }
 .avatarWrapper {
     position: relative;

@@ -34,7 +34,6 @@ function getTimeAgo(dateString) {
     return `${Math.floor(diffInDays / 7)}w`;
 }
 
-// --- Helper to check if media is video ---
 const isVideo = (fileType, mediaUrl) => {
     if (fileType && fileType.startsWith("video/")) return true;
     if (mediaUrl) {
@@ -77,6 +76,20 @@ const getReactionColor = (type) => {
 };
 
 // --- SVG Icons ---
+const MoreHorizIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ width: "24px", height: "24px" }}
+    >
+        <path
+            fillRule="evenodd"
+            d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
 const ImageIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -177,13 +190,14 @@ export default function Dashboard() {
     const [postError, setPostError] = useState("");
     const [postContent, setPostContent] = useState("");
     const [fileContent, setFileContent] = useState(null);
-    const [filePreview, setFilePreview] = useState(null); // For preview
+    const [filePreview, setFilePreview] = useState(null);
     const [commentText, setCommentText] = useState("");
     const [showReactionListModal, setShowReactionListModal] = useState(false);
     const [currentReactionList, setCurrentReactionList] = useState([]);
     const commentInputRef = useRef(null);
 
-    // --- Editing State ---
+    // --- Editing & Menu State ---
+    const [openMenuId, setOpenMenuId] = useState(null); // Track open dropdown
     const [editingPost, setEditingPost] = useState(null);
     const [editBody, setEditBody] = useState("");
     const [editFile, setEditFile] = useState(null);
@@ -197,6 +211,10 @@ export default function Dashboard() {
         if (!authState.all_profiles_fetched) {
             dispatch(getAllUsers());
         }
+        // Close menus on click anywhere
+        const closeMenu = () => setOpenMenuId(null);
+        document.addEventListener("click", closeMenu);
+        return () => document.removeEventListener("click", closeMenu);
     }, [authState.isTokenThere, dispatch]);
 
     const handleFileChange = (e) => {
@@ -261,6 +279,7 @@ export default function Dashboard() {
         setEditBody(post.body);
         setEditFile(null);
         setEditFilePreview(null);
+        setOpenMenuId(null);
     };
 
     const handleUpdateSubmit = async () => {
@@ -370,7 +389,6 @@ export default function Dashboard() {
                         <p className={styles.errorMessage}>{postError}</p>
                     )}
 
-                    {/* File Preview in Create Post */}
                     {filePreview && (
                         <div style={{ marginTop: "10px" }}>
                             {fileContent &&
@@ -410,7 +428,7 @@ export default function Dashboard() {
                             type="file"
                             hidden
                             id="fileUpload"
-                            accept="image/*,video/*" // Accept videos
+                            accept="image/*,video/*"
                         />
                         {fileContent && (
                             <span className={styles.fileName}>
@@ -476,29 +494,54 @@ export default function Dashboard() {
                                 {post.userId._id ===
                                     authState.user.userId._id && (
                                     <div
-                                        style={{
-                                            display: "flex",
-                                            gap: "0.5rem",
-                                        }}
+                                        className={styles.moreOptionsWrapper}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         <button
-                                            onClick={() =>
-                                                handleEditClick(post)
-                                            }
-                                            className={styles.deleteButton}
-                                            title="Edit Post"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenMenuId(
+                                                    openMenuId === post._id
+                                                        ? null
+                                                        : post._id
+                                                );
+                                            }}
+                                            className={styles.iconBtn}
+                                            title="More options"
                                         >
-                                            <EditIcon />
+                                            <MoreHorizIcon />
                                         </button>
-                                        <button
-                                            onClick={() =>
-                                                handleDelete(post._id)
-                                            }
-                                            className={styles.deleteButton}
-                                            title="Delete Post"
-                                        >
-                                            <DeleteIcon />
-                                        </button>
+
+                                        {openMenuId === post._id && (
+                                            <div
+                                                className={
+                                                    styles.optionsDropdown
+                                                }
+                                            >
+                                                <div
+                                                    className={
+                                                        styles.optionItem
+                                                    }
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleEditClick(post);
+                                                    }}
+                                                >
+                                                    <EditIcon />{" "}
+                                                    <span>Edit Post</span>
+                                                </div>
+                                                <div
+                                                    className={`${styles.optionItem} ${styles.delete}`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(post._id);
+                                                    }}
+                                                >
+                                                    <DeleteIcon />{" "}
+                                                    <span>Delete Post</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -724,7 +767,7 @@ export default function Dashboard() {
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             height: "auto",
-                            maxHeight: "80vh",
+                            maxHeight: "85vh",
                             maxWidth: "600px",
                         }}
                     >
@@ -737,46 +780,29 @@ export default function Dashboard() {
                                 &times;
                             </button>
                         </div>
-                        <div
-                            style={{
-                                padding: "1.5rem",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "1rem",
-                            }}
-                        >
+
+                        <div className={styles.editModalBody}>
                             <textarea
                                 className={styles.textAreaOfContent}
-                                style={{ height: "120px", borderRadius: "8px" }}
+                                style={{
+                                    height: "100px",
+                                    borderRadius: "12px",
+                                    border: "1px solid #ccc",
+                                }}
                                 value={editBody}
                                 onChange={(e) => setEditBody(e.target.value)}
                                 placeholder="What do you want to talk about?"
                             />
 
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "0.5rem",
-                                }}
-                            >
-                                <p
-                                    style={{
-                                        fontSize: "0.9rem",
-                                        fontWeight: "600",
-                                    }}
-                                >
-                                    Current Media:
-                                </p>
-                                {/* Show existing media or new preview */}
+                            <div className={styles.previewContainer}>
                                 {editFilePreview ? (
                                     isVideo(editFile?.type, editFilePreview) ? (
                                         <video
                                             src={editFilePreview}
                                             controls
                                             style={{
-                                                maxHeight: "150px",
-                                                borderRadius: "8px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                             }}
                                         />
                                     ) : (
@@ -784,9 +810,9 @@ export default function Dashboard() {
                                             src={editFilePreview}
                                             alt="New Preview"
                                             style={{
-                                                maxHeight: "150px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                                 objectFit: "contain",
-                                                borderRadius: "8px",
                                             }}
                                         />
                                     )
@@ -799,8 +825,8 @@ export default function Dashboard() {
                                             src={editingPost.media}
                                             controls
                                             style={{
-                                                maxHeight: "150px",
-                                                borderRadius: "8px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                             }}
                                         />
                                     ) : (
@@ -808,21 +834,20 @@ export default function Dashboard() {
                                             src={editingPost.media}
                                             alt="Current"
                                             style={{
-                                                maxHeight: "150px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                                 objectFit: "contain",
-                                                borderRadius: "8px",
-                                                border: "1px solid #eee",
                                             }}
                                         />
                                     )
                                 ) : (
                                     <p
                                         style={{
-                                            fontSize: "0.8rem",
-                                            color: "#666",
+                                            fontSize: "0.9rem",
+                                            color: "#888",
                                         }}
                                     >
-                                        No media uploaded.
+                                        No media selected
                                     </p>
                                 )}
                             </div>
@@ -831,6 +856,7 @@ export default function Dashboard() {
                                 <label
                                     htmlFor="editFileUpload"
                                     className={styles.mediaButton}
+                                    style={{ background: "#f0f0f0" }}
                                 >
                                     <ImageIcon /> <span>Change Media</span>
                                 </label>
@@ -842,19 +868,36 @@ export default function Dashboard() {
                                     onChange={handleEditFileChange}
                                 />
                                 {editFile && (
-                                    <span className={styles.fileName}>
+                                    <span
+                                        className={styles.fileName}
+                                        style={{ maxWidth: "200px" }}
+                                    >
                                         {editFile.name}
                                     </span>
                                 )}
                             </div>
 
-                            <button
-                                onClick={handleUpdateSubmit}
-                                className={styles.uploadButton}
-                                style={{ alignSelf: "flex-end" }}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: "1rem",
+                                    marginTop: "1rem",
+                                }}
                             >
-                                Save Changes
-                            </button>
+                                <button
+                                    onClick={() => setEditingPost(null)}
+                                    className={styles.cancelButton}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdateSubmit}
+                                    className={styles.uploadButton}
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
