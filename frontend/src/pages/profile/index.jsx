@@ -243,22 +243,24 @@ export default function Profilepage() {
             setCompletionStats(stats);
         }
     }, [authState.user, postReducer.posts]);
-
     const acceptedConnectionsList = useMemo(() => {
-        const connections = Array.isArray(authState.connections)
+        const sentRequests = Array.isArray(authState.connections)
             ? authState.connections
             : [];
-        const connectionRequests = Array.isArray(authState.connectionRequest)
+        const receivedRequests = Array.isArray(authState.connectionRequest)
             ? authState.connectionRequest
             : [];
 
-        const received = connections
-            .filter((req) => req.status_accepted)
-            .map((req) => req.userId);
-        const sent = connectionRequests
-            .filter((req) => req.status_accepted)
-            .map((req) => req.connectionId);
-        return [...received, ...sent].filter((u) => u);
+        const sentAccepted = sentRequests
+            .filter((req) => req.status_accepted === true)
+            .map((req) => req.connectionId); // Use connectionId for sent requests
+
+        const receivedAccepted = receivedRequests
+            .filter((req) => req.status_accepted === true)
+            .map((req) => req.userId); // Use userId for received requests
+
+        // Combine and filter out any nulls
+        return [...sentAccepted, ...receivedAccepted].filter((u) => u);
     }, [authState.connections, authState.connectionRequest]);
 
     const connectionCount = acceptedConnectionsList.length;
