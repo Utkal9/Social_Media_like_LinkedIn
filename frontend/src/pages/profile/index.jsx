@@ -123,6 +123,83 @@ const TruncatedText = ({ content, postId }) => {
     );
 };
 
+// --- PROGRESS CALCULATION HELPER ---
+const calculateProfileCompletion = (profile) => {
+    if (!profile || !profile.userId) return { percentage: 0, missing: [] };
+
+    let score = 0;
+    const totalPoints = 20; // Total weighted points
+    const missing = [];
+
+    // 1. Basic Contact Details (5 points)
+    if (profile.userId.name) score++;
+    else missing.push("Full Name");
+    if (profile.userId.email) score++;
+    else missing.push("Email");
+    if (profile.phoneNumber) score++;
+    else missing.push("Mobile Number");
+    if (profile.github) score++;
+    else missing.push("GitHub Profile Link");
+    if (profile.leetcode) score++;
+    else missing.push("LeetCode Profile Link");
+
+    // 2. Resume Specific Skills (5 points) - One in each field
+    if (profile.skillLanguages) score++;
+    else missing.push("Skills: Languages");
+    if (profile.skillCloudDevOps) score++;
+    else missing.push("Skills: Cloud/DevOps");
+    if (profile.skillFrameworks) score++;
+    else missing.push("Skills: Frameworks");
+    if (profile.skillTools) score++;
+    else missing.push("Skills: Tools");
+    if (profile.skillSoft) score++;
+    else missing.push("Skills: Soft Skills");
+
+    // 3. Projects (Minimum 3) (10 points total)
+    const projects = profile.projects || [];
+
+    // Base point for having at least 3 projects
+    if (projects.length >= 3) {
+        score++;
+    } else {
+        missing.push(`Add ${3 - projects.length} more Project(s)`);
+    }
+
+    // Details check for the first 3 projects (3 points each project * 3 = 9 points)
+    for (let i = 0; i < 3; i++) {
+        const proj = projects[i];
+        if (proj) {
+            // Description length check (approx 3-4 lines ~ 120 chars)
+            if (proj.description && proj.description.length >= 120) {
+                score++;
+            } else {
+                missing.push(
+                    `Project ${i + 1}: Description too short (min 3-4 lines)`
+                );
+            }
+
+            // Link check
+            if (proj.link) {
+                score++;
+            } else {
+                missing.push(`Project ${i + 1}: Missing GitHub/Live Link`);
+            }
+
+            // Timeline check
+            if (proj.duration) {
+                score++;
+            } else {
+                missing.push(`Project ${i + 1}: Missing Duration`);
+            }
+        } else {
+            // If project doesn't exist, missing counts are implicitly handled by score not increasing
+        }
+    }
+
+    const percentage = Math.round((score / totalPoints) * 100);
+    return { percentage: Math.min(percentage, 100), missing }; // Cap at 100
+};
+
 export default function Profilepage() {
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
@@ -135,6 +212,12 @@ export default function Profilepage() {
     const [modalInput, setModalInput] = useState({});
     const [skillInput, setSkillInput] = useState("");
     const [showConnectionsModal, setShowConnectionsModal] = useState(false);
+
+    // Progress State
+    const [completionStats, setCompletionStats] = useState({
+        percentage: 0,
+        missing: [],
+    });
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -154,6 +237,10 @@ export default function Profilepage() {
                     post.userId.username === authState.user.userId.username
             );
             setUserPosts(posts);
+
+            // Calculate progress
+            const stats = calculateProfileCompletion(authState.user);
+            setCompletionStats(stats);
         }
     }, [authState.user, postReducer.posts]);
 
@@ -199,6 +286,10 @@ export default function Profilepage() {
 
     const syncProfileToBackend = async (updatedProfile) => {
         try {
+            // Optimistic update for calculations
+            const stats = calculateProfileCompletion(updatedProfile);
+            setCompletionStats(stats);
+
             await clientServer.post("/user_update", {
                 token: localStorage.getItem("token"),
                 name: updatedProfile.userId.name,
@@ -235,8 +326,13 @@ export default function Profilepage() {
         alert("Profile updated!");
     };
 
-    // --- UPDATED DOWNLOAD HANDLER FOR DOCX ---
     const handleDownloadResume = async () => {
+        if (completionStats.percentage < 90) {
+            alert(
+                `Profile is ${completionStats.percentage}% complete. Please complete at least 90% to download resume.`
+            );
+            return;
+        }
         if (!userProfile || !userProfile.userId?._id) return;
         try {
             const response = await clientServer.get(
@@ -246,7 +342,6 @@ export default function Profilepage() {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
             link.href = url;
-            // Change extension to .docx
             link.setAttribute(
                 "download",
                 `${userProfile.userId.username}_resume.docx`
@@ -302,7 +397,7 @@ export default function Profilepage() {
                     fieldOfStudy: "",
                     years: "",
                     grade: "",
-                    location: "", // NEW
+                    location: "",
                 }
             );
         else if (mode.includes("project"))
@@ -312,7 +407,7 @@ export default function Profilepage() {
         else if (mode.includes("cert"))
             setModalInput(item || { name: "", link: "", date: "" });
         else if (mode.includes("achieve"))
-            setModalInput(item || { title: "", description: "", date: "" }); // NEW
+            setModalInput(item || { title: "", description: "", date: "" });
     };
 
     const closeModal = () => {
@@ -376,6 +471,10 @@ export default function Profilepage() {
 
     if (!userProfile) return <h2>Loading Profile...</h2>;
 
+    // Color for circular loader: Green if >= 90%, Blue otherwise
+    const strokeColor =
+        completionStats.percentage >= 90 ? "#057642" : "#0a66c2";
+
     return (
         <div className={styles.container}>
             <div className={styles.profileHeaderCard}>
@@ -387,14 +486,68 @@ export default function Profilepage() {
                         }")`,
                     }}
                 >
-                    <button
-                        onClick={handleDownloadResume}
-                        title="Download Resume"
-                        className={styles.downloadResumeBtn}
-                    >
-                        <DownloadIcon />
-                    </button>
+                    {/* --- UNIFIED RESUME DOWNLOAD BUTTON + LOADER --- */}
+                    <div className={styles.resumeActionWrapper}>
+                        {/* Background Ring */}
+                        <svg
+                            viewBox="0 0 36 36"
+                            className={styles.progressRing}
+                        >
+                            <path
+                                className={styles.circleBg}
+                                d="M18 2.0845
+                                a 15.9155 15.9155 0 0 1 0 31.831
+                                a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            <path
+                                className={styles.circle}
+                                strokeDasharray={`${completionStats.percentage}, 100`}
+                                stroke={strokeColor}
+                                d="M18 2.0845
+                                a 15.9155 15.9155 0 0 1 0 31.831
+                                a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                        </svg>
 
+                        {/* Download Button - Centered in Ring */}
+                        <button
+                            onClick={handleDownloadResume}
+                            className={styles.downloadResumeBtn}
+                            disabled={completionStats.percentage < 90}
+                        >
+                            <DownloadIcon />
+                        </button>
+
+                        {/* Hover Tooltip for missing steps */}
+                        <div className={styles.completionTooltip}>
+                            <h5>
+                                Status: {completionStats.percentage}%
+                                <span>
+                                    {completionStats.percentage < 90
+                                        ? "(Incomplete)"
+                                        : "(Ready)"}
+                                </span>
+                            </h5>
+                            {completionStats.missing.length > 0 ? (
+                                <ul>
+                                    {completionStats.missing
+                                        .slice(0, 6)
+                                        .map((item, i) => (
+                                            <li key={i}>{item}</li>
+                                        ))}
+                                    {completionStats.missing.length > 6 && (
+                                        <li>...and more</li>
+                                    )}
+                                </ul>
+                            ) : (
+                                <p style={{ color: "#057642", margin: 0 }}>
+                                    Great! You can now download your resume.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* ... (Rest of the JSX) ... */}
                     <label htmlFor="bgUpload" className={styles.editCoverBtn}>
                         <CameraIcon />
                     </label>
@@ -528,7 +681,7 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* --- RESUME SPECIFIC SKILLS SECTION (NEW) --- */}
+            {/* --- RESUME SPECIFIC SKILLS SECTION --- */}
             <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                     <h4>Resume Specific Skills</h4>
@@ -987,7 +1140,6 @@ export default function Profilepage() {
                                     onChange={handleModalInputChange}
                                     placeholder="School / University"
                                 />
-                                {/* NEW LOCATION INPUT */}
                                 <input
                                     className={styles.modalInput}
                                     name="location"
@@ -1041,21 +1193,22 @@ export default function Profilepage() {
                                     name="link"
                                     value={modalInput.link || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Project Link"
+                                    placeholder="GitHub/Live Link (Required)"
                                 />
                                 <input
                                     className={styles.modalInput}
                                     name="duration"
                                     value={modalInput.duration || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Duration (e.g. Oct 2023)"
+                                    placeholder="Duration (e.g. Oct 2023) (Required)"
                                 />
                                 <textarea
                                     className={styles.modalInput}
                                     name="description"
                                     value={modalInput.description || ""}
                                     onChange={handleModalInputChange}
-                                    placeholder="Description (Each line will be a bullet point)"
+                                    placeholder="Description (Min 3-4 lines)"
+                                    style={{ minHeight: "100px" }}
                                 />
                             </>
                         )}
@@ -1095,7 +1248,6 @@ export default function Profilepage() {
                                     onChange={handleModalInputChange}
                                     placeholder="Achievement Title"
                                 />
-                                {/* NEW DATE INPUT */}
                                 <input
                                     className={styles.modalInput}
                                     name="date"
