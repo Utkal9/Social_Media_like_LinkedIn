@@ -1,130 +1,198 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* 24px */
+    gap: 1.5rem;
+    padding-bottom: 2rem;
 }
 
-/* --- 1. Profile Header Card --- */
+/* --- Profile Header --- */
 .profileHeaderCard {
-    background: #ffffff;
-    border-radius: 8px;
+    background: white;
+    border-radius: 10px;
     border: 1px solid #e0e0e0;
     overflow: hidden;
+    position: relative;
 }
 
 .backDropContainer {
     width: 100%;
-    height: 25vh; /* 25% of viewport height */
-    background: url("https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80");
+    height: 200px;
     background-size: cover;
     background-position: center;
     position: relative;
+    background-color: #a0b4b7; /* Fallback */
+}
+
+.editCoverBtn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: white;
+    border-radius: 50%;
+    padding: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: #0a66c2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatarSection {
+    position: absolute;
+    bottom: -60px;
+    left: 2rem;
+}
+
+.profilePicWrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
 }
 
 .profilePic {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    position: absolute;
-    bottom: -75px; /* Halfway over the edge */
-    left: 2rem;
-    border: 5px solid white;
-    background-color: #eee;
+    border: 4px solid white;
+    object-fit: cover;
+    background: #fff;
 }
 
-.backDrop_overlay {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 50%;
+.editPfpBtn {
     position: absolute;
-    bottom: -75px;
-    left: 2rem;
-    border: 5px solid white;
-    z-index: 4;
-    transition: all 0.3s;
-    cursor: pointer;
+    bottom: 5px;
+    right: 5px;
+    background: #0a66c2;
     color: white;
-    opacity: 0;
+    border-radius: 50%;
+    padding: 6px;
+    cursor: pointer;
+    border: 2px solid white;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    font-weight: 600;
-}
-.backDrop_overlay:hover {
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.6);
-}
-.backDrop_overlay svg {
-    width: 30px;
-    height: 30px;
+    justify-content: center;
 }
 
-.profileHeaderContent {
-    padding: 1.5rem;
-    padding-top: 90px; /* 75px profile pic + 15px space */
-    position: relative;
+.profileInfoSection {
+    padding: 70px 2rem 2rem 2rem; /* Top padding clears avatar */
 }
 
-.saveChangesButton {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    padding: 0.6rem 1.2rem;
+.infoTopRow {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.saveButton {
     background: #0a66c2;
     color: white;
     border: none;
+    padding: 6px 16px;
     border-radius: 20px;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
-.saveChangesButton:hover {
+.saveButton:hover {
     background: #004182;
 }
 
-/* --- "Advanced" In-Place Edit Styles --- */
-.nameEdit,
-.bioEdit {
-    background: transparent;
-    border: 1px solid transparent;
-    outline: none;
-    width: 100%;
-    padding: 5px;
-    margin: 0;
-    transition: background 0.2s, border 0.2s;
-    border-radius: 5px;
-}
-.nameEdit {
-    font-size: 2rem;
-    font-weight: bold;
-    font-family: inherit;
-    color: #000;
-}
-.bioEdit {
-    font-size: 1rem;
-    font-family: inherit;
-    color: #333;
-    resize: none; /* Disables manual resize */
-}
-.nameEdit:hover,
-.bioEdit:hover {
-    background: #f3f3f3;
-    border-color: #dcdcdc;
-}
-.nameEdit:focus,
-.bioEdit:focus {
-    background: #fff;
-    border-color: #0a66c2;
-    box-shadow: 0 0 0 2px #0a66c240;
+.mainInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-/* --- 2. Profile Section Card (Reusable) --- */
-.profileSectionCard {
-    background: #ffffff;
-    border-radius: 8px;
+.nameInput {
+    font-size: 1.8rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    padding: 4px;
+    border-radius: 4px;
+    width: 100%;
+    outline: none;
+}
+.nameInput:hover,
+.nameInput:focus {
+    border-color: #ccc;
+    background-color: #f9f9f9;
+}
+
+.headlineInput {
+    font-size: 1.1rem;
+    color: #333;
+    border: 1px solid transparent;
+    padding: 4px;
+    width: 100%;
+    outline: none;
+}
+.headlineInput:hover,
+.headlineInput:focus {
+    border-color: #ccc;
+    background-color: #f9f9f9;
+}
+
+.metaInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #666;
+    flex-wrap: wrap;
+}
+
+.dot {
+    font-weight: bold;
+}
+
+/* Connection Count Link Style */
+.connectionCount {
+    color: #0a66c2;
+    font-weight: 600;
+    cursor: pointer;
+    transition: text-decoration 0.2s;
+}
+.connectionCount:hover {
+    text-decoration: underline;
+}
+
+.emailInput {
+    color: #0a66c2;
+    font-weight: 500;
+    border: 1px solid transparent;
+    width: auto;
+    min-width: 200px;
+    outline: none;
+    padding: 2px;
+}
+.emailInput:hover,
+.emailInput:focus {
+    border-color: #ccc;
+    background-color: #f9f9f9;
+}
+
+.bioInput {
+    margin-top: 1rem;
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+    outline: none;
+}
+.bioInput:hover,
+.bioInput:focus {
+    border-color: #ccc;
+    background-color: #f9f9f9;
+}
+
+/* --- Sections --- */
+.sectionCard {
+    background: white;
+    border-radius: 10px;
     border: 1px solid #e0e0e0;
     padding: 1.5rem;
 }
@@ -133,137 +201,349 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 0.75rem;
     margin-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.5rem;
 }
 .sectionHeader h4 {
     font-size: 1.25rem;
-    font-weight: 600;
     margin: 0;
+    color: #191919;
 }
 
-.iconButton {
+.iconBtn {
     background: none;
     border: none;
     cursor: pointer;
     color: #555;
-    padding: 0.5rem;
+    padding: 6px;
     border-radius: 50%;
     transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.iconButton:hover {
-    background: #f3f3f3;
+.iconBtn:hover {
+    background: #f0f0f0;
     color: #000;
 }
 
-/* --- Work History Styles --- */
-.workHistoryContainer {
+/* --- Skills --- */
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skillChip {
+    background: #fff;
+    border: 1px solid #0a66c2;
+    color: #0a66c2;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.skillChip button {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #0a66c2;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+.skillChip button:hover {
+    background-color: rgba(10, 102, 194, 0.1);
+    border-radius: 50%;
+}
+
+.addSkillWrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #666;
+    border-radius: 20px;
+    padding: 4px 10px;
+    transition: border 0.2s;
+}
+.addSkillWrapper:focus-within {
+    border-color: #0a66c2;
+}
+
+.addSkillWrapper input {
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    background: transparent;
+}
+.addSkillWrapper button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+}
+.addSkillWrapper button:hover {
+    color: #0a66c2;
+}
+
+/* --- Lists (Work/Edu) --- */
+.listContainer {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
-.workHistoryCard {
+
+.listItem {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 1rem;
-    border: 1px solid #f0f0f0;
-    border-radius: 6px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 1rem;
 }
-.workPosition {
+.listItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.listInfo h5 {
+    margin: 0;
+    font-size: 1.1rem;
     font-weight: 600;
-    font-size: 1.05rem;
+    color: #191919;
 }
-.workCompany {
+.listInfo p {
+    margin: 4px 0;
     color: #333;
+    font-size: 0.95rem;
 }
-.workYears {
+.listInfo span {
+    font-size: 0.85rem;
     color: #666;
-    font-size: 0.9rem;
-    font-style: italic;
 }
-.cardActions {
+
+.listActions {
     display: flex;
     gap: 0.5rem;
 }
+.listActions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 6px;
+    border-radius: 50%;
+}
+.listActions button:hover {
+    background-color: #f3f3f3;
+}
 
-/* --- Recent Activity Styles --- */
+/* --- Recent Activity Grid --- */
 .activityContainer {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1rem;
 }
+
 .postCard {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* stretch to grid cell height */
 }
+.postCard:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mediaPreview {
+    width: 100%;
+    height: 140px;
+    background-color: #f3f3f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
 .postCardImage {
     width: 100%;
-    height: 150px;
+    height: 100%;
     object-fit: cover;
 }
-.postCardBody {
+
+/* Text-only preview fallback */
+.textOnlyPreview {
     padding: 1rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    color: #333;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.postCardFooter {
+    padding: 0.8rem;
+    border-top: 1px solid #f0f0f0;
+    flex-grow: 1;
+    background: #fff;
+}
+
+.postCardBody {
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0;
     line-height: 1.4;
 }
 
-/* --- Read More Link --- */
 .readMore {
     color: #0a66c2;
     font-weight: 600;
     cursor: pointer;
-    margin-left: 5px;
+    margin-left: 4px;
 }
 .readMore:hover {
     text-decoration: underline;
 }
 
-/* --- Modal Styles --- */
-.modalBackdrop {
+/* --- Modal --- */
+.modalOverlay {
     position: fixed;
-    width: 100vw;
-    height: 100vh;
     top: 0;
     left: 0;
-    z-index: 5;
-    background: rgb(0, 0, 0, 0.7);
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
 }
-.modalContent {
+
+.modalBox {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
     width: 90%;
     max-width: 500px;
-    height: fit-content;
-    background: white;
-    border-radius: 10px;
-    position: relative;
-    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-height: 85vh;
+    overflow: hidden;
 }
-.inputField {
-    padding: 0.8rem;
-    outline: none;
-    border-radius: 10px;
-    border: 1px solid silver;
-    width: 100%;
+
+.modalBox h3 {
+    margin: 0 0 0.5rem 0;
+    color: #191919;
+}
+
+.modalInput {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
     font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
 }
-.saveModalButton {
-    padding: 0.8rem;
+.modalInput:focus {
+    border-color: #0a66c2;
+    box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.1);
+}
+
+.modalSaveBtn {
     background: #0a66c2;
     color: white;
     border: none;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 24px;
     font-weight: 600;
     cursor: pointer;
     font-size: 1rem;
+    margin-top: 0.5rem;
+    transition: background 0.2s;
 }
-.saveModalButton:hover {
+.modalSaveBtn:hover {
     background: #004182;
+}
+
+/* --- Connections List Modal Specifics --- */
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 1rem;
+    margin-bottom: 0.5rem;
+}
+.closeIcon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+}
+.closeIcon:hover {
+    color: #000;
+}
+
+.connectionsList {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.connectionItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.connectionItem:hover {
+    background-color: #f3f3f3;
+}
+
+.connectionAvatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.connectionName {
+    font-weight: 600;
+    color: #191919;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.connectionUsername {
+    color: #666;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.noConnectionsText {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
 }

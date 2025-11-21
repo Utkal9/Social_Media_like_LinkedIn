@@ -9,7 +9,7 @@ import {
     getAllComments,
     postComment,
     deletePost,
-    updatePost, // Import update
+    updatePost,
 } from "@/config/redux/action/postAction";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
@@ -26,6 +26,30 @@ const isVideo = (fileType, mediaUrl) => {
 };
 
 // --- Icons ---
+const MoreHorizIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ width: "24px", height: "24px" }}
+    >
+        <path
+            fillRule="evenodd"
+            d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const ImageIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ color: "#378fe9", width: "24px", height: "24px" }}
+    >
+        <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
+    </svg>
+);
 const LikeIcon = ({ isLiked }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -74,22 +98,6 @@ const ShareIcon = () => (
         />
     </svg>
 );
-const DeleteIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        style={{ width: "18px", height: "18px" }}
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-        />
-    </svg>
-);
 const EditIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -106,31 +114,22 @@ const EditIcon = () => (
         />
     </svg>
 );
-const ImageIcon = () => (
+const DeleteIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
+        fill="none"
         viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ color: "#378fe9", width: "24px", height: "24px" }}
+        strokeWidth={1.5}
+        stroke="currentColor"
+        style={{ width: "18px", height: "18px" }}
     >
-        <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+        />
     </svg>
 );
-
-function getTimeAgo(dateString) {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
-    if (diffInSeconds < 60) return "Just now";
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return `${diffInMinutes}m`;
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d`;
-    return `${Math.floor(diffInDays / 7)}w`;
-}
 
 export default function PostPage({ postData }) {
     const router = useRouter();
@@ -142,7 +141,8 @@ export default function PostPage({ postData }) {
     const [localPost, setLocalPost] = useState(postData);
     const [commentText, setCommentText] = useState("");
 
-    // Editing State
+    // --- Editing & Menu State ---
+    const [openMenuId, setOpenMenuId] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
     const [editBody, setEditBody] = useState("");
     const [editFile, setEditFile] = useState(null);
@@ -151,6 +151,13 @@ export default function PostPage({ postData }) {
     useEffect(() => {
         setLocalPost(postData);
     }, [postData]);
+
+    useEffect(() => {
+        // Close menus on click anywhere
+        const closeMenu = () => setOpenMenuId(null);
+        document.addEventListener("click", closeMenu);
+        return () => document.removeEventListener("click", closeMenu);
+    }, []);
 
     const isUserOnline = (uid, defaultStatus) => {
         return onlineStatuses && onlineStatuses[uid]
@@ -178,13 +185,6 @@ export default function PostPage({ postData }) {
         }
     };
 
-    const handleEditClick = () => {
-        setEditingPost(localPost);
-        setEditBody(localPost.body);
-        setEditFile(null);
-        setEditFilePreview(null);
-    };
-
     const handleEditFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.size > 10 * 1024 * 1024) {
@@ -196,6 +196,14 @@ export default function PostPage({ postData }) {
             setEditFile(file);
             setEditFilePreview(URL.createObjectURL(file));
         }
+    };
+
+    const handleEditClick = () => {
+        setEditingPost(localPost);
+        setEditBody(localPost.body);
+        setEditFile(null);
+        setEditFilePreview(null);
+        setOpenMenuId(null);
     };
 
     const handleUpdateSubmit = async () => {
@@ -211,7 +219,7 @@ export default function PostPage({ postData }) {
         setEditBody("");
         setEditFile(null);
         setEditFilePreview(null);
-        router.replace(router.asPath); // Refresh current page data
+        router.replace(router.asPath);
     };
 
     const handleOpenComments = () => {
@@ -292,23 +300,52 @@ export default function PostPage({ postData }) {
                             @{localPost.userId.username}
                         </p>
                     </div>
+
+                    {/* --- Three Dots Menu --- */}
                     {authState.user &&
                         localPost.userId._id === authState.user.userId._id && (
-                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <div
+                                className={styles.moreOptionsWrapper}
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <button
-                                    onClick={handleEditClick}
-                                    className={styles.deleteButton}
-                                    title="Edit Post"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenuId(
+                                            openMenuId
+                                                ? null
+                                                : "single-post-menu"
+                                        );
+                                    }}
+                                    className={styles.iconBtn}
+                                    title="More options"
                                 >
-                                    <EditIcon />
+                                    <MoreHorizIcon />
                                 </button>
-                                <button
-                                    onClick={handleDelete}
-                                    className={styles.deleteButton}
-                                    title="Delete Post"
-                                >
-                                    <DeleteIcon />
-                                </button>
+
+                                {openMenuId === "single-post-menu" && (
+                                    <div className={styles.optionsDropdown}>
+                                        <div
+                                            className={styles.optionItem}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditClick();
+                                            }}
+                                        >
+                                            <EditIcon /> <span>Edit Post</span>
+                                        </div>
+                                        <div
+                                            className={`${styles.optionItem} ${styles.delete}`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete();
+                                            }}
+                                        >
+                                            <DeleteIcon />{" "}
+                                            <span>Delete Post</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                 </div>
@@ -385,7 +422,7 @@ export default function PostPage({ postData }) {
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             height: "auto",
-                            maxHeight: "80vh",
+                            maxHeight: "85vh",
                             maxWidth: "600px",
                         }}
                     >
@@ -398,44 +435,29 @@ export default function PostPage({ postData }) {
                                 &times;
                             </button>
                         </div>
-                        <div
-                            style={{
-                                padding: "1.5rem",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "1rem",
-                            }}
-                        >
+
+                        <div className={styles.editModalBody}>
                             <textarea
                                 className={styles.textAreaOfContent}
-                                style={{ height: "120px", borderRadius: "8px" }}
+                                style={{
+                                    height: "100px",
+                                    borderRadius: "12px",
+                                    border: "1px solid #ccc",
+                                }}
                                 value={editBody}
                                 onChange={(e) => setEditBody(e.target.value)}
                                 placeholder="What do you want to talk about?"
                             />
-                            <div
-                                style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "0.5rem",
-                                }}
-                            >
-                                <p
-                                    style={{
-                                        fontSize: "0.9rem",
-                                        fontWeight: "600",
-                                    }}
-                                >
-                                    Current Media:
-                                </p>
+
+                            <div className={styles.previewContainer}>
                                 {editFilePreview ? (
                                     isVideo(editFile?.type, editFilePreview) ? (
                                         <video
                                             src={editFilePreview}
                                             controls
                                             style={{
-                                                maxHeight: "150px",
-                                                borderRadius: "8px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                             }}
                                         />
                                     ) : (
@@ -443,9 +465,9 @@ export default function PostPage({ postData }) {
                                             src={editFilePreview}
                                             alt="New Preview"
                                             style={{
-                                                maxHeight: "150px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                                 objectFit: "contain",
-                                                borderRadius: "8px",
                                             }}
                                         />
                                     )
@@ -458,8 +480,8 @@ export default function PostPage({ postData }) {
                                             src={editingPost.media}
                                             controls
                                             style={{
-                                                maxHeight: "150px",
-                                                borderRadius: "8px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                             }}
                                         />
                                     ) : (
@@ -467,28 +489,29 @@ export default function PostPage({ postData }) {
                                             src={editingPost.media}
                                             alt="Current"
                                             style={{
-                                                maxHeight: "150px",
+                                                maxHeight: "250px",
+                                                maxWidth: "100%",
                                                 objectFit: "contain",
-                                                borderRadius: "8px",
-                                                border: "1px solid #eee",
                                             }}
                                         />
                                     )
                                 ) : (
                                     <p
                                         style={{
-                                            fontSize: "0.8rem",
-                                            color: "#666",
+                                            fontSize: "0.9rem",
+                                            color: "#888",
                                         }}
                                     >
-                                        No media uploaded.
+                                        No media selected
                                     </p>
                                 )}
                             </div>
+
                             <div className={styles.createPostBottom}>
                                 <label
                                     htmlFor="editFileUpload"
                                     className={styles.mediaButton}
+                                    style={{ background: "#f0f0f0" }}
                                 >
                                     <ImageIcon /> <span>Change Media</span>
                                 </label>
@@ -500,18 +523,36 @@ export default function PostPage({ postData }) {
                                     onChange={handleEditFileChange}
                                 />
                                 {editFile && (
-                                    <span className={styles.fileName}>
+                                    <span
+                                        className={styles.fileName}
+                                        style={{ maxWidth: "200px" }}
+                                    >
                                         {editFile.name}
                                     </span>
                                 )}
                             </div>
-                            <button
-                                onClick={handleUpdateSubmit}
-                                className={styles.uploadButton}
-                                style={{ alignSelf: "flex-end" }}
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    gap: "1rem",
+                                    marginTop: "1rem",
+                                }}
                             >
-                                Save Changes
-                            </button>
+                                <button
+                                    onClick={() => setEditingPost(null)}
+                                    className={styles.cancelButton}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdateSubmit}
+                                    className={styles.uploadButton}
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

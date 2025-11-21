@@ -2,6 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem; /* 24px */
+    padding-bottom: 2rem;
 }
 
 /* --- 1. Profile Header Card --- */
@@ -10,20 +11,37 @@
     border-radius: 8px;
     border: 1px solid #e0e0e0;
     overflow: hidden;
+    position: relative;
 }
 
 .backDropContainer {
     width: 100%;
-    height: 25vh; /* 25% of viewport height */
-    background: url("https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80");
+    height: 200px;
     background-size: cover;
     background-position: center;
     position: relative;
+    background-color: #a0b4b7;
+}
+
+.editCoverBtn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: white;
+    border-radius: 50%;
+    padding: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: #0a66c2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
 }
 
 .avatarWrapper {
     position: absolute;
-    bottom: -75px; /* Position relative to backdrop */
+    bottom: -75px;
     left: 2rem;
     width: 150px;
     height: 150px;
@@ -36,8 +54,6 @@
     border-radius: 50%;
     border: 5px solid white;
     background-color: #eee;
-    /* Reset previous absolute positioning */
-    position: static;
 }
 
 .onlineDot {
@@ -54,29 +70,46 @@
 
 .profileHeaderContent {
     padding: 1.5rem;
-    padding-top: 90px; /* 75px profile pic + 15px space */
+    padding-top: 90px;
     position: relative;
 }
 
-/* --- Read-only text styles --- */
 .nameDisplay {
     font-size: 2rem;
     font-weight: bold;
     color: #000;
     margin: 0;
 }
+
 .usernameDisplay {
     color: grey;
     margin-top: 0.25rem;
 }
+
+.metaInfo {
+    margin-top: 0.5rem;
+}
+
+/* Updated Connection Count Style */
+.connectionCount {
+    color: #0a66c2;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: text-decoration 0.2s;
+}
+.connectionCount:hover {
+    text-decoration: underline;
+}
+
 .bioDisplay {
     font-size: 1rem;
     color: #333;
     margin-top: 1rem;
-    white-space: pre-wrap; /* Show line breaks */
+    white-space: pre-wrap;
 }
 
-/* --- 2. Profile Section Card (Reusable) --- */
+/* --- 2. Profile Section Card --- */
 .profileSectionCard {
     background: #ffffff;
     border-radius: 8px;
@@ -98,7 +131,24 @@
     margin: 0;
 }
 
-/* --- Work History Styles --- */
+/* --- Skills --- */
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skillChip {
+    background: #fff;
+    border: 1px solid #0a66c2;
+    color: #0a66c2;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* --- Work/Edu History --- */
 .workHistoryContainer {
     display: flex;
     flex-direction: column;
@@ -125,7 +175,7 @@
     font-style: italic;
 }
 
-/* --- Recent Activity Styles --- */
+/* --- Recent Activity --- */
 .activityContainer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -135,19 +185,54 @@
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     overflow: hidden;
+    cursor: pointer;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: box-shadow 0.2s;
+}
+.postCard:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mediaPreview {
+    width: 100%;
+    height: 140px;
+    background-color: #f3f3f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 .postCardImage {
     width: 100%;
-    height: 150px;
+    height: 100%;
     object-fit: cover;
+    background: #000;
+}
+.textOnlyPreview {
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: #333;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+.postCardFooter {
+    padding: 0.8rem;
+    border-top: 1px solid #f0f0f0;
+    flex-grow: 1;
+    background: #fff;
 }
 .postCardBody {
-    padding: 1rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    color: #555;
+    margin: 0;
     line-height: 1.4;
 }
-
-/* --- New Read More Link Style --- */
 .readMore {
     color: #0a66c2;
     font-weight: 600;
@@ -172,9 +257,9 @@
     background: white;
     border: 1px solid #666;
     color: #666;
-    border-radius: 50%; /* Circular */
-    width: 42px; /* Fixed width */
-    height: 42px; /* Fixed height */
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -182,7 +267,6 @@
     transition: all 0.2s;
     padding: 0;
 }
-
 .iconActionButton:hover {
     background-color: #f3f3f3;
     border-color: #333;
@@ -199,7 +283,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
-    height: 42px; /* Match icon button height */
+    height: 42px;
     display: flex;
     align-items: center;
     white-space: nowrap;
@@ -220,4 +304,92 @@
     height: 42px;
     display: flex;
     align-items: center;
+}
+
+/* --- Modal for Connections --- */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.modalBox {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.modalHeader {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modalHeader h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+.closeIcon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+}
+.closeIcon:hover {
+    color: #000;
+}
+
+.connectionsList {
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.connectionItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.connectionItem:hover {
+    background-color: #f3f3f3;
+}
+
+.connectionAvatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.connectionName {
+    font-weight: 600;
+    color: #191919;
+    margin: 0;
+    font-size: 0.95rem;
+}
+.connectionUsername {
+    color: #666;
+    margin: 0;
+    font-size: 0.85rem;
+}
+.noConnectionsText {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
 }

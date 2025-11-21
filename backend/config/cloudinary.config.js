@@ -18,6 +18,7 @@ const storage = new CloudinaryStorage({
     params: {
         folder: "pro-connect-uploads",
         resource_type: "auto", // Important: Detects if it's an image or video
+        // --- UPDATED: Added 'avif' and 'webp' ---
         allowed_formats: [
             "jpg",
             "png",
@@ -27,6 +28,8 @@ const storage = new CloudinaryStorage({
             "webm",
             "ogg",
             "mov",
+            "avif",
+            "webp",
         ],
     },
 });

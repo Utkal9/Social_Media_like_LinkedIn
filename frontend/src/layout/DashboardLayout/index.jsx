@@ -6,6 +6,10 @@ import { setTokenIsThere } from "@/config/redux/reducer/authReducer";
 import { getAboutUser, getAllUsers } from "@/config/redux/action/authAction";
 import { useSocket } from "@/context/SocketContext";
 
+// Default banner if user hasn't set one
+const DEFAULT_BG =
+    "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80";
+
 export default function DashboardLayout({ children }) {
     const router = useRouter();
     const dispatch = useDispatch();
@@ -36,6 +40,10 @@ export default function DashboardLayout({ children }) {
 
     const user = authState.user?.userId;
     const userFallback = user?.name ? user.name.charAt(0).toUpperCase() : "?";
+
+    // Use dynamic background or default
+    const backgroundPic = user?.backgroundPicture || DEFAULT_BG;
+
     const isUserOnline = (uid, defaultStatus) => {
         return onlineStatuses && onlineStatuses[uid]
             ? onlineStatuses[uid].isOnline
@@ -52,7 +60,6 @@ export default function DashboardLayout({ children }) {
         });
 
         const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-
         return shuffled.slice(0, 5);
     }, [authState.all_users, authState.user, authState.all_profiles_fetched]);
 
@@ -62,7 +69,14 @@ export default function DashboardLayout({ children }) {
                 <div className={styles.leftSidebar}>
                     {authState.profileFetched && user ? (
                         <div className={styles.profileCard}>
-                            <div className={styles.profileCardHeader}></div>
+                            {/* --- DYNAMIC HEADER BACKGROUND --- */}
+                            <div
+                                className={styles.profileCardHeader}
+                                style={{
+                                    backgroundImage: `url("${backgroundPic}")`,
+                                }}
+                            ></div>
+
                             <div
                                 className={styles.avatarWrapper}
                                 onClick={() => router.push("/profile")}

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+
 const educationSchema = new mongoose.Schema({
     school: {
         type: String,
@@ -13,6 +14,7 @@ const educationSchema = new mongoose.Schema({
         default: "",
     },
 });
+
 const workSchema = new mongoose.Schema({
     company: {
         type: String,
@@ -27,6 +29,7 @@ const workSchema = new mongoose.Schema({
         default: "",
     },
 });
+
 const ProfileSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -48,6 +51,12 @@ const ProfileSchema = new mongoose.Schema({
         type: [educationSchema],
         default: [],
     },
+    // --- NEW: Skills Section ---
+    skills: {
+        type: [String],
+        default: [],
+    },
 });
+
 const Profile = mongoose.model("Profile", ProfileSchema);
 export default Profile;
