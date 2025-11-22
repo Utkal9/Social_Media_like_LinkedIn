@@ -1,3 +1,4 @@
+// frontend/src/pages/discover/index.jsx
 import {
     getAllUsers,
     sendConnectionRequest,
@@ -6,18 +7,97 @@ import {
 } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 
-export default function Discoverpage() {
+// --- Icons ---
+const SearchIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="20"
+    >
+        <circle cx="11" cy="11" r="8" />
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-4.35-4.35"
+        />
+    </svg>
+);
+const ClearIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+        />
+    </svg>
+);
+const UserPlusIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3.75 15a6.75 6.75 0 0113.5 0v.75a8.625 8.625 0 01-17.25 0v-.75z"
+        />
+    </svg>
+);
+const CheckIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+        />
+    </svg>
+);
+const ClockIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+    </svg>
+);
+
+export default function DiscoverPage() {
     const authState = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const router = useRouter();
     const { onlineStatuses } = useSocket() || {};
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -30,7 +110,8 @@ export default function Discoverpage() {
         }
     }, [dispatch, authState.all_profiles_fetched]);
 
-    const handleConnect = (targetUserId) => {
+    const handleConnect = (e, targetUserId) => {
+        e.stopPropagation();
         dispatch(
             sendConnectionRequest({
                 token: localStorage.getItem("token"),
@@ -40,7 +121,6 @@ export default function Discoverpage() {
     };
 
     const getConnectStatus = (targetUserId) => {
-        // --- FIX: Safety checks to prevent crashes if data is loading ---
         const requestsReceived = Array.isArray(authState.connectionRequest)
             ? authState.connectionRequest
             : [];
@@ -84,139 +164,198 @@ export default function Discoverpage() {
             : defaultStatus;
     };
 
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.05 },
-        },
+    // --- ROBUST FILTER LOGIC ---
+    const filteredUsers = useMemo(() => {
+        if (!authState.all_users) return [];
+
+        return (
+            authState.all_users
+                // 1. Safety: Ensure profile and userId exist (prevents crash on deleted users)
+                .filter((profile) => profile && profile.userId)
+                // 2. Exclude Self
+                .filter(
+                    (profile) =>
+                        authState.user &&
+                        profile.userId._id !== authState.user.userId._id
+                )
+                // 3. Search Filter (Case Insensitive & Trimmed)
+                .filter((profile) => {
+                    const term = searchQuery.toLowerCase().trim();
+                    if (!term) return true;
+
+                    const name = profile.userId.name?.toLowerCase() || "";
+                    const username =
+                        profile.userId.username?.toLowerCase() || "";
+
+                    return name.includes(term) || username.includes(term);
+                })
+        );
+    }, [authState.all_users, authState.user, searchQuery]);
+
+    const handleClearSearch = () => {
+        setSearchQuery("");
     };
 
+    // Animation
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+    };
     const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 15 },
         visible: { opacity: 1, y: 0 },
     };
 
-    const filteredUsers = authState.all_profiles_fetched
-        ? authState.all_users.filter(
-              (user) =>
-                  authState.user &&
-                  user.userId._id !== authState.user.userId._id
-          )
-        : [];
-
     return (
-        <div className={styles.discoverPageWrapper}>
-            <div className={styles.headerContainer}>
-                <h2 className={styles.discoverTitle}>People You May Know</h2>
-                <p className={styles.discoverSubtitle}>
-                    Expand your professional network
-                </p>
+        <div className={styles.discoverContainer}>
+            {/* Header Section */}
+            <div className={styles.headerSection}>
+                <div>
+                    <h2 className={styles.pageTitle}>Global Discovery</h2>
+                    <p className={styles.pageSubtitle}>
+                        Expand your neural network
+                    </p>
+                </div>
+                <div className={styles.searchWrapper}>
+                    <SearchIcon />
+                    <input
+                        type="text"
+                        placeholder="Search nodes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={handleClearSearch}
+                            className={styles.clearBtn}
+                        >
+                            <ClearIcon />
+                        </button>
+                    )}
+                </div>
             </div>
 
+            {/* Grid */}
             <motion.div
-                className={styles.discoverGrid}
+                className={styles.grid}
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
+                key={searchQuery} // Force re-render animation on search change
             >
-                {filteredUsers.length === 0 && (
-                    <div className={styles.noUsersMessage}>
-                        <p>No new profiles to discover right now.</p>
-                        <button onClick={() => dispatch(getAllUsers())}>
-                            Refresh List
+                {filteredUsers.length === 0 ? (
+                    <div className={styles.emptyState}>
+                        <p>No matching signals found for "{searchQuery}".</p>
+                        <button onClick={handleClearSearch}>
+                            Clear Filter
                         </button>
                     </div>
-                )}
+                ) : (
+                    filteredUsers.map((user) => {
+                        const status = getConnectStatus(user.userId._id);
 
-                {filteredUsers.map((user) => {
-                    const connectStatus = getConnectStatus(user.userId._id);
-
-                    return (
-                        <motion.div
-                            key={user._id}
-                            className={styles.userCard}
-                            variants={itemVariants}
-                            whileHover={{ y: -4 }}
-                        >
-                            <div className={styles.cardHeaderBackground}></div>
-                            <div
-                                className={styles.avatarWrapper}
+                        return (
+                            <motion.div
+                                key={user._id}
+                                className={styles.userCard}
+                                variants={itemVariants}
+                                whileHover={{
+                                    y: -5,
+                                    boxShadow:
+                                        "0 10px 30px rgba(139, 92, 246, 0.2)",
+                                }}
                                 onClick={() =>
                                     router.push(
                                         `/view_profile/${user.userId.username}`
                                     )
                                 }
                             >
-                                <img
-                                    className={styles.userProfileImage}
-                                    src={user.userId.profilePicture}
-                                    alt={user.userId.name}
-                                />
-                                {isUserOnline(
-                                    user.userId._id,
-                                    user.userId.isOnline
-                                ) && <span className={styles.onlineDot}></span>}
-                            </div>
+                                <div
+                                    className={styles.cardBanner}
+                                    style={{
+                                        backgroundImage: `url(${
+                                            user.userId.backgroundPicture ||
+                                            "https://via.placeholder.com/300"
+                                        })`,
+                                    }}
+                                ></div>
 
-                            <div className={styles.userInfoContent}>
-                                <h3
-                                    onClick={() =>
-                                        router.push(
-                                            `/view_profile/${user.userId.username}`
-                                        )
-                                    }
-                                >
-                                    {user.userId.name}
-                                </h3>
-                                <p className={styles.usernameText}>
-                                    @{user.userId.username}
-                                </p>
+                                <div className={styles.cardContent}>
+                                    <div className={styles.avatarWrapper}>
+                                        <img
+                                            src={user.userId.profilePicture}
+                                            alt={user.userId.name}
+                                        />
+                                        {isUserOnline(
+                                            user.userId._id,
+                                            user.userId.isOnline
+                                        ) && (
+                                            <span
+                                                className={styles.onlineDot}
+                                            ></span>
+                                        )}
+                                    </div>
 
-                                <div className={styles.bioContainer}>
-                                    {user.currentPost ? (
-                                        <p>{user.currentPost}</p>
-                                    ) : user.bio ? (
-                                        <p>
-                                            {user.bio.length > 60
-                                                ? user.bio.substring(0, 60) +
-                                                  "..."
-                                                : user.bio}
+                                    <div className={styles.userInfo}>
+                                        <h3>{user.userId.name}</h3>
+                                        <p className={styles.userHandle}>
+                                            @{user.userId.username}
                                         </p>
-                                    ) : (
-                                        <p className={styles.placeholderBio}>
-                                            No bio available
+                                        <p className={styles.userBio}>
+                                            {user.currentPost ||
+                                                (user.bio
+                                                    ? user.bio.substring(
+                                                          0,
+                                                          50
+                                                      ) +
+                                                      (user.bio.length > 50
+                                                          ? "..."
+                                                          : "")
+                                                    : "Digital Nomad")}
                                         </p>
-                                    )}
+                                    </div>
+
+                                    <button
+                                        className={`${styles.actionBtn} ${
+                                            styles[status.toLowerCase()]
+                                        }`}
+                                        onClick={(e) =>
+                                            handleConnect(e, user.userId._id)
+                                        }
+                                        disabled={
+                                            status !== "Connect" &&
+                                            status !== "Accept"
+                                        }
+                                    >
+                                        {status === "Connect" && (
+                                            <>
+                                                <UserPlusIcon /> Connect
+                                            </>
+                                        )}
+                                        {status === "Pending" && (
+                                            <>
+                                                <ClockIcon /> Pending
+                                            </>
+                                        )}
+                                        {status === "Connected" && (
+                                            <>
+                                                <CheckIcon /> Connected
+                                            </>
+                                        )}
+                                        {status === "Accept" &&
+                                            "Accept Request"}
+                                    </button>
                                 </div>
-
-                                <button
-                                    onClick={() =>
-                                        handleConnect(user.userId._id)
-                                    }
-                                    className={`${styles.connectBtn} ${
-                                        styles[connectStatus.toLowerCase()]
-                                    }`}
-                                    disabled={
-                                        connectStatus !== "Connect" &&
-                                        connectStatus !== "Accept"
-                                    }
-                                >
-                                    {connectStatus === "Accept"
-                                        ? "Accept"
-                                        : connectStatus}
-                                </button>
-                            </div>
-                        </motion.div>
-                    );
-                })}
+                            </motion.div>
+                        );
+                    })
+                )}
             </motion.div>
         </div>
     );
 }
 
-Discoverpage.getLayout = function getLayout(page) {
+DiscoverPage.getLayout = function getLayout(page) {
     return (
         <UserLayout>
             <DashboardLayout>{page}</DashboardLayout>

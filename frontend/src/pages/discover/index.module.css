@@ -1,268 +1,288 @@
-/* --- Main Page Wrapper --- */
-.discoverPageWrapper {
-    background-color: #f3f2ef; /* Classic social media gray background */
-    min-height: 85vh;
-    padding: 1.5rem;
-    border-radius: 8px;
+/* frontend/src/pages/discover/index.module.css */
+
+.discoverContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-height: 80vh;
 }
 
-/* --- Header Section --- */
-.headerContainer {
-    background-color: #fff;
-    padding: 1.5rem;
-    border-radius: 8px 8px 0 0;
-    border: 1px solid #e0e0e0;
-    border-bottom: none;
-    margin-bottom: 1rem;
-    text-align: left;
+/* --- Header & Search --- */
+.headerSection {
+    background: rgba(11, 15, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-.discoverTitle {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #191919;
-    margin-bottom: 0.25rem;
+.pageTitle {
+    font-family: "Orbitron", sans-serif;
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 1px;
 }
-
-.discoverSubtitle {
+.pageSubtitle {
+    color: var(--text-secondary);
     font-size: 0.9rem;
-    color: #666;
+    margin: 4px 0 0 0;
 }
 
-/* --- Grid Layout --- */
-.discoverGrid {
-    display: grid;
-    /* Adaptive columns: ~220px is a good standard card width */
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    padding-bottom: 2rem;
-}
-
-.noUsersMessage {
-    grid-column: 1 / -1;
-    background: white;
-    padding: 3rem;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px solid #e0e0e0;
-    color: #666;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-}
-.noUsersMessage button {
-    padding: 0.5rem 1rem;
-    background: #0a66c2;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-}
-
-/* --- Card Styling --- */
-.userCard {
-    background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.searchWrapper {
     position: relative;
-    overflow: hidden;
-    transition: box-shadow 0.2s ease;
-    cursor: default;
+    flex-grow: 1;
+    max-width: 400px;
 }
-
-.userCard:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.searchWrapper svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    transition: color 0.2s;
+    pointer-events: none; /* Let clicks pass through icon */
 }
-
-/* Banner Area */
-.cardHeaderBackground {
+.searchWrapper input {
     width: 100%;
-    height: 65px;
-    background: url("https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80");
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    padding: 10px 40px 10px 40px; /* Left and Right padding for icons */
+    color: #fff;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+.searchWrapper input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--neon-teal);
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.2);
+}
+.searchWrapper input:focus + svg {
+    color: var(--neon-teal);
+}
+
+/* Clear Button inside input */
+.clearBtn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+.clearBtn svg {
+    position: static; /* Reset absolute from parent selector */
+    transform: none;
+    pointer-events: auto;
+}
+.clearBtn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Grid --- */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+    padding-bottom: 40px;
+}
+
+.userCard {
+    background: rgba(11, 15, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cardBanner {
+    height: 80px;
     background-size: cover;
     background-position: center;
+    background-color: #1a1a2e;
     position: relative;
 }
+.cardBanner::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(11, 15, 42, 1) 100%
+    );
+}
 
-/* Avatar Wrapper */
+.cardContent {
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -40px; /* Pull avatar up */
+    flex-grow: 1;
+}
+
 .avatarWrapper {
     position: relative;
-    margin-top: -40px; /* Pull avatar up into banner */
     width: 80px;
     height: 80px;
-    cursor: pointer;
+    margin-bottom: 12px;
 }
-
-.userProfileImage {
+.avatarWrapper img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #ffffff; /* White ring */
-    background-color: #f3f2ef;
+    border: 3px solid var(--holo-bg);
+    background: #000;
 }
-
-/* Online Dot */
 .onlineDot {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 2px;
+    right: 2px;
     width: 14px;
     height: 14px;
-    background-color: #057642; /* LinkedIn Green */
-    border: 2px solid #fff;
+    background-color: var(--neon-teal);
+    border: 3px solid var(--holo-bg);
     border-radius: 50%;
-    z-index: 2;
 }
 
-/* --- User Info Section --- */
-.userInfoContent {
-    padding: 0.5rem 1rem 1rem 1rem;
-    text-align: center;
+.userInfo {
+    margin-bottom: 16px;
     width: 100%;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
 }
-
-.userInfoContent h3 {
-    font-size: 1rem;
+.userInfo h3 {
+    font-size: 1.1rem;
     font-weight: 600;
-    color: #191919;
-    margin: 0.5rem 0 0 0;
-    cursor: pointer;
+    color: #fff;
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
-.userInfoContent h3:hover {
-    text-decoration: underline;
-}
-
-.usernameText {
+.userHandle {
     font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    margin: 2px 0 8px 0;
 }
-
-/* Fixed height for bio so cards align */
-.bioContainer {
-    height: 40px;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.bioContainer p {
+.userBio {
     font-size: 0.85rem;
-    color: #666;
+    color: #ccc;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    height: 40px; /* Fixed height for alignment */
 }
 
-.placeholderBio {
-    color: #999 !important;
-    font-style: italic;
-}
-
-/* --- Connect Button --- */
-.connectBtn {
-    margin-top: auto; /* Push to bottom */
+/* --- Action Buttons --- */
+.actionBtn {
     width: 100%;
-    padding: 6px 0;
-    border-radius: 16px;
+    padding: 8px;
+    border-radius: 20px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
     transition: all 0.2s;
+    border: 1px solid transparent;
+    margin-top: auto; /* Push to bottom */
 }
 
-/* Default State (Connect) - Outline Blue */
-.connectBtn.connect {
-    background-color: transparent;
-    color: #0a66c2;
-    border: 1px solid #0a66c2;
+/* Connect (Default) */
+.connect {
+    background: transparent;
+    border-color: var(--neon-violet);
+    color: var(--neon-violet);
 }
-.connectBtn.connect:hover {
-    background-color: #e7f3ff; /* Light blue background */
-    border-width: 2px; /* Thicker border on hover like LinkedIn */
-    padding: 5px 0; /* Adjust padding to prevent layout shift */
+.connect:hover {
+    background: var(--neon-violet);
+    color: white;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
 }
 
-/* Pending State - Gray */
-.connectBtn.pending {
-    background-color: transparent;
-    color: #666;
-    border: 1px solid #666;
+/* Pending */
+.pending {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-secondary);
     cursor: not-allowed;
 }
 
-/* Connected State - Filled Greenish/Gray */
-.connectBtn.connected {
-    background-color: #057642;
-    color: white;
-    border: 1px solid #057642;
+/* Connected */
+.connected {
+    background: rgba(15, 255, 198, 0.1);
+    border-color: var(--neon-teal);
+    color: var(--neon-teal);
+    cursor: default;
 }
 
-/* Accept State - Filled Blue */
-.connectBtn.accept {
-    background-color: #0a66c2;
-    color: white;
-    border: 1px solid #0a66c2;
+/* Accept */
+.accept {
+    background: var(--neon-teal);
+    color: #000;
+    border: none;
 }
-.connectBtn.accept:hover {
-    background-color: #004182;
+.accept:hover {
+    background: #0fd1a3;
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.4);
 }
 
-/* --- Mobile Response --- */
-@media (max-width: 600px) {
-    .discoverPageWrapper {
-        padding: 1rem;
-    }
-    .discoverGrid {
-        grid-template-columns: 1fr; /* Single column on mobile */
-    }
-    .userCard {
-        flex-direction: row; /* Horizontal card on mobile */
-        padding: 1rem;
-        align-items: center;
-        gap: 1rem;
-        text-align: left;
-        height: auto;
-    }
-    .cardHeaderBackground {
-        display: none; /* Remove banner on mobile list view */
-    }
-    .avatarWrapper {
-        margin-top: 0;
-        width: 60px;
-        height: 60px;
-    }
-    .userInfoContent {
-        padding: 0;
-        text-align: left;
+.emptyState {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+.emptyState button {
+    margin-top: 1rem;
+    background: var(--neon-blue);
+    border: none;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+@media (max-width: 576px) {
+    .headerSection {
+        flex-direction: column;
         align-items: flex-start;
     }
-    .bioContainer {
-        height: auto;
-        margin-bottom: 0.5rem;
-        justify-content: flex-start;
-    }
-    .connectBtn {
-        width: auto;
-        padding: 5px 20px;
+    .searchWrapper {
+        width: 100%;
+        max-width: none;
     }
 }

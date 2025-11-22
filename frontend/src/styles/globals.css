@@ -1,9 +1,52 @@
+/* frontend/src/styles/globals.css */
+:root {
+    /* --- HoloStream Palette --- */
+    --holo-bg: #020410; /* Deep Space Black */
+    --holo-panel: #0b0f2a; /* Midnight Blue */
+    --holo-glass: rgba(255, 255, 255, 0.03); /* Ultra-thin Glass */
+    --holo-border: rgba(139, 92, 246, 0.4); /* Neon Violet Border */
+
+    /* Neon Accents */
+    --neon-violet: #8b5cf6;
+    --neon-teal: #0fffc6;
+    --neon-blue: #3b82f6;
+    --neon-pink: #ec4899;
+
+    /* Text Colors */
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+
+    /* Effects */
+    --glow-primary: 0 0 20px rgba(139, 92, 246, 0.5);
+    --glow-teal: 0 0 15px rgba(15, 255, 198, 0.4);
+    --glass-blur: blur(12px);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
 body {
-    /* Set the font-family globally here */
-    font-family: "Poppins", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--holo-bg);
+    color: var(--text-primary);
+    font-family: "Poppins", sans-serif; /* Readable Body Font */
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Custom Scrollbar for Chrome/Edge/Safari */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--holo-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--holo-panel);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-violet);
 }

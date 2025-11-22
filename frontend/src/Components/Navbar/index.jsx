@@ -1,3 +1,4 @@
+// frontend/src/Components/Navbar/index.jsx
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./styles.module.css";
 import { useRouter } from "next/router";
@@ -6,100 +7,101 @@ import { reset } from "@/config/redux/reducer/authReducer";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 
-// --- SVG Icons ---
+// --- Fixed Holo Icons ---
+
 const HomeIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={isActive ? 2.5 : 2}
+        fill={isActive ? "currentColor" : "none"}
         stroke="currentColor"
+        strokeWidth={2}
+        className={styles.navIcon}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="m2.25 12 8.955-8.955a1.125 1.125 0 0 1 1.59 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+            d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
         />
     </svg>
 );
+
 const NetworkIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={isActive ? 2.5 : 2}
+        fill={isActive ? "currentColor" : "none"}
         stroke="currentColor"
+        strokeWidth={2}
+        className={styles.navIcon}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.244-3.07a3 3 0 0 0-4.681-2.72-3 3 0 0 0-4.682 2.72m.244 3.07a9.094 9.094 0 0 1-3.741-.479 3 3 0 0 1 4.682-2.72m-.244-3.07a3 3 0 0 1 4.681 2.72-3 3 0 0 1 4.682-2.72m-.244 3.07m-12.48-3.07a3 3 0 0 0-4.682 2.72 3 3 0 0 0 4.682-2.72M3 13.5a3 3 0 0 1 6 0m6 0a3 3 0 0 1 6 0m-6 0a3 3 0 0 0-6 0m6 0a3 3 0 0 0 6 0"
+            d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
         />
     </svg>
 );
+
 const DiscoverIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={isActive ? 2.5 : 2}
+        fill={isActive ? "currentColor" : "none"}
         stroke="currentColor"
+        strokeWidth={2}
+        className={styles.navIcon}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"
         />
     </svg>
 );
+
 const MeetIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={isActive ? 2.5 : 2}
+        fill={isActive ? "currentColor" : "none"}
         stroke="currentColor"
+        strokeWidth={2}
+        className={styles.navIcon}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 13.5 5.25h-9A2.25 2.25 0 0 0 2.25 7.5v9A2.25 2.25 0 0 0 4.5 18.75Z"
+            d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
         />
     </svg>
 );
+
+// --- FIXED: Messaging Icon (Valid Path) ---
 const MessagingIcon = ({ isActive }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill={isActive ? "currentColor" : "none"}
         viewBox="0 0 24 24"
-        strokeWidth={isActive ? 2.5 : 2}
+        fill={isActive ? "currentColor" : "none"}
         stroke="currentColor"
+        strokeWidth={2}
+        className={styles.navIcon}
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+            d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
         />
     </svg>
 );
-const LogoIcon = () => (
-    <img
-        src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=1440,h=756,fit=crop,f=jpeg/A3Q7xGO4EOc9ZVJo/chatgpt-image-aug-11-2025-10_04_14-pm-YleQ8RV01OtW9GKv.png"
-        alt="Logo"
-        style={{
-            width: "32px",
-            height: "32px",
-            objectFit: "cover",
-            borderRadius: "6px",
-        }}
-    />
-);
+
+// --- UPDATED: Cleaner Mobile Menu Icon ---
 const MenuIcon = () => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        strokeWidth={2}
         stroke="currentColor"
         style={{ width: 28, height: 28 }}
     >
@@ -111,7 +113,13 @@ const MenuIcon = () => (
     </svg>
 );
 
-function NavbarComponent() {
+const LogoIcon = () => (
+    <div className={styles.holoLogo}>
+        <span>Link</span>Ups
+    </div>
+);
+
+export default function NavbarComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
@@ -141,9 +149,7 @@ function NavbarComponent() {
     }, [dropdownRef]);
 
     const handleLogout = () => {
-        if (socket) {
-            socket.disconnect();
-        }
+        if (socket) socket.disconnect();
         localStorage.removeItem("token");
         dispatch(reset());
         setDropdownOpen(false);
@@ -166,302 +172,215 @@ function NavbarComponent() {
           true
         : false;
 
-    const navVariants = {
-        hidden: { y: -50, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 15,
-                delay: 0.2,
-            },
-        },
-    };
-    const itemHover = { hover: { scale: 1.1, y: -2 }, tap: { scale: 0.95 } };
-    const mobileMenuVariants = {
-        hidden: { opacity: 0, height: 0 },
-        visible: {
-            opacity: 1,
-            height: "auto",
-            transition: { duration: 0.3, ease: "easeInOut" },
-        },
-        exit: {
-            opacity: 0,
-            height: 0,
-            transition: { duration: 0.3, ease: "easeInOut" },
-        },
-    };
-
-    const renderNavContent = () => (
-        <div className={styles.navbar}>
-            <div className={styles.navLeft}>
-                <div
-                    className={styles.logo}
-                    onClick={() => handleNavigation("/")}
-                >
-                    <LogoIcon />
-                </div>
-            </div>
-            <div className={styles.navCenter}>
+    const renderNavLinks = () => (
+        <>
+            {[
+                { path: "/dashboard", icon: HomeIcon, label: "Feed" },
+                {
+                    path: "/my_connections",
+                    icon: NetworkIcon,
+                    label: "Network",
+                },
+                { path: "/discover", icon: DiscoverIcon, label: "Discover" },
+                { path: "/meet", icon: MeetIcon, label: "Meet" },
+                { path: "/messaging", icon: MessagingIcon, label: "Chat" },
+            ].map((item) => (
                 <motion.div
+                    key={item.path}
                     className={`${styles.navLink} ${
-                        router.pathname === "/dashboard" ? styles.active : ""
+                        router.pathname === item.path ? styles.active : ""
                     }`}
-                    onClick={() => handleNavigation("/dashboard")}
-                    variants={itemHover}
-                    whileHover="hover"
-                    whileTap="tap"
+                    onClick={() => handleNavigation(item.path)}
+                    whileHover={{ scale: 1.05, color: "var(--neon-violet)" }}
+                    whileTap={{ scale: 0.95 }}
                 >
-                    <HomeIcon isActive={router.pathname === "/dashboard"} />
-                    <span>Home</span>
-                </motion.div>
-                <motion.div
-                    className={`${styles.navLink} ${
-                        router.pathname === "/my_connections"
-                            ? styles.active
-                            : ""
-                    }`}
-                    onClick={() => handleNavigation("/my_connections")}
-                    variants={itemHover}
-                    whileHover="hover"
-                    whileTap="tap"
-                >
-                    <NetworkIcon
-                        isActive={router.pathname === "/my_connections"}
-                    />
-                    <span>My Network</span>
-                </motion.div>
-                <motion.div
-                    className={`${styles.navLink} ${
-                        router.pathname === "/discover" ? styles.active : ""
-                    }`}
-                    onClick={() => handleNavigation("/discover")}
-                    variants={itemHover}
-                    whileHover="hover"
-                    whileTap="tap"
-                >
-                    <DiscoverIcon isActive={router.pathname === "/discover"} />
-                    <span>Discover</span>
-                </motion.div>
-                <motion.div
-                    className={`${styles.navLink} ${
-                        router.pathname === "/meet" ? styles.active : ""
-                    }`}
-                    onClick={() => handleNavigation("/meet")}
-                    variants={itemHover}
-                    whileHover="hover"
-                    whileTap="tap"
-                >
-                    <MeetIcon isActive={router.pathname === "/meet"} />
-                    <span>Meet</span>
-                </motion.div>
-                <motion.div
-                    className={`${styles.navLink} ${
-                        router.pathname === "/messaging" ? styles.active : ""
-                    }`}
-                    onClick={() => handleNavigation("/messaging")}
-                    variants={itemHover}
-                    whileHover="hover"
-                    whileTap="tap"
-                >
-                    <MessagingIcon
-                        isActive={router.pathname === "/messaging"}
-                    />
-                    <span>Messaging</span>
-                </motion.div>
-            </div>
-            <div className={styles.navRight}>
-                {authState.profileFetched && authState.user ? (
-                    <div className={styles.profileMenu} ref={dropdownRef}>
-                        <motion.button
-                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                            className={styles.profileButton}
-                            variants={itemHover}
-                            whileHover="hover"
-                            whileTap="tap"
-                        >
-                            <div className={styles.avatarContainer}>
-                                {authState.user.userId.profilePicture ? (
-                                    <img
-                                        src={
-                                            authState.user.userId.profilePicture
-                                        }
-                                        alt="Profile"
-                                        className={styles.profilePic}
-                                    />
-                                ) : (
-                                    <div
-                                        className={`${styles.profilePic} ${styles.profileFallback}`}
-                                    >
-                                        {userFallback}
-                                    </div>
-                                )}
-                                {isMyOnline && (
-                                    <span className={styles.onlineDot}></span>
-                                )}
-                            </div>
-                            <span>Me</span>
-                        </motion.button>
-                        {dropdownOpen && (
-                            <motion.div
-                                className={styles.dropdownContent}
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <div className={styles.dropdownHeader}>
-                                    <img
-                                        src={
-                                            authState.user.userId.profilePicture
-                                        }
-                                        alt="Profile"
-                                        className={styles.profilePicLarge}
-                                    />
-                                    <div>
-                                        <strong>
-                                            {authState.user.userId.name}
-                                        </strong>
-                                        <p>@{authState.user.userId.username}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    className={styles.dropdownItem}
-                                    onClick={() => handleNavigation("/profile")}
-                                >
-                                    View Profile
-                                </button>
-                                <button
-                                    className={styles.dropdownItem}
-                                    onClick={handleLogout}
-                                >
-                                    Logout
-                                </button>
-                            </motion.div>
-                        )}
+                    <div className={styles.iconGlow}>
+                        <item.icon isActive={router.pathname === item.path} />
                     </div>
-                ) : (
-                    <motion.div
-                        onClick={() => handleNavigation("/login")}
-                        className={styles.buttonJoin}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <p>Be a part</p>
-                    </motion.div>
-                )}
-            </div>
-            <div className={styles.hamburgerMenuButton}>
-                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                    <MenuIcon />
-                </button>
-            </div>
-        </div>
+                    <span>{item.label}</span>
+                    {router.pathname === item.path && (
+                        <motion.div
+                            className={styles.activeBar}
+                            layoutId="navUnderline"
+                        />
+                    )}
+                </motion.div>
+            ))}
+        </>
     );
 
-    if (!hasMounted)
-        return <nav className={styles.container}>{renderNavContent()}</nav>;
+    if (!hasMounted) return <nav className={styles.container} />;
 
     return (
         <motion.nav
             className={styles.container}
-            variants={navVariants}
-            initial="hidden"
-            animate="visible"
+            initial={{ y: -80 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5 }}
         >
-            {renderNavContent()}
+            <div className={styles.navbar}>
+                <div
+                    className={styles.navLeft}
+                    onClick={() => handleNavigation("/")}
+                >
+                    <LogoIcon />
+                </div>
+
+                {/* Desktop Nav */}
+                <div className={styles.navCenter}>{renderNavLinks()}</div>
+
+                <div className={styles.navRight}>
+                    {authState.profileFetched && authState.user ? (
+                        <div className={styles.profileMenu} ref={dropdownRef}>
+                            <motion.button
+                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                                className={styles.profileButton}
+                                whileHover={{ scale: 1.05 }}
+                            >
+                                <div className={styles.avatarContainer}>
+                                    {authState.user.userId.profilePicture ? (
+                                        <img
+                                            src={
+                                                authState.user.userId
+                                                    .profilePicture
+                                            }
+                                            alt="Profile"
+                                            className={styles.profilePic}
+                                        />
+                                    ) : (
+                                        <div
+                                            className={`${styles.profilePic} ${styles.profileFallback}`}
+                                        >
+                                            {userFallback}
+                                        </div>
+                                    )}
+                                    {isMyOnline && (
+                                        <span
+                                            className={styles.onlineDot}
+                                        ></span>
+                                    )}
+                                </div>
+                            </motion.button>
+
+                            <AnimatePresence>
+                                {dropdownOpen && (
+                                    <motion.div
+                                        className={styles.dropdownContent}
+                                        initial={{
+                                            opacity: 0,
+                                            y: 10,
+                                            scale: 0.95,
+                                        }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{
+                                            opacity: 0,
+                                            y: 10,
+                                            scale: 0.95,
+                                        }}
+                                    >
+                                        <div className={styles.dropdownHeader}>
+                                            <p className={styles.userName}>
+                                                {authState.user.userId.name}
+                                            </p>
+                                            <p className={styles.userHandle}>
+                                                @
+                                                {authState.user.userId.username}
+                                            </p>
+                                        </div>
+                                        <div className={styles.dropdownBody}>
+                                            <button
+                                                onClick={() =>
+                                                    handleNavigation("/profile")
+                                                }
+                                            >
+                                                View Profile
+                                            </button>
+                                            <button
+                                                onClick={handleLogout}
+                                                className={styles.logoutBtn}
+                                            >
+                                                Disconnect
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    ) : (
+                        <motion.button
+                            onClick={() => handleNavigation("/login")}
+                            className={styles.buttonJoin}
+                            whileHover={{
+                                scale: 1.05,
+                                boxShadow: "0 0 15px var(--neon-teal)",
+                            }}
+                        >
+                            Initialize ID
+                        </motion.button>
+                    )}
+                </div>
+
+                {/* Mobile Hamburger - Now Styled */}
+                <div className={styles.hamburgerMenuButton}>
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        <MenuIcon />
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Menu Overlay */}
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <motion.div
                         className={styles.mobileMenu}
-                        variants={mobileMenuVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{
+                            type: "spring",
+                            bounce: 0,
+                            duration: 0.4,
+                        }}
                     >
-                        <a
-                            className={
-                                router.pathname === "/dashboard"
-                                    ? styles.mobileLinkActive
-                                    : styles.mobileLink
-                            }
-                            onClick={() => handleNavigation("/dashboard")}
-                        >
-                            Home
-                        </a>
-                        <a
-                            className={
-                                router.pathname === "/my_connections"
-                                    ? styles.mobileLinkActive
-                                    : styles.mobileLink
-                            }
-                            onClick={() => handleNavigation("/my_connections")}
-                        >
-                            My Network
-                        </a>
-                        <a
-                            className={
-                                router.pathname === "/discover"
-                                    ? styles.mobileLinkActive
-                                    : styles.mobileLink
-                            }
-                            onClick={() => handleNavigation("/discover")}
-                        >
-                            Discover
-                        </a>
-                        <a
-                            className={
-                                router.pathname === "/meet"
-                                    ? styles.mobileLinkActive
-                                    : styles.mobileLink
-                            }
-                            onClick={() => handleNavigation("/meet")}
-                        >
-                            Meet
-                        </a>
-                        <a
-                            className={
-                                router.pathname === "/messaging"
-                                    ? styles.mobileLinkActive
-                                    : styles.mobileLink
-                            }
-                            onClick={() => handleNavigation("/messaging")}
-                        >
-                            Messaging
-                        </a>
-                        <div className={styles.mobileDivider}></div>
-                        {authState.profileFetched && authState.user ? (
-                            <>
-                                <a
-                                    className={
-                                        router.pathname === "/profile"
-                                            ? styles.mobileLinkActive
-                                            : styles.mobileLink
-                                    }
-                                    onClick={() => handleNavigation("/profile")}
-                                >
-                                    View Profile
-                                </a>
-                                <a
-                                    className={styles.mobileLink}
-                                    onClick={handleLogout}
-                                >
-                                    Logout
-                                </a>
-                            </>
-                        ) : (
-                            <a
-                                className={styles.mobileLink}
-                                onClick={() => handleNavigation("/login")}
+                        <div className={styles.mobileHeader}>
+                            <LogoIcon />
+                            <button
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={styles.closeMenuBtn}
                             >
-                                Login / Sign Up
-                            </a>
-                        )}
+                                &times;
+                            </button>
+                        </div>
+                        <div className={styles.mobileLinks}>
+                            {renderNavLinks()}
+                            <div className={styles.mobileDivider}></div>
+                            {authState.user ? (
+                                <>
+                                    <a
+                                        onClick={() =>
+                                            handleNavigation("/profile")
+                                        }
+                                    >
+                                        Profile Settings
+                                    </a>
+                                    <a
+                                        onClick={handleLogout}
+                                        style={{ color: "var(--neon-pink)" }}
+                                    >
+                                        Terminating Session
+                                    </a>
+                                </>
+                            ) : (
+                                <a onClick={() => handleNavigation("/login")}>
+                                    Login
+                                </a>
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </motion.nav>
     );
 }
-export default NavbarComponent;

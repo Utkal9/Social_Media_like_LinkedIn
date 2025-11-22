@@ -1,87 +1,241 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+/* frontend/src/pages/login/style.module.css */
 
-/* --- Base Container --- */
-.pageContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* --- Wrapper --- */
+.authPageWrapper {
     min-height: 100vh;
-    padding: 2rem 1rem;
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
-
-/* --- Main Form Card --- */
-.formCard {
-    width: 100%;
-    max-width: 450px;
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: var(--holo-bg);
+    position: relative;
     overflow: hidden;
-    animation: fadeIn 0.5s ease-out;
+    padding: 20px;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+/* ... (Background Orbs - same as before) ... */
+.ambientOrbTop {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--neon-violet) 0%, transparent 70%);
+    opacity: 0.15;
+    filter: blur(80px);
+    z-index: 0;
+}
+.ambientOrbBottom {
+    position: absolute;
+    bottom: -10%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--neon-teal) 0%, transparent 70%);
+    opacity: 0.1;
+    filter: blur(100px);
+    z-index: 0;
+}
+
+/* --- Main Container --- */
+.authCardContainer {
+    background: rgba(11, 15, 42, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--holo-border);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    min-height: 600px;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Visual Panel --- */
+.visualPanel {
+    background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.1),
+        rgba(2, 4, 16, 0.8)
+    );
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 3rem;
+}
+
+.hologramEffect {
+    position: relative;
+    width: 80%;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+    border: 2px solid rgba(139, 92, 246, 0.2);
+}
+
+.visualImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+}
+
+.scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent 50%,
+        rgba(15, 255, 198, 0.1) 51%,
+        transparent 52%
+    );
+    background-size: 100% 10px;
+    animation: scan 4s linear infinite;
+    pointer-events: none;
+    z-index: 2;
+}
+
+@keyframes scan {
+    0% {
+        background-position: 0 0;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    100% {
+        background-position: 0 100%;
     }
 }
 
-/* --- Header --- */
-.formHeader {
-    text-align: center;
-    padding: 2rem 2rem 1.5rem 2rem;
-    border-bottom: 1px solid #f0f0f0;
+.visualTitle {
+    font-family: "Orbitron", sans-serif;
+    color: white;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
 }
 
-.formHeader h1 {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-top: 0.75rem;
+.visualText {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    max-width: 300px;
 }
 
-.formHeader p {
-    font-size: 0.95rem;
-    color: #555;
-    margin-top: 0.25rem;
-}
-
-/* --- Form Content --- */
-.formContent {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+/* --- Glass Form --- */
+.glassForm {
+    width: 100%;
+    max-width: 400px;
     padding: 2rem;
 }
 
-/* --- Social Button --- */
-.socialButton {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #333;
-    background: #fff;
-    border: 1px solid #dcdcdc;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s, box-shadow 0.2s;
+.formHeader {
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
-.socialButton:hover {
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* --- NEW: Login Logo Style --- */
+.loginLogo {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 900;
+    font-size: 2.5rem;
+    color: #fff;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+.loginLogo span {
+    color: var(--neon-teal);
+}
+
+.formTitle {
+    font-family: "Orbitron", sans-serif;
+    font-size: 1.8rem;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.formSubtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* --- Inputs --- */
+.holoLabel {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.holoInput {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: white;
+    font-family: "Poppins", sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.holoInput:focus {
+    border-color: var(--neon-violet);
+    background: rgba(139, 92, 246, 0.05);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+}
+
+.holoInput::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Buttons --- */
+.btnNeon {
+    width: 100%;
+    padding: 14px;
+    background: var(--neon-violet);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: "Orbitron", sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.btnNeon:hover:not(:disabled) {
+    background: #7c3aed;
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+    transform: translateY(-1px);
+}
+
+.btnNeon:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.socialBtn {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.socialBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--neon-teal);
 }
 
 /* --- Divider --- */
@@ -89,138 +243,86 @@
     display: flex;
     align-items: center;
     text-align: center;
-    color: #aaa;
+    margin: 1.5rem 0;
+    color: rgba(255, 255, 255, 0.2);
     font-size: 0.8rem;
-    font-weight: 500;
+    letter-spacing: 1px;
 }
-
 .divider::before,
 .divider::after {
     content: "";
     flex: 1;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .divider span {
-    padding: 0 1rem;
+    padding: 0 10px;
 }
 
-/* --- Input Fields --- */
-.inputGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+/* --- Links & Footer --- */
+.linkAction {
+    color: var(--neon-teal);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: color 0.2s;
 }
-
-.inputGroup label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #333;
-}
-
-.inputGroup input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    font-family: "Poppins", sans-serif;
-    border: 1px solid #dcdcdc;
-    border-radius: 8px;
-    background: #f9f9f9;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.inputGroup input::placeholder {
-    color: #aaa;
-}
-
-.inputGroup input:focus {
-    outline: none;
-    border-color: #0a66c2;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1);
-}
-
-/* --- Forgot Password Link --- */
-.forgotPassword {
-    font-size: 0.9rem;
-    color: #0a66c2;
-    text-decoration: none;
-    text-align: right;
-    transition: text-decoration 0.2s;
-}
-
-.forgotPassword:hover {
+.linkAction:hover {
+    color: white;
     text-decoration: underline;
 }
 
-/* --- Submit Button --- */
-.submitButton {
-    width: 100%;
-    padding: 0.85rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #fff;
-    background: linear-gradient(90deg, #0a66c2 0%, #004182 100%);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.submitButton:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(10, 102, 194, 0.3);
-}
-
-.submitButton:active {
-    transform: translateY(0);
-}
-
-.submitButton:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-
-/* --- Footer --- */
 .formFooter {
     text-align: center;
-    padding: 1.5rem 2rem;
-    background-color: #f9f9f9;
-    border-top: 1px solid #f0f0f0;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
-
 .formFooter p {
-    font-size: 0.95rem;
-    color: #555;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
 }
-
-.formFooter span {
+.linkHighlight {
+    color: var(--neon-violet);
     font-weight: 600;
-    color: #0a66c2;
     cursor: pointer;
-    text-decoration: none;
+    margin-left: 5px;
+}
+.linkHighlight:hover {
+    color: white;
 }
 
-.formFooter span:hover {
-    text-decoration: underline;
+/* --- Messages --- */
+.msgError {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.msgSuccess {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    text-align: center;
 }
 
-/* --- Error/Success Messages --- */
-.errorMessage {
-    font-size: 0.9rem;
-    color: #d93025;
-    background: #fbeae9;
-    padding: 0.75rem;
-    border-radius: 8px;
-    text-align: center;
-}
-.successMessage {
-    font-size: 0.9rem;
-    color: #1e8e3e;
-    background: #e6f4ea;
-    padding: 0.75rem;
-    border-radius: 8px;
-    text-align: center;
+/* --- Responsive Tweaks --- */
+@media (max-width: 991px) {
+    .authCardContainer {
+        min-height: auto;
+        flex-direction: column;
+    }
+    .visualPanel {
+        display: none !important;
+    }
+    .glassForm {
+        padding: 2rem 1rem;
+    }
 }

@@ -1,34 +1,23 @@
+// frontend/src/pages/meet/index.jsx
 import React, { useState, useEffect } from "react";
 import UserLayout from "@/layout/UserLayout";
 import DashboardLayout from "@/layout/DashboardLayout";
 import styles from "./index.module.css";
+import { useRouter } from "next/router";
 
-// --- Icons ---
+// --- Holo Icons ---
 const VideoIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        className={styles.icon}
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 13.5 5.25h-9A2.25 2.25 0 0 0 2.25 7.5v9A2.25 2.25 0 0 0 4.5 18.75Z"
-        />
+    <svg viewBox="0 0 24 24" fill="currentColor" width="32">
+        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
     </svg>
 );
-
 const KeyboardIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        className={styles.icon}
+        strokeWidth={2}
+        width="20"
     >
         <path
             strokeLinecap="round"
@@ -37,11 +26,41 @@ const KeyboardIcon = () => (
         />
     </svg>
 );
-// --- End Icons ---
+const LinkIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="24"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+        />
+    </svg>
+);
+const ArrowRightIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+        />
+    </svg>
+);
 
 function MeetPage() {
     const [meetingCode, setMeetingCode] = useState("");
     const [returnUrl, setReturnUrl] = useState("");
+    const router = useRouter();
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -51,7 +70,7 @@ function MeetPage() {
 
     const handleJoinVideoCall = () => {
         if (!meetingCode.trim()) {
-            alert("Please enter a meeting code.");
+            alert("Please enter a secure channel code.");
             return;
         }
         const baseUrl = `${
@@ -74,58 +93,65 @@ function MeetPage() {
 
     return (
         <div className={styles.meetContainer}>
-            <div className={styles.contentWrapper}>
-                <div className={styles.actionSection}>
-                    <div className={styles.header}>
-                        <h1>Video Meetings</h1>
-                        <p>
-                            Connect with your professional network instantly.
-                            Secure, high-quality video conferencing for
-                            everyone.
-                        </p>
-                    </div>
+            <div className={styles.ambientGlow}></div>
 
-                    <div className={styles.cardContainer}>
-                        {/* Start New Meeting Card */}
-                        <div className={styles.actionCard}>
-                            <div className={styles.iconWrapperPrimary}>
+            <div className={styles.contentWrapper}>
+                {/* Header Section */}
+                <div className={styles.header}>
+                    <div className={styles.badge}>
+                        <span className={styles.liveDot}></span> Live Uplink
+                    </div>
+                    <h1>Secure Video Interface</h1>
+                    <p>Initialize high-fidelity holographic communication.</p>
+                </div>
+
+                {/* Cards Container (Vertical Stack) */}
+                <div className={styles.cardStack}>
+                    {/* Card 1: Host */}
+                    <div className={styles.actionCard}>
+                        <div className={styles.cardGlowPrimary}></div>
+                        <div className={styles.cardBody}>
+                            <div className={styles.iconBoxPrimary}>
                                 <VideoIcon />
                             </div>
-                            <div className={styles.cardText}>
-                                <h3>New Meeting</h3>
-                                <p>
-                                    Create a new meeting link and share it with
-                                    others.
-                                </p>
+                            <div className={styles.textContent}>
+                                <h3>Initialize Session</h3>
+                                <p>Generate a new encrypted room.</p>
                             </div>
-                            <button
-                                onClick={handleStartNewCall}
-                                className={styles.primaryButton}
-                            >
-                                Start Instant Meeting
-                            </button>
+                        </div>
+                        <button
+                            onClick={handleStartNewCall}
+                            className={styles.primaryBtn}
+                        >
+                            Start Meeting <ArrowRightIcon />
+                        </button>
+                    </div>
+
+                    <div className={styles.divider}>
+                        <span>OR</span>
+                    </div>
+
+                    {/* Card 2: Join */}
+                    <div className={styles.actionCard}>
+                        <div className={styles.cardGlowSecondary}></div>
+                        <div className={styles.cardBody}>
+                            <div className={styles.iconBoxSecondary}>
+                                <LinkIcon />
+                            </div>
+                            <div className={styles.textContent}>
+                                <h3>Join Channel</h3>
+                                <p>Enter destination code.</p>
+                            </div>
                         </div>
 
-                        <div className={styles.divider}>
-                            <span>OR</span>
-                        </div>
-
-                        {/* Join Meeting Card */}
-                        <div className={styles.actionCard}>
-                            <div className={styles.iconWrapperSecondary}>
-                                <KeyboardIcon />
-                            </div>
-                            <div className={styles.cardText}>
-                                <h3>Join with Code</h3>
-                                <p>
-                                    Enter the code provided by the meeting
-                                    organizer.
-                                </p>
-                            </div>
-                            <div className={styles.inputGroup}>
+                        <div className={styles.inputArea}>
+                            <div className={styles.inputWrapper}>
+                                <div className={styles.inputIcon}>
+                                    <KeyboardIcon />
+                                </div>
                                 <input
                                     type="text"
-                                    placeholder="Enter meeting code"
+                                    placeholder="Enter Code (e.g. room-123)"
                                     value={meetingCode}
                                     onChange={(e) =>
                                         setMeetingCode(e.target.value)
@@ -135,14 +161,14 @@ function MeetPage() {
                                         handleJoinVideoCall()
                                     }
                                 />
-                                <button
-                                    onClick={handleJoinVideoCall}
-                                    className={styles.secondaryButton}
-                                    disabled={!meetingCode.trim()}
-                                >
-                                    Join
-                                </button>
                             </div>
+                            <button
+                                onClick={handleJoinVideoCall}
+                                className={styles.joinBtn}
+                                disabled={!meetingCode.trim()}
+                            >
+                                Connect
+                            </button>
                         </div>
                     </div>
                 </div>

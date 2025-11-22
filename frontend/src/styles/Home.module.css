@@ -1,160 +1,312 @@
-.pageWrapper {
-    background-color: #ffffff;
-    min-height: 100vh;
+/* frontend/src/styles/Home.module.css */
+
+/* --- Page Wrapper --- */
+.holoPageWrapper {
+    position: relative;
+    background-color: var(--holo-bg);
+    overflow-x: hidden;
+    /* Ensures navbar spacing */
+    padding-top: 80px;
 }
 
-/* --- New Landing Page Header --- */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 5%;
-    max-width: 1400px;
-    margin: 0 auto;
-    border-bottom: 1px solid #f0f0f0;
+/* --- Background Effects --- */
+.cyberGrid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px
+        ),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+    pointer-events: none;
+    mask-image: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 1) 20%,
+        rgba(0, 0, 0, 0) 90%
+    );
 }
 
-.logoContainer {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #0a66c2;
+.orbGlow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: var(--neon-violet);
+    filter: blur(120px);
+    opacity: 0.2;
+    z-index: 0;
+    animation: orbFloat 10s infinite alternate ease-in-out;
 }
 
-.nav {
-    display: flex;
-    gap: 1rem;
+@keyframes orbFloat {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(30px, 50px);
+    }
 }
 
-.navButton {
-    background: none;
-    border: 1px solid transparent;
-    border-radius: 20px;
-    padding: 0.5rem 1.25rem;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #333;
-}
-.navButton:hover {
-    color: #000;
-    background-color: #f3f3f3;
-}
-
-.navButton.primary {
-    background-color: #0a66c2;
+/* --- Typography --- */
+.heroTitle {
+    font-family: "Orbitron", sans-serif;
     color: #fff;
-    border-color: #0a66c2;
-}
-.navButton.primary:hover {
-    background-color: #004182;
-    border-color: #004182;
-    color: #fff;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* --- Main Hero Section --- */
-.container {
-    padding: 2rem 5%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    min-height: calc(100vh - 90px); /* Full height minus header */
-}
-
-.mainContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 4rem;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-.mainContainer__left {
-    flex: 1;
-}
-
-.mainContainer__right {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.mainContainer__right img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 10px;
-    object-fit: cover;
-}
-
-.mainContainer__left > p:nth-child(1) {
-    font-size: 3.5rem; /* Larger hero text */
-    background: linear-gradient(45deg, #0a66c2, #004182);
+.neonText {
+    color: transparent;
+    background: linear-gradient(90deg, var(--neon-violet), var(--neon-blue));
+    -webkit-background-clip: text;
     background-clip: text;
-    font-weight: 700;
-    -webkit-text-fill-color: transparent;
-    line-height: 1.2;
+    text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
 }
 
-.mainContainer__left > p:nth-child(2) {
-    color: #4d4d4d;
-    font-size: 1.25rem;
-    margin-top: 1rem;
+.heroSubtitle {
+    color: var(--text-secondary);
+    font-weight: 300;
     max-width: 500px;
 }
 
-.buttonJoin {
-    width: fit-content;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.2s;
-    margin-top: 2rem;
-    font-size: 1.2rem;
-    font-weight: 600;
-    background: #0a66c2;
-    color: white;
-    padding: 0.8rem 2rem;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(10, 102, 194, 0.2);
-}
-.buttonJoin:hover {
-    background: #004182;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(10, 102, 194, 0.3);
+/* Mobile Center Alignment */
+@media (max-width: 991px) {
+    .heroSubtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
-/* Responsive */
+/* --- Badges --- */
+.betaBadge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--neon-teal);
+    color: var(--neon-teal);
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-family: "Orbitron", sans-serif;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.1);
+}
+
+.statusDot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--neon-teal);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--neon-teal);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* --- Buttons --- */
+.btnHoloPrimary {
+    background: var(--neon-violet);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-family: "Orbitron", sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.btnHoloPrimary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+    background: #7c3aed;
+}
+
+.btnHoloOutline {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-family: "Orbitron", sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btnHoloOutline:hover {
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    background: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+/* --- Stats --- */
+.statNumber {
+    font-family: "Orbitron", sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+.statLabel {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.trustBadge {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.9rem;
+    display: inline-block;
+}
+
+/* --- Hologram Frame (Right Side) --- */
+.hologramFrame {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    perspective: 1000px;
+}
+
+.imageWrapper {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.2);
+    background: #000;
+}
+
+.heroImg {
+    width: 100%;
+    height: auto;
+    display: block;
+    opacity: 0.9;
+    transition: transform 0.5s ease;
+}
+
+.hologramFrame:hover .heroImg {
+    transform: scale(1.03);
+}
+
+/* Scanline Effect */
+.scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0.5;
+    animation: scan 3s linear infinite;
+    z-index: 2;
+    pointer-events: none;
+}
+
+@keyframes scan {
+    0% {
+        top: -10%;
+    }
+    100% {
+        top: 110%;
+    }
+}
+
+/* Floating Cards */
+.floatCard {
+    position: absolute;
+    background: rgba(11, 15, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    min-width: 180px;
+    animation: float 4s ease-in-out infinite;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.cardIcon {
+    width: 36px;
+    height: 36px;
+    background: var(--neon-violet);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.cardTopRight {
+    top: 10%;
+    right: -30px;
+    border-left: 3px solid var(--neon-violet);
+    animation-delay: 0s;
+}
+
+.cardBottomLeft {
+    bottom: 15%;
+    left: -30px;
+    border-left: 3px solid var(--neon-teal);
+    animation-delay: 2s;
+}
+
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* --- Mobile Responsive Tweaks --- */
 @media (max-width: 768px) {
-    .header {
-        padding: 1rem 5%;
+    .hologramFrame {
+        max-width: 350px;
+        margin-top: 2rem;
     }
-    .navButton {
-        padding: 0.4rem 1rem;
-        font-size: 0.9rem;
+
+    .cardTopRight {
+        right: -10px;
     }
-    .container {
-        padding-top: 2rem;
+    .cardBottomLeft {
+        left: -10px;
     }
-    .mainContainer {
-        flex-direction: column-reverse;
-        padding: 0;
-        gap: 2rem;
-    }
-    .mainContainer__left > p:nth-child(1) {
-        font-size: 2.2rem;
-    }
-    .mainContainer__left > p:nth-child(2) {
-        font-size: 1rem;
-    }
-    .mainContainer__left {
-        text-align: center;
-    }
-    .buttonJoin {
-        margin: 1.5rem auto 0 auto;
+
+    .heroTitle {
+        font-size: 2.5rem;
     }
 }
