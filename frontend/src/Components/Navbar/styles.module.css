@@ -1,18 +1,13 @@
 /* frontend/src/Components/Navbar/styles.module.css */
 
-/* --- Main Container --- */
+/* --- Top Navbar Container --- */
 .container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 70px;
-    background: rgba(
-        11,
-        15,
-        42,
-        0.85
-    ); /* Slightly more opaque for better text contrast */
+    background: rgba(11, 15, 42, 0.85);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--holo-border);
     z-index: 1000;
@@ -29,7 +24,7 @@
     padding: 0 20px;
 }
 
-/* --- Logo --- */
+/* Logo */
 .holoLogo {
     font-family: "Orbitron", sans-serif;
     font-weight: 800;
@@ -44,10 +39,10 @@
     text-shadow: 0 0 10px rgba(15, 255, 198, 0.4);
 }
 
-/* --- Nav Links (Desktop) --- */
+/* Desktop Nav Links */
 .navCenter {
     display: flex;
-    gap: 10px;
+    gap: 20px;
     height: 100%;
 }
 
@@ -56,33 +51,29 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 20px;
+    padding: 0 15px;
     color: var(--text-secondary);
     cursor: pointer;
     position: relative;
     transition: color 0.3s ease;
     height: 100%;
 }
-
 .navLink:hover {
     color: #fff;
 }
-
 .navLink.active {
     color: var(--neon-teal);
-}
-
-.navLink span {
-    font-size: 0.75rem;
-    margin-top: 4px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
 }
 
 .navIcon {
     width: 24px;
     height: 24px;
     transition: filter 0.3s ease;
+}
+.navLabel {
+    font-size: 0.75rem;
+    margin-top: 4px;
+    font-weight: 500;
 }
 
 .activeBar {
@@ -93,10 +84,9 @@
     height: 3px;
     background: var(--neon-teal);
     box-shadow: 0 -2px 10px var(--neon-teal);
-    border-radius: 2px 2px 0 0;
 }
 
-/* --- Profile Section --- */
+/* Right Side (Profile) */
 .navRight {
     display: flex;
     align-items: center;
@@ -107,20 +97,25 @@
     background: transparent;
     border: 1px solid var(--neon-teal);
     color: var(--neon-teal);
-    padding: 8px 20px;
-    border-radius: 4px;
+    padding: 6px 18px;
+    border-radius: 20px;
     font-family: "Orbitron", sans-serif;
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.3s;
+}
+.buttonJoin:hover {
+    background: rgba(15, 255, 198, 0.1);
+    color: #fff;
 }
 
 .profileButton {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
 }
 
 .avatarContainer {
@@ -128,7 +123,6 @@
     width: 40px;
     height: 40px;
 }
-
 .profilePic {
     width: 100%;
     height: 100%;
@@ -136,7 +130,6 @@
     object-fit: cover;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
-
 .profileFallback {
     background: var(--holo-panel);
     color: white;
@@ -145,11 +138,7 @@
     justify-content: center;
     font-weight: 700;
     border: 1px solid var(--holo-border);
-    border-radius: 50%;
-    width: 100%;
-    height: 100%;
 }
-
 .onlineDot {
     position: absolute;
     bottom: 0;
@@ -159,10 +148,9 @@
     background-color: var(--neon-teal);
     border: 2px solid var(--holo-bg);
     border-radius: 50%;
-    box-shadow: 0 0 5px var(--neon-teal);
 }
 
-/* --- Dropdown --- */
+/* Dropdown */
 .dropdownContent {
     position: absolute;
     top: 75px;
@@ -177,20 +165,17 @@
     overflow: hidden;
     z-index: 2000;
 }
-
 .dropdownHeader {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 10px;
     margin-bottom: 10px;
 }
-
 .userName {
     color: #fff;
     font-weight: 600;
     font-size: 1rem;
     margin: 0;
 }
-
 .userHandle {
     color: var(--text-secondary);
     font-size: 0.85rem;
@@ -210,136 +195,81 @@
     transition: background 0.2s;
     font-size: 0.9rem;
 }
-
 .dropdownBody button:hover {
     background: rgba(255, 255, 255, 0.05);
     color: var(--neon-violet);
 }
-
 .logoutBtn:hover {
     color: var(--neon-pink) !important;
 }
 
-/* --- Mobile Menu (Updated) --- */
-.hamburgerMenuButton {
-    display: none;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--holo-border);
-    border-radius: 8px;
-    cursor: pointer;
-    padding: 6px;
-    transition: all 0.2s;
-}
-.hamburgerMenuButton:active {
-    background: rgba(255, 255, 255, 0.1);
-}
-.hamburgerMenuButton button {
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
+/* --- BOTTOM NAV (Mobile Only) --- */
+.bottomNav {
+    display: none; /* Hidden on desktop */
 }
 
-.mobileMenu {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 280px;
-    height: 100vh;
-    background: rgba(2, 4, 16, 0.98); /* Darker background */
-    backdrop-filter: blur(20px);
-    border-left: 1px solid var(--holo-border);
-    z-index: 2001; /* Above everything */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.7);
-}
-
-.mobileHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.closeMenuBtn {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 2rem;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.mobileLinks {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow-y: auto;
-}
-
-/* Style for NavLinks inside Mobile Menu */
-.mobileLinks .navLink {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 15px;
-    height: 50px;
-    border-radius: 8px;
-    padding-left: 10px;
-    width: 100%;
-}
-
-.mobileLinks .navLink:hover,
-.mobileLinks .navLink.active {
-    background: rgba(139, 92, 246, 0.1);
-    color: #fff;
-}
-
-.mobileLinks .navLink span {
-    font-size: 1rem;
-    margin-top: 0; /* Reset desktop margin */
-}
-
-.mobileLinks .activeBar {
-    display: none; /* Remove active bar for mobile list style */
-}
-
-.mobileDivider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 10px 0;
-}
-
-.mobileLinks a {
-    padding: 12px 10px;
-    color: var(--text-primary);
-    text-decoration: none;
-    font-weight: 500;
-    cursor: pointer;
-    font-size: 1rem;
-    border-radius: 8px;
-    transition: background 0.2s;
-}
-.mobileLinks a:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-/* --- Responsive Breakpoint --- */
 @media (max-width: 768px) {
-    .navCenter,
-    .navRight {
+    /* Hide Center Nav on Mobile */
+    .navCenter {
         display: none;
     }
-    .hamburgerMenuButton {
+
+    /* Profile Icon acts as Menu Trigger on Top Right */
+    .navRight {
         display: flex;
+    }
+
+    /* Show Bottom Nav */
+    .bottomNav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px;
+        background: rgba(
+            11,
+            15,
+            42,
+            0.95
+        ); /* Almost opaque for better reading */
+        backdrop-filter: blur(20px);
+        border-top: 1px solid var(--holo-border);
+        z-index: 2000;
+        padding-bottom: 5px; /* For safe area on some phones */
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .bottomNavItem {
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        color: var(--text-secondary);
+        flex: 1;
+        height: 100%;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .bottomNavItem svg {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+    }
+
+    .bottomNavLabel {
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .bottomNavActive {
+        color: var(--neon-teal);
+    }
+
+    .bottomNavActive svg {
+        filter: drop-shadow(0 0 5px var(--neon-teal));
     }
 }
