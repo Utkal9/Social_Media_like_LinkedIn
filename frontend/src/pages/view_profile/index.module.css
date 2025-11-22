@@ -1,13 +1,12 @@
 /* frontend/src/pages/view_profile/index.module.css */
 
-.container {
+/* --- Page Layout --- */
+.profilePage {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding-bottom: 4rem;
-    max-width: 1000px;
-    margin: 0 auto;
-    animation: fadeIn 0.5s ease-in-out;
+    gap: 24px;
+    padding-bottom: 60px;
+    animation: fadeIn 0.5s ease-out;
 }
 
 @keyframes fadeIn {
@@ -21,162 +20,189 @@
     }
 }
 
-/* --- 1. Header Card --- */
-.profileHeaderCard {
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+.loading {
+    text-align: center;
+    padding: 50px;
+    color: var(--text-secondary);
+    font-family: "Orbitron", sans-serif;
 }
 
-.backDropContainer {
-    width: 100%;
+/* --- Header Card --- */
+.headerCard {
+    background: rgba(11, 15, 42, 0.6);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    overflow: visible;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.coverImage {
     height: 220px;
     background-size: cover;
     background-position: center;
     position: relative;
-    background-color: #a0b4b7;
+    border-radius: 16px 16px 0 0;
 }
-
-/* Header Action Buttons */
-.headerActionBtn {
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    color: #555;
-    transition: all 0.2s ease;
-}
-.headerActionBtn:hover {
-    transform: scale(1.1);
-    background: #fff;
-    color: #0a66c2;
-}
-
-.headerActionsContainer {
+.coverImage::after {
+    content: "";
     position: absolute;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 10px;
-    z-index: 5;
-}
-
-/* Connect Button Specifics */
-.connectBtn {
-    padding: 0 20px;
-    border-radius: 24px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    cursor: pointer;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-    width: auto; /* Allow width to fit text */
-}
-
-.connectBtn.connect {
-    background: #0a66c2;
-    color: white;
-    border: none;
-    box-shadow: 0 2px 8px rgba(10, 102, 194, 0.3);
-}
-.connectBtn.connect:hover {
-    background: #004182;
-}
-
-.connectBtn.pending {
-    background: rgba(255, 255, 255, 0.9);
-    color: #666;
-    border: 1px solid #ccc;
-    cursor: default;
-}
-
-.connectBtn.connected {
-    background: #057642;
-    color: white;
-    border: none;
-    cursor: default;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(11, 15, 42, 0.8) 100%
+    );
 }
 
 /* Avatar */
-.avatarSection {
-    position: absolute;
-    bottom: -60px;
-    left: 30px;
-}
-.profilePicWrapper {
+.headerContent {
+    padding: 0 24px 24px;
+    margin-top: -60px;
     position: relative;
-    width: 160px;
-    height: 160px;
 }
-.profilePic {
+
+.avatarContainer {
+    width: 140px;
+    height: 140px;
+    position: relative;
+    margin-bottom: 16px;
+}
+.avatarImg {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 5px solid #ffffff;
     object-fit: cover;
-    background: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: 4px solid var(--holo-bg);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+    background: #000;
 }
 .onlineDot {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
-    width: 24px;
-    height: 24px;
-    background-color: #057642;
-    border: 4px solid #fff;
+    bottom: 8px;
+    right: 8px;
+    width: 18px;
+    height: 18px;
+    background: var(--neon-teal);
+    border: 3px solid var(--holo-bg);
     border-radius: 50%;
-    z-index: 2;
 }
 
-/* Profile Info */
-.profileInfoSection {
-    padding: 75px 30px 30px 30px;
+/* Identity Section */
+.identitySection {
+    color: white;
 }
 
-.mainInfo {
+.identityTop {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
-.nameDisplay {
+.nameWrapper {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.viewName {
+    font-family: "Orbitron", sans-serif;
     font-size: 1.8rem;
     font-weight: 700;
-    color: #191919;
     margin: 0;
+    color: #fff;
+    line-height: 1.2;
 }
-
-.usernameDisplay {
+.viewHeadline {
     font-size: 1rem;
-    color: #666;
-    margin: 0;
+    color: var(--text-secondary);
+    margin-top: 4px;
 }
 
-.metaInfo {
+/* Action Buttons (Message / Connect) */
+.headerActions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.msgBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 0.5rem;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
 }
-.connectionCount {
-    color: #0a66c2;
+.msgBtn:hover {
+    background: var(--neon-violet);
+    border-color: var(--neon-violet);
+}
+
+.connectBtn {
+    padding: 0 20px;
+    height: 40px;
+    border-radius: 20px;
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+.connect {
+    background: var(--neon-teal);
+    color: #000;
+    border: none;
+}
+.connect:hover {
+    background: #0fd1a3;
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.4);
+}
+.pending {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.connected {
+    background: rgba(15, 255, 198, 0.1);
+    color: var(--neon-teal);
+    border: 1px solid var(--neon-teal);
+}
+.accept {
+    background: var(--neon-blue);
+    color: #fff;
+    border: none;
+}
+
+/* Meta Data */
+.metaData {
+    margin: 12px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.metaDivider {
+    color: #555;
+}
+.connectionCount {
+    color: var(--neon-blue);
+    font-weight: 600;
+    cursor: pointer;
+    transition: text-decoration 0.2s;
 }
 .connectionCount:hover {
     text-decoration: underline;
@@ -184,272 +210,375 @@
 
 /* Contact Grid */
 .contactGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-    margin-top: 1rem;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
 }
-.contactItem {
+.contactPill {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #ccc;
+    text-decoration: none;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    transition: all 0.2s;
+}
+.contactPill:hover {
+    border-color: var(--neon-blue);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.bioBox {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    color: #ddd;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* --- GRID LAYOUT (Exact Match) --- */
+.gridLayout {
+    display: grid;
+    grid-template-columns: 2.5fr 1fr; /* Main Left, Sidebar Right */
+    gap: 24px;
+    align-items: start;
+}
+
+.mainColumn,
+.sideColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- Cards --- */
+.dataCard {
+    background: rgba(11, 15, 42, 0.6);
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+}
+.cardTitle {
+    font-family: "Orbitron", sans-serif;
+    color: #fff;
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.cardHeaderRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+}
+.cardHeaderRow .cardTitle {
+    margin-bottom: 0;
+    border: none;
+    padding: 0;
+}
+
+/* --- Skills --- */
+.stackList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.stackItem label {
+    display: block;
+    color: var(--neon-teal);
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+.viewStackText {
+    color: #ddd;
     font-size: 0.9rem;
-    color: #555;
-    background: #f9fafb;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #eee;
+    line-height: 1.4;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px;
+    border-radius: 4px;
+    margin: 0;
 }
-.contactItem svg {
-    width: 18px;
-    height: 18px;
-    color: #666;
+
+.skillsWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
-.contactItem a {
-    color: #0a66c2;
+.skillTag {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid var(--neon-violet);
+    color: var(--neon-violet);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+/* --- Timeline Items --- */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.timelineItem {
+    padding-left: 12px;
+    border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+.timelineContent h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+.timelineContent h4 span {
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+.timelineContent small {
+    color: var(--neon-blue);
+    font-family: monospace;
+    display: block;
+    margin: 4px 0;
+    font-size: 0.8rem;
+}
+.timelineContent p {
+    color: #ccc;
+    font-size: 0.9rem;
+    margin: 6px 0 0 0;
+    line-height: 1.5;
+}
+
+/* --- Projects --- */
+.projectList {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+.projectItem {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 16px;
+    border-radius: 12px;
+    position: relative;
+}
+.projectHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.projectHeader h5 {
+    color: #fff;
+    margin: 0;
+    font-size: 1rem;
+}
+.projectHeader span {
+    font-size: 0.8rem;
+    color: var(--neon-blue);
+}
+.projectItem p {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+.projectLink {
+    color: var(--neon-teal);
+    font-size: 0.85rem;
     text-decoration: none;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
-.contactItem a:hover {
+
+/* --- Split Row (Certs/Achievements) --- */
+.splitRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.miniItem {
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 8px;
+}
+.miniItem:last-child {
+    border: none;
+}
+.miniItem h5 {
+    color: #fff;
+    font-size: 0.95rem;
+    margin: 0;
+}
+.miniItemMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+.miniItem small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+.viewLink {
+    color: var(--neon-blue);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+}
+.viewLink:hover {
     text-decoration: underline;
 }
 
-.bioDisplay {
-    margin-top: 1.5rem;
-    font-size: 0.95rem;
-    color: #333;
-    line-height: 1.6;
-    white-space: pre-wrap;
-}
-
-/* --- Sections General --- */
-.sectionCard {
-    background: white;
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-    padding: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.sectionHeader {
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #f0f0f0;
-}
-.sectionHeader h4 {
-    font-size: 1.25rem;
-    margin: 0;
-    color: #191919;
-    font-weight: 600;
-}
-
-/* --- Skills (Chips) --- */
-.skillsContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.skillChip {
-    background: #fff;
-    border: 1px solid #0a66c2;
-    color: #0a66c2;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-/* --- Resume Skills (Categorized) --- */
-.resumeSkillsGrid {
+/* --- Activity (Sidebar Style) --- */
+.activityGrid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
-.skillRow {
-    display: flex;
-    gap: 10px;
-    align-items: baseline;
-}
-.skillLabel {
-    font-weight: 600;
-    color: #444;
-    min-width: 120px;
-    font-size: 0.9rem;
-}
-.skillValue {
-    font-size: 0.95rem;
-    color: #333;
-    line-height: 1.4;
-}
-
-/* --- Lists (Experience etc) --- */
-.listContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-.listItem {
-    padding: 1rem;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background: #fcfcfc;
-    transition: background 0.2s;
-}
-.listItem:hover {
-    background: #fff;
-    border-color: #ddd;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-.listInfo h5 {
-    margin: 0 0 4px 0;
-    font-size: 1.05rem;
-    color: #191919;
-}
-.listInfo p {
-    font-weight: 500;
-    color: #333;
-    margin: 0 0 4px 0;
-}
-.listInfo span {
-    font-size: 0.85rem;
-    color: #666;
-    display: block;
-    margin-bottom: 8px;
-}
-.description {
-    font-size: 0.9rem;
-    color: #555;
-    line-height: 1.5;
-    white-space: pre-wrap;
-}
-
-/* --- Activity Grid --- */
-.activityContainer {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
-}
-.postCard {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+.activityCard {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    background: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: border-color 0.2s, transform 0.2s;
     display: flex;
     flex-direction: column;
-    transition: box-shadow 0.2s;
 }
-.postCard:hover {
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+.activityCard:hover {
+    border-color: var(--neon-violet);
+    transform: translateY(-2px);
 }
 .mediaPreview {
     width: 100%;
-    height: 150px;
-    background-color: #f3f3f3;
+    height: 120px;
+    overflow: hidden;
+    background: #000;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
 }
-.postCardImage {
+.mediaImg {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-.textOnlyPreview {
-    padding: 1.5rem;
-    font-size: 0.9rem;
-    color: #333;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+.textPreview {
+    padding: 12px;
+    font-size: 0.85rem;
+    color: #ddd;
     line-height: 1.4;
 }
-.postCardFooter {
-    padding: 1rem;
-    background: #fff;
-    border-top: 1px solid #f0f0f0;
-}
-.postCardBody {
-    font-size: 0.9rem;
-    color: #333;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.postBody {
     margin: 0;
 }
 .readMore {
-    color: #0a66c2;
-    font-weight: 600;
-    cursor: pointer;
+    color: var(--neon-teal);
+    font-size: 0.8rem;
     margin-left: 4px;
-}
-.readMore:hover {
-    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 600;
 }
 
-/* --- Modals --- */
+.viewAllBtn {
+    width: 100%;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid var(--neon-violet);
+    color: var(--neon-violet);
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 8px;
+    transition: all 0.2s;
+}
+.viewAllBtn:hover {
+    background: var(--neon-violet);
+    color: #fff;
+}
+
+.emptyText {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 0.9rem;
+    padding: 10px;
+}
+
+/* --- Connections Modal --- */
 .modalOverlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 3000;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(5px);
 }
+
 .modalBox {
-    background: white;
-    padding: 2rem;
+    background: #0b0f2a;
+    padding: 30px;
     border-radius: 16px;
     width: 95%;
     max-width: 500px;
     display: flex;
     flex-direction: column;
-    max-height: 80vh;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    gap: 1.5rem;
+    box-shadow: 0 0 60px rgba(139, 92, 246, 0.4);
+    border: 1px solid var(--holo-border);
+    max-height: 90vh;
+    overflow-y: auto;
 }
+
 .modalHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 1rem;
     margin-bottom: 0.5rem;
 }
 .modalHeader h3 {
     margin: 0;
-    font-size: 1.3rem;
-    color: #191919;
+    font-family: "Orbitron", sans-serif;
+    color: #fff;
 }
 .closeIcon {
     background: none;
     border: none;
     cursor: pointer;
-    color: #666;
+    color: #aaa;
     padding: 4px;
-    transition: color 0.2s;
 }
 .closeIcon:hover {
-    color: #000;
+    color: #fff;
 }
 
 .connectionsList {
-    overflow-y: auto;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
+    padding: 10px 0;
 }
 .connectionItem {
     display: flex;
@@ -459,44 +588,63 @@
     cursor: pointer;
     border-radius: 8px;
     transition: background 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 .connectionItem:hover {
-    background-color: #f3f3f3;
+    background: rgba(255, 255, 255, 0.05);
 }
 .connectionAvatar {
     width: 48px;
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid var(--neon-teal);
 }
 .connectionName {
     font-weight: 600;
-    color: #191919;
+    color: #fff;
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 .connectionUsername {
-    color: #666;
+    color: #888;
     margin: 0;
     font-size: 0.85rem;
 }
 .noConnectionsText {
     text-align: center;
     padding: 2rem;
-    color: #777;
+    color: #666;
     font-style: italic;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .contactGrid {
+/* --- Mobile Responsive --- */
+@media (max-width: 900px) {
+    .gridLayout {
         grid-template-columns: 1fr;
     }
-    .headerActionsContainer {
-        top: 10px;
-        right: 10px;
+
+    /* Mobile Order: Main Content (1) -> Sidebar (2) */
+    /* This forces Skills & Recent Activity to bottom on mobile */
+    .mainColumn {
+        order: 1;
     }
-    .profileInfoSection {
-        padding: 60px 20px 20px 20px;
+    .sideColumn {
+        order: 2;
+    }
+
+    .splitRow {
+        grid-template-columns: 1fr;
+    }
+    .contactGrid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .contactPill {
+        justify-content: center;
+    }
+    .headerActions {
+        justify-content: flex-start;
+        margin-top: 10px;
     }
 }

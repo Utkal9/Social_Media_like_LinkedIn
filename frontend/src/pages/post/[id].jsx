@@ -1,3 +1,4 @@
+// frontend/src/pages/post/[id].jsx
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import DashboardLayout from "@/layout/DashboardLayout";
@@ -13,7 +14,7 @@ import {
 } from "@/config/redux/action/postAction";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
-import styles from "../dashboard/index.module.css";
+import styles from "../dashboard/index.module.css"; // Reuse Dashboard Glass Styles
 
 // --- HELPER: Video Detection ---
 const isVideo = (fileType, mediaUrl) => {
@@ -25,10 +26,9 @@ const isVideo = (fileType, mediaUrl) => {
     return false;
 };
 
-// --- Icons ---
+// --- Holo Icons (Consistent with Dashboard) ---
 const MoreHorizIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
         style={{ width: "24px", height: "24px" }}
@@ -42,7 +42,6 @@ const MoreHorizIcon = () => (
 );
 const ImageIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
         style={{ color: "#378fe9", width: "24px", height: "24px" }}
@@ -66,19 +65,19 @@ const LikeIcon = ({ isLiked }) => (
         />
     </svg>
 );
+// FIXED COMMENT ICON PATH
 const CommentIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
+        strokeWidth={1.5}
+        width="20"
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+            d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
         />
     </svg>
 );
@@ -130,6 +129,22 @@ const DeleteIcon = () => (
         />
     </svg>
 );
+const BackIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+        stroke="currentColor"
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+        />
+    </svg>
+);
 
 export default function PostPage({ postData }) {
     const router = useRouter();
@@ -153,7 +168,6 @@ export default function PostPage({ postData }) {
     }, [postData]);
 
     useEffect(() => {
-        // Close menus on click anywhere
         const closeMenu = () => setOpenMenuId(null);
         document.addEventListener("click", closeMenu);
         return () => document.removeEventListener("click", closeMenu);
@@ -163,6 +177,14 @@ export default function PostPage({ postData }) {
         return onlineStatuses && onlineStatuses[uid]
             ? onlineStatuses[uid].isOnline
             : defaultStatus;
+    };
+
+    // --- Share Handler (Restored) ---
+    const handleShare = (postBody) => {
+        const text = encodeURIComponent(postBody);
+        const url = encodeURIComponent(window.location.href);
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+        window.open(twitterUrl, "_blank");
     };
 
     const handleLike = async () => {
@@ -226,13 +248,6 @@ export default function PostPage({ postData }) {
         dispatch(getAllComments({ post_id: localPost._id }));
     };
 
-    const handleShare = () => {
-        const text = encodeURIComponent(localPost.body);
-        const url = encodeURIComponent(window.location.href);
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
-        window.open(twitterUrl, "_blank");
-    };
-
     const handlePostComment = async () => {
         if (!commentText.trim()) return;
         await dispatch(
@@ -252,16 +267,28 @@ export default function PostPage({ postData }) {
                 style={{
                     marginBottom: "1rem",
                     cursor: "pointer",
-                    border: "none",
-                    background: "none",
-                    color: "#666",
+                    border: "1px solid var(--neon-teal)",
+                    background: "rgba(15, 255, 198, 0.1)",
+                    color: "var(--neon-teal)",
                     fontWeight: "600",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
-                    gap: "5px",
+                    gap: "8px",
+                    padding: "8px 16px",
+                    borderRadius: "20px",
+                    fontSize: "0.9rem",
+                    transition: "all 0.2s",
                 }}
+                onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                        "rgba(15, 255, 198, 0.2)")
+                }
+                onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                        "rgba(15, 255, 198, 0.1)")
+                }
             >
-                ← Back
+                <BackIcon /> Return to Stream
             </button>
 
             <div className={styles.postCard}>
@@ -301,7 +328,6 @@ export default function PostPage({ postData }) {
                         </p>
                     </div>
 
-                    {/* --- Three Dots Menu --- */}
                     {authState.user &&
                         localPost.userId._id === authState.user.userId._id && (
                             <div
@@ -322,7 +348,6 @@ export default function PostPage({ postData }) {
                                 >
                                     <MoreHorizIcon />
                                 </button>
-
                                 {openMenuId === "single-post-menu" && (
                                     <div className={styles.optionsDropdown}>
                                         <div
@@ -377,23 +402,27 @@ export default function PostPage({ postData }) {
                 </div>
 
                 <div className={styles.postCardActions}>
-                    {(() => {
-                        const isLiked =
+                    <button
+                        onClick={handleLike}
+                        className={`${styles.actionButton} ${
                             authState.user &&
                             Array.isArray(localPost.likes) &&
-                            localPost.likes.includes(authState.user.userId._id);
-                        return (
-                            <button
-                                onClick={handleLike}
-                                className={`${styles.actionButton} ${
-                                    isLiked ? styles.activeAction : ""
-                                }`}
-                            >
-                                <LikeIcon isLiked={isLiked} />
-                                <span>Like</span>
-                            </button>
-                        );
-                    })()}
+                            localPost.likes.includes(authState.user.userId._id)
+                                ? styles.activeAction
+                                : ""
+                        }`}
+                    >
+                        <LikeIcon
+                            isLiked={
+                                authState.user &&
+                                Array.isArray(localPost.likes) &&
+                                localPost.likes.includes(
+                                    authState.user.userId._id
+                                )
+                            }
+                        />
+                        <span>Like</span>
+                    </button>
                     <button
                         onClick={handleOpenComments}
                         className={styles.actionButton}
@@ -402,7 +431,7 @@ export default function PostPage({ postData }) {
                         <span>Comment</span>
                     </button>
                     <button
-                        onClick={handleShare}
+                        onClick={() => handleShare(localPost.body)}
                         className={styles.actionButton}
                     >
                         <ShareIcon />
@@ -411,7 +440,7 @@ export default function PostPage({ postData }) {
                 </div>
             </div>
 
-            {/* --- EDIT POST MODAL --- */}
+            {/* --- EDIT POST MODAL (Reusing styles) --- */}
             {editingPost && (
                 <div
                     className={styles.commentModalBackdrop}
@@ -435,83 +464,43 @@ export default function PostPage({ postData }) {
                                 &times;
                             </button>
                         </div>
-
                         <div className={styles.editModalBody}>
                             <textarea
                                 className={styles.textAreaOfContent}
-                                style={{
-                                    height: "100px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #ccc",
-                                }}
+                                style={{ height: "100px" }}
                                 value={editBody}
                                 onChange={(e) => setEditBody(e.target.value)}
-                                placeholder="What do you want to talk about?"
+                                placeholder="Update your transmission..."
                             />
-
                             <div className={styles.previewContainer}>
                                 {editFilePreview ? (
-                                    isVideo(editFile?.type, editFilePreview) ? (
-                                        <video
-                                            src={editFilePreview}
-                                            controls
-                                            style={{
-                                                maxHeight: "250px",
-                                                maxWidth: "100%",
-                                            }}
-                                        />
-                                    ) : (
-                                        <img
-                                            src={editFilePreview}
-                                            alt="New Preview"
-                                            style={{
-                                                maxHeight: "250px",
-                                                maxWidth: "100%",
-                                                objectFit: "contain",
-                                            }}
-                                        />
-                                    )
-                                ) : editingPost.media ? (
-                                    isVideo(
-                                        editingPost.fileType,
-                                        editingPost.media
-                                    ) ? (
-                                        <video
-                                            src={editingPost.media}
-                                            controls
-                                            style={{
-                                                maxHeight: "250px",
-                                                maxWidth: "100%",
-                                            }}
-                                        />
-                                    ) : (
-                                        <img
-                                            src={editingPost.media}
-                                            alt="Current"
-                                            style={{
-                                                maxHeight: "250px",
-                                                maxWidth: "100%",
-                                                objectFit: "contain",
-                                            }}
-                                        />
-                                    )
-                                ) : (
-                                    <p
+                                    <img
+                                        src={editFilePreview}
+                                        alt="Preview"
                                         style={{
-                                            fontSize: "0.9rem",
-                                            color: "#888",
+                                            maxHeight: "250px",
+                                            maxWidth: "100%",
+                                            objectFit: "contain",
                                         }}
-                                    >
-                                        No media selected
-                                    </p>
+                                    />
+                                ) : editingPost.media ? (
+                                    <img
+                                        src={editingPost.media}
+                                        alt="Current"
+                                        style={{
+                                            maxHeight: "250px",
+                                            maxWidth: "100%",
+                                            objectFit: "contain",
+                                        }}
+                                    />
+                                ) : (
+                                    <p style={{ color: "#888" }}>No media</p>
                                 )}
                             </div>
-
                             <div className={styles.createPostBottom}>
                                 <label
                                     htmlFor="editFileUpload"
                                     className={styles.mediaButton}
-                                    style={{ background: "#f0f0f0" }}
                                 >
                                     <ImageIcon /> <span>Change Media</span>
                                 </label>
@@ -522,16 +511,7 @@ export default function PostPage({ postData }) {
                                     accept="image/*,video/*"
                                     onChange={handleEditFileChange}
                                 />
-                                {editFile && (
-                                    <span
-                                        className={styles.fileName}
-                                        style={{ maxWidth: "200px" }}
-                                    >
-                                        {editFile.name}
-                                    </span>
-                                )}
                             </div>
-
                             <div
                                 style={{
                                     display: "flex",
@@ -578,11 +558,6 @@ export default function PostPage({ postData }) {
                             </button>
                         </div>
                         <div className={styles.allCommentsContainer}>
-                            {postState.comments.length === 0 && (
-                                <p className={styles.noComments}>
-                                    Be the first to comment!
-                                </p>
-                            )}
                             {postState.comments.map((postComment) => (
                                 <div
                                     className={styles.singleComment}
@@ -596,41 +571,21 @@ export default function PostPage({ postData }) {
                                             }
                                             alt={postComment.userId.name}
                                             className={styles.userProfilePic}
+                                            style={{ width: 32, height: 32 }}
                                         />
-                                        {isUserOnline(
-                                            postComment.userId._id,
-                                            postComment.userId.isOnline
-                                        ) && (
-                                            <span
-                                                className={styles.onlineDot}
-                                            ></span>
-                                        )}
                                     </div>
                                     <div className={styles.singleCommentBody}>
                                         <p className={styles.commentUser}>
                                             {postComment.userId.name}
-                                            <span>
-                                                @{postComment.userId.username}
-                                            </span>
                                         </p>
-                                        <p>{postComment.body}</p>
+                                        <p className={styles.commentText}>
+                                            {postComment.body}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                         <div className={styles.postCommentContainer}>
-                            {authState.user && (
-                                <div className={styles.avatarContainer}>
-                                    <img
-                                        className={styles.userProfilePic}
-                                        src={
-                                            authState.user.userId.profilePicture
-                                        }
-                                        alt="Your profile"
-                                    />
-                                    <span className={styles.onlineDot}></span>
-                                </div>
-                            )}
                             <div className={styles.commentInputWrapper}>
                                 <input
                                     type="text"
@@ -643,11 +598,7 @@ export default function PostPage({ postData }) {
                                         e.key === "Enter" && handlePostComment()
                                     }
                                 />
-                                <button
-                                    onClick={handlePostComment}
-                                    className={styles.postCommentButton}
-                                    disabled={!commentText.trim()}
-                                >
+                                <button onClick={handlePostComment}>
                                     Post
                                 </button>
                             </div>
@@ -665,15 +616,9 @@ export async function getServerSideProps(context) {
         const response = await clientServer.get("/get_post", {
             params: { post_id: id },
         });
-        return {
-            props: {
-                postData: response.data.post,
-            },
-        };
+        return { props: { postData: response.data.post } };
     } catch (error) {
-        return {
-            notFound: true,
-        };
+        return { notFound: true };
     }
 }
 

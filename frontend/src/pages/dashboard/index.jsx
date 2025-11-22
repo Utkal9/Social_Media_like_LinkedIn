@@ -1,3 +1,4 @@
+// frontend/src/pages/dashboard/index.jsx
 import { getAboutUser, getAllUsers } from "@/config/redux/action/authAction";
 import {
     createPost,
@@ -12,18 +13,18 @@ import {
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
 import { useRouter } from "next/router";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
 
+// --- Helpers ---
 function getTimeAgo(dateString) {
     if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
-
     if (diffInSeconds < 60) return "Just now";
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
@@ -34,55 +35,45 @@ function getTimeAgo(dateString) {
     return `${Math.floor(diffInDays / 7)}w`;
 }
 
-const isVideo = (fileType, mediaUrl) => {
+// --- FIXED: Robust Video Detection ---
+const isVideo = (fileType, fileNameOrUrl) => {
+    // 1. Trust MIME type if available
     if (fileType && fileType.startsWith("video/")) return true;
-    if (mediaUrl) {
-        const ext = mediaUrl.split(".").pop().toLowerCase();
-        return ["mp4", "webm", "ogg", "mov"].includes(ext);
+
+    // 2. Fallback: Check extension from filename or URL
+    if (fileNameOrUrl) {
+        // Remove query params if it's a URL
+        const cleanStr = fileNameOrUrl.split("?")[0].split("#")[0];
+        const ext = cleanStr.split(".").pop().toLowerCase();
+        return ["mp4", "webm", "ogg", "mov", "avi", "mkv"].includes(ext);
     }
     return false;
 };
 
 const getReactionIcon = (type) => {
-    switch (type) {
-        case "Like":
-            return "👍";
-        case "Love":
-            return "❤️";
-        case "Celebrate":
-            return "👏";
-        case "Insightful":
-            return "💡";
-        case "Funny":
-            return "😂";
-        default:
-            return "👍";
-    }
+    const map = {
+        Like: "👍",
+        Love: "❤️",
+        Celebrate: "👏",
+        Insightful: "💡",
+        Funny: "😂",
+    };
+    return map[type] || "👍";
 };
 
 const getReactionColor = (type) => {
-    switch (type) {
-        case "Love":
-            return "#E74C3C";
-        case "Celebrate":
-            return "#27AE60";
-        case "Insightful":
-            return "#F1C40F";
-        case "Funny":
-            return "#E67E22";
-        default:
-            return "#0a66c2";
-    }
+    const map = {
+        Love: "#E74C3C",
+        Celebrate: "#27AE60",
+        Insightful: "#F1C40F",
+        Funny: "#E67E22",
+    };
+    return map[type] || "#0fffc6";
 };
 
-// --- SVG Icons ---
+// --- Holo Icons ---
 const MoreHorizIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ width: "24px", height: "24px" }}
-    >
+    <svg viewBox="0 0 24 24" fill="currentColor" width="24">
         <path
             fillRule="evenodd"
             d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
@@ -92,22 +83,21 @@ const MoreHorizIcon = () => (
 );
 const ImageIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         fill="currentColor"
-        style={{ color: "#378fe9", width: "24px", height: "24px" }}
+        style={{ color: "#0fffc6" }}
+        width="22"
     >
         <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
     </svg>
 );
 const CommentIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
+        strokeWidth={1.5}
+        width="20"
     >
         <path
             strokeLinecap="round"
@@ -118,12 +108,11 @@ const CommentIcon = () => (
 );
 const ShareIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
+        strokeWidth={1.5}
+        width="20"
     >
         <path
             strokeLinecap="round"
@@ -134,12 +123,11 @@ const ShareIcon = () => (
 );
 const DeleteIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "18px", height: "18px" }}
+        strokeWidth={1.5}
+        width="18"
     >
         <path
             strokeLinecap="round"
@@ -150,12 +138,11 @@ const DeleteIcon = () => (
 );
 const EditIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "18px", height: "18px" }}
+        strokeWidth={1.5}
+        width="18"
     >
         <path
             strokeLinecap="round"
@@ -166,17 +153,36 @@ const EditIcon = () => (
 );
 const LikeIconOutline = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
+        strokeWidth={1.5}
+        width="20"
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z"
+        />
+    </svg>
+);
+const LikeIconFilled = () => (
+    <svg viewBox="0 0 24 24" fill="#0fffc6" width="20">
+        <path d="M7.493 18.5c-.425 0-.82-.236-.975-.632A7.48 7.48 0 0 1 6 15.125c0-1.75.584-3.377 1.57-4.7.397-.532.79-1.063 1.18-1.594a5.97 5.97 0 0 0 .944-2.805c0-.953.33-1.872.936-2.586a4.48 4.48 0 0 1 3.626-1.434c.98.054 1.88.472 2.526 1.2.638.72.953 1.66.885 2.624-.037.526-.074 1.05-.074 1.575a5.98 5.98 0 0 1 1.755.036c1.673.376 2.905 1.76 3.094 3.466.064.58.08 1.167.048 1.75a5.99 5.99 0 0 1 1.213 3.554c.047.546.017 1.096-.09 1.634a4.49 4.49 0 0 1-2.046 2.75c-.72.392-1.528.602-2.347.613H7.493zM6 18.5a1.5 1.5 0 0 1-1.5-1.5V7.625a1.5 1.5 0 0 1 1.5-1.5h.05c.706 0 1.31.49 1.457 1.18.094.44.258.864.488 1.258.12.206.255.402.403.591l.002.003c.398.532.79 1.063 1.183 1.594.95 1.274 1.417 2.817 1.417 4.374 0 1.924-.727 3.78-2.05 5.22A5.97 5.97 0 0 0 6 18.5z" />
+    </svg>
+);
+const CloseIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="24"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
         />
     </svg>
 );
@@ -187,21 +193,27 @@ export default function Dashboard() {
     const authState = useSelector((state) => state.auth);
     const postState = useSelector((state) => state.postReducer);
     const { onlineStatuses } = useSocket() || {};
+
+    // Filter State
+    const { username: filterUsername } = router.query;
+
     const [postError, setPostError] = useState("");
     const [postContent, setPostContent] = useState("");
     const [fileContent, setFileContent] = useState(null);
     const [filePreview, setFilePreview] = useState(null);
     const [commentText, setCommentText] = useState("");
-    const [showReactionListModal, setShowReactionListModal] = useState(false);
-    const [currentReactionList, setCurrentReactionList] = useState([]);
-    const commentInputRef = useRef(null);
 
-    // --- Editing & Menu State ---
-    const [openMenuId, setOpenMenuId] = useState(null); // Track open dropdown
+    // Editing
+    const [openMenuId, setOpenMenuId] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
     const [editBody, setEditBody] = useState("");
     const [editFile, setEditFile] = useState(null);
     const [editFilePreview, setEditFilePreview] = useState(null);
+
+    // Reactions
+    const [showReactionListModal, setShowReactionListModal] = useState(false);
+    const [currentReactionList, setCurrentReactionList] = useState([]);
+    const commentInputRef = useRef(null);
 
     useEffect(() => {
         if (authState.isTokenThere) {
@@ -211,12 +223,12 @@ export default function Dashboard() {
         if (!authState.all_profiles_fetched) {
             dispatch(getAllUsers());
         }
-        // Close menus on click anywhere
         const closeMenu = () => setOpenMenuId(null);
         document.addEventListener("click", closeMenu);
         return () => document.removeEventListener("click", closeMenu);
     }, [authState.isTokenThere, dispatch]);
 
+    // File Handlers
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.size > 10 * 1024 * 1024) {
@@ -234,7 +246,6 @@ export default function Dashboard() {
             setPostError("");
         }
     };
-
     const handleUpload = async () => {
         await dispatch(createPost({ file: fileContent, body: postContent }));
         setPostContent("");
@@ -242,7 +253,6 @@ export default function Dashboard() {
         setFilePreview(null);
         setPostError("");
     };
-
     const handleEditFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.size > 10 * 1024 * 1024) {
@@ -254,32 +264,6 @@ export default function Dashboard() {
             setEditFile(file);
             setEditFilePreview(URL.createObjectURL(file));
         }
-    };
-
-    const handleReaction = (postId, type) => {
-        const token = localStorage.getItem("token");
-        dispatch(
-            toggleLike({
-                post_id: postId,
-                token: token,
-                reactionType: type,
-            })
-        );
-    };
-
-    const handleDelete = async (postId) => {
-        if (confirm("Are you sure you want to delete this post?")) {
-            await dispatch(deletePost({ post_id: postId }));
-            dispatch(getAllPosts());
-        }
-    };
-
-    const handleEditClick = (post) => {
-        setEditingPost(post);
-        setEditBody(post.body);
-        setEditFile(null);
-        setEditFilePreview(null);
-        setOpenMenuId(null);
     };
 
     const handleUpdateSubmit = async () => {
@@ -297,15 +281,16 @@ export default function Dashboard() {
         setEditFilePreview(null);
     };
 
-    const handleOpenComments = (postId) => {
-        dispatch(getAllComments({ post_id: postId }));
+    const handleDelete = async (postId) => {
+        if (confirm("Delete this post?")) {
+            await dispatch(deletePost({ post_id: postId }));
+            dispatch(getAllPosts());
+        }
     };
 
-    const handleShare = (postBody) => {
-        const text = encodeURIComponent(postBody);
-        const url = encodeURIComponent("proconnect.com");
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
-        window.open(twitterUrl, "_blank");
+    const handleReaction = (postId, type) => {
+        const token = localStorage.getItem("token");
+        dispatch(toggleLike({ post_id: postId, token, reactionType: type }));
     };
 
     const handlePostComment = async () => {
@@ -332,17 +317,32 @@ export default function Dashboard() {
         commentInputRef.current?.focus();
     };
 
+    const handleShare = (postBody) => {
+        const text = encodeURIComponent(postBody);
+        const url = encodeURIComponent(window.location.href);
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+        window.open(twitterUrl, "_blank");
+    };
+
+    // Filter Posts
+    const displayedPosts = useMemo(() => {
+        if (filterUsername) {
+            return postState.posts.filter(
+                (p) => p.userId.username === filterUsername
+            );
+        }
+        return postState.posts;
+    }, [postState.posts, filterUsername]);
+
+    const clearFilter = () => router.push("/dashboard");
+
+    const isUserOnline = (uid) =>
+        onlineStatuses && onlineStatuses[uid]?.isOnline;
+
     const handleShowReactionList = (reactions) => {
         setCurrentReactionList(reactions || []);
         setShowReactionListModal(true);
     };
-
-    const isUserOnline = (uid, defaultStatus) => {
-        return onlineStatuses && onlineStatuses[uid]
-            ? onlineStatuses[uid].isOnline
-            : defaultStatus;
-    };
-
     const getUserReaction = (post, userId) => {
         return post.reactions?.find(
             (r) => r.userId?._id === userId || r.userId === userId
@@ -355,14 +355,22 @@ export default function Dashboard() {
         return uniqueTypes;
     };
 
-    if (!authState.user) {
-        return <div className={styles.loading}>Loading feed...</div>;
-    }
+    if (!authState.user)
+        return <div className={styles.loading}>Initializing...</div>;
 
     return (
-        <>
-            <div className={styles.feedContainer}>
-                {/* Create Post */}
+        <div className={styles.feedContainer}>
+            {/* --- Filter Banner --- */}
+            {filterUsername ? (
+                <div className={styles.filterBanner}>
+                    <p>
+                        Viewing data stream from{" "}
+                        <strong>@{filterUsername}</strong>
+                    </p>
+                    <button onClick={clearFilter}>Return to Global Feed</button>
+                </div>
+            ) : (
+                /* --- Create Post --- */
                 <div className={styles.createPostContainer}>
                     <div className={styles.createPostTop}>
                         <div
@@ -372,56 +380,44 @@ export default function Dashboard() {
                             <img
                                 className={styles.userProfilePic}
                                 src={authState.user.userId.profilePicture}
-                                alt="Your profile"
+                                alt="Me"
                             />
-                            <span className={styles.onlineDot}></span>
                         </div>
                         <div className={styles.inputWrapper}>
                             <textarea
                                 onChange={(e) => setPostContent(e.target.value)}
                                 value={postContent}
                                 className={styles.textAreaOfContent}
-                                placeholder="Start a post"
-                            ></textarea>
+                                placeholder="Initialize new transmission..."
+                            />
                         </div>
                     </div>
                     {postError && (
                         <p className={styles.errorMessage}>{postError}</p>
                     )}
-
                     {filePreview && (
-                        <div style={{ marginTop: "10px" }}>
-                            {fileContent &&
-                            fileContent.type.startsWith("video/") ? (
+                        <div className={styles.previewBox}>
+                            {isVideo(fileContent?.type, fileContent?.name) ? (
                                 <video
                                     src={filePreview}
                                     controls
                                     style={{
-                                        maxWidth: "100%",
-                                        maxHeight: "200px",
+                                        width: "100%",
+                                        maxHeight: "250px",
                                         borderRadius: "8px",
                                     }}
                                 />
                             ) : (
-                                <img
-                                    src={filePreview}
-                                    alt="Preview"
-                                    style={{
-                                        maxWidth: "100%",
-                                        maxHeight: "200px",
-                                        borderRadius: "8px",
-                                    }}
-                                />
+                                <img src={filePreview} alt="Preview" />
                             )}
                         </div>
                     )}
-
                     <div className={styles.createPostBottom}>
                         <label
                             htmlFor="fileUpload"
                             className={styles.mediaButton}
                         >
-                            <ImageIcon /> <span>Media</span>
+                            <ImageIcon /> <span>Attach Media</span>
                         </label>
                         <input
                             onChange={handleFileChange}
@@ -430,25 +426,25 @@ export default function Dashboard() {
                             id="fileUpload"
                             accept="image/*,video/*"
                         />
-                        {fileContent && (
-                            <span className={styles.fileName}>
-                                {fileContent.name}
-                            </span>
-                        )}
-                        <div className={styles.spacer}></div>
                         <button
                             onClick={handleUpload}
                             className={styles.uploadButton}
                             disabled={!postContent.trim() && !fileContent}
                         >
-                            Post
+                            Upload
                         </button>
                     </div>
                 </div>
+            )}
 
-                {/* Feed */}
-                <div className={styles.postsContainer}>
-                    {postState.posts.map((post) => (
+            {/* --- Feed Stream --- */}
+            <div className={styles.postsContainer}>
+                {displayedPosts.length === 0 && filterUsername ? (
+                    <p className={styles.noPosts}>
+                        No activity logs found for this node.
+                    </p>
+                ) : (
+                    displayedPosts.map((post) => (
                         <div key={post._id} className={styles.postCard}>
                             <div className={styles.postCardHeader}>
                                 <div
@@ -458,37 +454,32 @@ export default function Dashboard() {
                                             `/view_profile/${post.userId.username}`
                                         )
                                     }
-                                    style={{ cursor: "pointer" }}
                                 >
                                     <img
                                         className={styles.userProfilePic}
                                         src={post.userId.profilePicture}
-                                        alt={`${post.userId.name}'s profile`}
+                                        alt=""
                                     />
-                                    {isUserOnline(
-                                        post.userId._id,
-                                        post.userId.isOnline
-                                    ) && (
+                                    {isUserOnline(post.userId._id) && (
                                         <span
                                             className={styles.onlineDot}
                                         ></span>
                                     )}
                                 </div>
                                 <div className={styles.postCardHeaderInfo}>
-                                    <div className={styles.headerTopRow}>
-                                        <p
-                                            className={styles.postCardUser}
-                                            onClick={() =>
-                                                router.push(
-                                                    `/view_profile/${post.userId.username}`
-                                                )
-                                            }
-                                        >
-                                            {post.userId.name}
-                                        </p>
-                                    </div>
+                                    <p
+                                        className={styles.postCardUser}
+                                        onClick={() =>
+                                            router.push(
+                                                `/view_profile/${post.userId.username}`
+                                            )
+                                        }
+                                    >
+                                        {post.userId.name}
+                                    </p>
                                     <p className={styles.postCardUsername}>
-                                        @{post.userId.username}
+                                        @{post.userId.username} •{" "}
+                                        {getTimeAgo(post.createdAt)}
                                     </p>
                                 </div>
                                 {post.userId._id ===
@@ -498,48 +489,43 @@ export default function Dashboard() {
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
+                                            onClick={() =>
                                                 setOpenMenuId(
                                                     openMenuId === post._id
                                                         ? null
                                                         : post._id
-                                                );
-                                            }}
+                                                )
+                                            }
                                             className={styles.iconBtn}
-                                            title="More options"
                                         >
                                             <MoreHorizIcon />
                                         </button>
-
                                         {openMenuId === post._id && (
                                             <div
                                                 className={
                                                     styles.optionsDropdown
                                                 }
                                             >
-                                                <div
+                                                <button
                                                     className={
                                                         styles.optionItem
                                                     }
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleEditClick(post);
+                                                    onClick={() => {
+                                                        setEditingPost(post);
+                                                        setEditBody(post.body);
+                                                        setOpenMenuId(null);
                                                     }}
                                                 >
-                                                    <EditIcon />{" "}
-                                                    <span>Edit Post</span>
-                                                </div>
-                                                <div
+                                                    <EditIcon /> Edit
+                                                </button>
+                                                <button
                                                     className={`${styles.optionItem} ${styles.delete}`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDelete(post._id);
-                                                    }}
+                                                    onClick={() =>
+                                                        handleDelete(post._id)
+                                                    }
                                                 >
-                                                    <DeleteIcon />{" "}
-                                                    <span>Delete Post</span>
-                                                </div>
+                                                    <DeleteIcon /> Delete
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -558,16 +544,10 @@ export default function Dashboard() {
                                             <video
                                                 src={post.media}
                                                 controls
-                                                style={{
-                                                    width: "100%",
-                                                    maxHeight: "600px",
-                                                }}
+                                                style={{ width: "100%" }}
                                             />
                                         ) : (
-                                            <img
-                                                src={post.media}
-                                                alt="Post media"
-                                            />
+                                            <img src={post.media} alt="" />
                                         )}
                                     </div>
                                 )}
@@ -617,9 +597,7 @@ export default function Dashboard() {
                                                 }
                                             >
                                                 {post.reactions.length}{" "}
-                                                {post.reactions.length === 1
-                                                    ? "Reaction"
-                                                    : "Reactions"}
+                                                Reactions
                                             </span>
                                         </div>
                                     )}
@@ -628,62 +606,27 @@ export default function Dashboard() {
                             <div className={styles.postCardActions}>
                                 <div className={styles.reactionWrapper}>
                                     <div className={styles.reactionPopup}>
-                                        <button
-                                            className={styles.reactionBtn}
-                                            onClick={() =>
-                                                handleReaction(post._id, "Like")
-                                            }
-                                            title="Like"
-                                        >
-                                            👍
-                                        </button>
-                                        <button
-                                            className={styles.reactionBtn}
-                                            onClick={() =>
-                                                handleReaction(post._id, "Love")
-                                            }
-                                            title="Love"
-                                        >
-                                            ❤️
-                                        </button>
-                                        <button
-                                            className={styles.reactionBtn}
-                                            onClick={() =>
-                                                handleReaction(
-                                                    post._id,
-                                                    "Celebrate"
-                                                )
-                                            }
-                                            title="Celebrate"
-                                        >
-                                            👏
-                                        </button>
-                                        <button
-                                            className={styles.reactionBtn}
-                                            onClick={() =>
-                                                handleReaction(
-                                                    post._id,
-                                                    "Insightful"
-                                                )
-                                            }
-                                            title="Insightful"
-                                        >
-                                            💡
-                                        </button>
-                                        <button
-                                            className={styles.reactionBtn}
-                                            onClick={() =>
-                                                handleReaction(
-                                                    post._id,
-                                                    "Funny"
-                                                )
-                                            }
-                                            title="Funny"
-                                        >
-                                            😂
-                                        </button>
+                                        {[
+                                            "Like",
+                                            "Love",
+                                            "Celebrate",
+                                            "Insightful",
+                                            "Funny",
+                                        ].map((type) => (
+                                            <button
+                                                key={type}
+                                                className={styles.reactionBtn}
+                                                onClick={() =>
+                                                    handleReaction(
+                                                        post._id,
+                                                        type
+                                                    )
+                                                }
+                                            >
+                                                {getReactionIcon(type)}
+                                            </button>
+                                        ))}
                                     </div>
-
                                     <button
                                         className={styles.actionButton}
                                         onClick={() =>
@@ -696,28 +639,24 @@ export default function Dashboard() {
                                                 authState.user.userId._id
                                             );
                                             if (myReaction) {
-                                                const color = getReactionColor(
-                                                    myReaction.type
-                                                );
-                                                const icon = getReactionIcon(
-                                                    myReaction.type
-                                                );
                                                 return (
                                                     <>
                                                         <span
                                                             style={{
                                                                 fontSize:
                                                                     "1.2rem",
-                                                                lineHeight: 1,
-                                                                marginRight:
-                                                                    "4px",
+                                                                marginRight: 6,
                                                             }}
                                                         >
-                                                            {icon}
+                                                            {getReactionIcon(
+                                                                myReaction.type
+                                                            )}
                                                         </span>
                                                         <span
                                                             style={{
-                                                                color: color,
+                                                                color: getReactionColor(
+                                                                    myReaction.type
+                                                                ),
                                                                 fontWeight: 600,
                                                             }}
                                                         >
@@ -735,28 +674,135 @@ export default function Dashboard() {
                                         })()}
                                     </button>
                                 </div>
-
                                 <button
-                                    onClick={() => handleOpenComments(post._id)}
+                                    onClick={() =>
+                                        dispatch(
+                                            getAllComments({
+                                                post_id: post._id,
+                                            })
+                                        )
+                                    }
                                     className={styles.actionButton}
                                 >
-                                    <CommentIcon />
-                                    <span>Comment</span>
+                                    <CommentIcon /> <span>Comment</span>
                                 </button>
                                 <button
                                     onClick={() => handleShare(post.body)}
                                     className={styles.actionButton}
                                 >
-                                    <ShareIcon />
-                                    <span>Share</span>
+                                    <ShareIcon /> <span>Share</span>
                                 </button>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    ))
+                )}
             </div>
 
-            {/* --- EDIT POST MODAL --- */}
+            {/* --- Comments Modal --- */}
+            {postState.postId !== "" && (
+                <div
+                    className={styles.commentModalBackdrop}
+                    onClick={() => dispatch(resetPostId())}
+                >
+                    <div
+                        className={styles.commentModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className={styles.commentModalHeader}>
+                            <h3>Signal Log</h3>
+                            <button
+                                onClick={() => dispatch(resetPostId())}
+                                className={styles.closeModalButton}
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+                        <div className={styles.allCommentsContainer}>
+                            {postState.comments.map((c) => (
+                                <div
+                                    key={c._id}
+                                    className={styles.singleComment}
+                                >
+                                    <img
+                                        src={c.userId.profilePicture}
+                                        className={styles.userProfilePic}
+                                        style={{
+                                            width: 32,
+                                            height: 32,
+                                            marginRight: 10,
+                                        }}
+                                    />
+                                    <div className={styles.singleCommentBody}>
+                                        <div className={styles.commentHeader}>
+                                            <span
+                                                className={styles.commentUser}
+                                            >
+                                                {c.userId.name}
+                                            </span>
+                                            <span
+                                                className={styles.commentTime}
+                                            >
+                                                {getTimeAgo(c.createdAt)}
+                                            </span>
+                                        </div>
+                                        <p className={styles.commentText}>
+                                            {c.body}
+                                        </p>
+                                        <div className={styles.commentActions}>
+                                            <span
+                                                onClick={() =>
+                                                    handleLikeComment(c._id)
+                                                }
+                                                style={{
+                                                    color: c.likes?.includes(
+                                                        authState.user.userId
+                                                            ._id
+                                                    )
+                                                        ? "var(--neon-teal)"
+                                                        : "#666",
+                                                }}
+                                            >
+                                                Like{" "}
+                                                {c.likes?.length > 0 &&
+                                                    `(${c.likes.length})`}
+                                            </span>
+                                            <span
+                                                onClick={() =>
+                                                    handleReplyComment(
+                                                        c.userId.username
+                                                    )
+                                                }
+                                            >
+                                                Reply
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className={styles.postCommentContainer}>
+                            <div className={styles.commentInputWrapper}>
+                                <input
+                                    ref={commentInputRef}
+                                    value={commentText}
+                                    onChange={(e) =>
+                                        setCommentText(e.target.value)
+                                    }
+                                    placeholder="Add data packet..."
+                                    onKeyDown={(e) =>
+                                        e.key === "Enter" && handlePostComment()
+                                    }
+                                />
+                                <button onClick={handlePostComment}>
+                                    Transmit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Edit Modal --- */}
             {editingPost && (
                 <div
                     className={styles.commentModalBackdrop}
@@ -765,38 +811,27 @@ export default function Dashboard() {
                     <div
                         className={styles.commentModalContent}
                         onClick={(e) => e.stopPropagation()}
-                        style={{
-                            height: "auto",
-                            maxHeight: "85vh",
-                            maxWidth: "600px",
-                        }}
+                        style={{ height: "auto" }}
                     >
                         <div className={styles.commentModalHeader}>
-                            <h3>Edit Post</h3>
+                            <h3>Modify Transmission</h3>
                             <button
                                 onClick={() => setEditingPost(null)}
                                 className={styles.closeModalButton}
                             >
-                                &times;
+                                <CloseIcon />
                             </button>
                         </div>
-
-                        <div className={styles.editModalBody}>
+                        <div style={{ padding: 20 }}>
                             <textarea
                                 className={styles.textAreaOfContent}
-                                style={{
-                                    height: "100px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #ccc",
-                                }}
                                 value={editBody}
                                 onChange={(e) => setEditBody(e.target.value)}
-                                placeholder="What do you want to talk about?"
+                                style={{ height: 100 }}
                             />
-
                             <div className={styles.previewContainer}>
                                 {editFilePreview ? (
-                                    isVideo(editFile?.type, editFilePreview) ? (
+                                    isVideo(editFile?.type, editFile?.name) ? (
                                         <video
                                             src={editFilePreview}
                                             controls
@@ -841,22 +876,13 @@ export default function Dashboard() {
                                         />
                                     )
                                 ) : (
-                                    <p
-                                        style={{
-                                            fontSize: "0.9rem",
-                                            color: "#888",
-                                        }}
-                                    >
-                                        No media selected
-                                    </p>
+                                    <p style={{ color: "#888" }}>No media</p>
                                 )}
                             </div>
-
                             <div className={styles.createPostBottom}>
                                 <label
                                     htmlFor="editFileUpload"
                                     className={styles.mediaButton}
-                                    style={{ background: "#f0f0f0" }}
                                 >
                                     <ImageIcon /> <span>Change Media</span>
                                 </label>
@@ -867,35 +893,26 @@ export default function Dashboard() {
                                     accept="image/*,video/*"
                                     onChange={handleEditFileChange}
                                 />
-                                {editFile && (
-                                    <span
-                                        className={styles.fileName}
-                                        style={{ maxWidth: "200px" }}
-                                    >
-                                        {editFile.name}
-                                    </span>
-                                )}
                             </div>
-
                             <div
                                 style={{
+                                    marginTop: 20,
                                     display: "flex",
                                     justifyContent: "flex-end",
-                                    gap: "1rem",
-                                    marginTop: "1rem",
+                                    gap: 10,
                                 }}
                             >
                                 <button
+                                    className={styles.actionButton}
                                     onClick={() => setEditingPost(null)}
-                                    className={styles.cancelButton}
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleUpdateSubmit}
                                     className={styles.uploadButton}
+                                    onClick={handleUpdateSubmit}
                                 >
-                                    Save Changes
+                                    Save
                                 </button>
                             </div>
                         </div>
@@ -903,7 +920,7 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* --- REACTION LIST MODAL --- */}
+            {/* --- Reaction List Modal --- */}
             {showReactionListModal && (
                 <div
                     className={styles.commentModalBackdrop}
@@ -920,7 +937,7 @@ export default function Dashboard() {
                                 onClick={() => setShowReactionListModal(false)}
                                 className={styles.closeModalButton}
                             >
-                                &times;
+                                <CloseIcon />
                             </button>
                         </div>
                         <div className={styles.allCommentsContainer}>
@@ -938,9 +955,7 @@ export default function Dashboard() {
                                     <div className={styles.avatarContainer}>
                                         <img
                                             src={
-                                                reaction.userId
-                                                    ?.profilePicture ||
-                                                "https://via.placeholder.com/48"
+                                                reaction.userId?.profilePicture
                                             }
                                             alt={reaction.userId?.name}
                                             className={styles.userProfilePic}
@@ -963,187 +978,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
-
-            {/* Comment Modal */}
-            {postState.postId !== "" && (
-                <div
-                    className={styles.commentModalBackdrop}
-                    onClick={() => dispatch(resetPostId())}
-                >
-                    <div
-                        className={styles.commentModalContent}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className={styles.commentModalHeader}>
-                            <h3>Comments</h3>
-                            <button
-                                onClick={() => dispatch(resetPostId())}
-                                className={styles.closeModalButton}
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <div className={styles.allCommentsContainer}>
-                            {postState.comments.length === 0 && (
-                                <p className={styles.noComments}>
-                                    Be the first to comment!
-                                </p>
-                            )}
-                            {postState.comments.map((postComment) => {
-                                const isCommentLiked =
-                                    postComment.likes &&
-                                    postComment.likes.includes(
-                                        authState.user.userId._id
-                                    );
-                                return (
-                                    <div
-                                        className={styles.singleComment}
-                                        key={postComment._id}
-                                    >
-                                        <div className={styles.avatarContainer}>
-                                            <img
-                                                src={
-                                                    postComment.userId
-                                                        .profilePicture
-                                                }
-                                                alt={postComment.userId.name}
-                                                className={
-                                                    styles.userProfilePic
-                                                }
-                                            />
-                                            {isUserOnline(
-                                                postComment.userId._id,
-                                                postComment.userId.isOnline
-                                            ) && (
-                                                <span
-                                                    className={styles.onlineDot}
-                                                ></span>
-                                            )}
-                                        </div>
-                                        <div
-                                            className={
-                                                styles.commentContentWrapper
-                                            }
-                                        >
-                                            <div
-                                                className={
-                                                    styles.singleCommentBody
-                                                }
-                                            >
-                                                <div
-                                                    className={
-                                                        styles.commentHeader
-                                                    }
-                                                >
-                                                    <span
-                                                        className={
-                                                            styles.commentUser
-                                                        }
-                                                        onClick={() =>
-                                                            router.push(
-                                                                `/view_profile/${postComment.userId.username}`
-                                                            )
-                                                        }
-                                                    >
-                                                        {
-                                                            postComment.userId
-                                                                .name
-                                                        }
-                                                    </span>
-                                                    <span
-                                                        className={
-                                                            styles.commentTime
-                                                        }
-                                                    >
-                                                        •{" "}
-                                                        {getTimeAgo(
-                                                            postComment.createdAt
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                <p
-                                                    className={
-                                                        styles.commentText
-                                                    }
-                                                >
-                                                    {postComment.body}
-                                                </p>
-                                            </div>
-                                            <div
-                                                className={
-                                                    styles.commentActions
-                                                }
-                                            >
-                                                <span
-                                                    onClick={() =>
-                                                        handleLikeComment(
-                                                            postComment._id
-                                                        )
-                                                    }
-                                                    style={{
-                                                        color: isCommentLiked
-                                                            ? "#0a66c2"
-                                                            : "#666",
-                                                    }}
-                                                >
-                                                    Like{" "}
-                                                    {postComment.likes &&
-                                                        postComment.likes
-                                                            .length > 0 &&
-                                                        `(${postComment.likes.length})`}
-                                                </span>
-                                                <span
-                                                    onClick={() =>
-                                                        handleReplyComment(
-                                                            postComment.userId
-                                                                .username
-                                                        )
-                                                    }
-                                                >
-                                                    Reply
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                        <div className={styles.postCommentContainer}>
-                            <div className={styles.avatarContainer}>
-                                <img
-                                    className={styles.userProfilePic}
-                                    src={authState.user.userId.profilePicture}
-                                    alt="Your profile"
-                                />
-                                <span className={styles.onlineDot}></span>
-                            </div>
-                            <div className={styles.commentInputWrapper}>
-                                <input
-                                    ref={commentInputRef}
-                                    type="text"
-                                    value={commentText}
-                                    onChange={(e) =>
-                                        setCommentText(e.target.value)
-                                    }
-                                    placeholder="Add a comment..."
-                                    onKeyDown={(e) =>
-                                        e.key === "Enter" && handlePostComment()
-                                    }
-                                />
-                                {commentText.length > 0 && (
-                                    <button
-                                        onClick={handlePostComment}
-                                        className={styles.postCommentButton}
-                                    >
-                                        Post
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
+        </div>
     );
 }
 

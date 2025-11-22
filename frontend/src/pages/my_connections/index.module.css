@@ -1,252 +1,317 @@
-/* --- Main Container --- */
-.connectionsContainer {
-    background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    padding: 1.5rem;
+/* frontend/src/pages/my_connections/index.module.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     min-height: 60vh;
+    animation: fadeIn 0.5s ease-out;
 }
 
-.connectionsContainer h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    color: #191919;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* --- Tab Styles --- */
+.header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.header h2 {
+    font-family: "Orbitron", sans-serif;
+    color: #fff;
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+}
+.header p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* --- Tabs --- */
 .tabContainer {
     display: flex;
-    border-bottom: 1px solid #e0e0e0;
-    margin-bottom: 1rem;
+    gap: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.tab,
-.activeTab {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.95rem;
-    font-weight: 600;
+.tab {
     background: none;
     border: none;
+    padding: 12px 4px;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
     cursor: pointer;
-    color: #5e5e5e;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    position: relative;
     transition: all 0.2s;
-}
-
-.activeTab {
-    color: #057642; /* LinkedIn Green */
-    border-bottom-color: #057642;
+    font-weight: 500;
 }
 
 .tab:hover {
-    background-color: #f3f3f3;
-    color: #191919;
+    color: #fff;
 }
 
-.noItemsMessage {
-    color: #666;
-    font-size: 1rem;
+.activeTab {
+    color: var(--neon-teal);
+    font-weight: 600;
+}
+.activeTab::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--neon-teal);
+    box-shadow: 0 -2px 8px var(--neon-teal);
+}
+
+.badge {
+    background: var(--neon-pink);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    margin-left: 6px;
+}
+
+/* --- Content Area --- */
+.contentArea {
+    padding: 10px 0;
+}
+
+.emptyState {
     text-align: center;
-    padding: 3rem 0;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+.discoverBtn {
+    margin-top: 15px;
+    background: var(--neon-violet);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
 }
 
-/* --- Grid for "Received" Tab (Requests) --- */
-.contentGrid {
+/* --- Request Grid --- */
+.requestGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
+    gap: 20px;
 }
 
 .requestCard {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background: #fff;
-    padding: 1rem;
+    background: rgba(11, 15, 42, 0.6);
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
     text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.requestCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+    border-color: var(--neon-violet);
+}
+
+.cardHeader {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.avatarContainer {
     position: relative;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.profilePicture {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--neon-teal);
+    box-shadow: 0 0 10px rgba(15, 255, 198, 0.2);
+}
+
+.userInfo h3 {
+    font-size: 1rem;
+    color: #fff;
+    margin: 0;
+    font-weight: 600;
+    cursor: pointer;
+}
+.userInfo h3:hover {
+    text-decoration: underline;
+}
+.userInfo p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 2px 0 0 0;
 }
 
 .buttonGroup {
     display: flex;
-    gap: 0.5rem;
+    gap: 10px;
     width: 100%;
-    margin-top: 0.5rem;
 }
 
 .acceptButton,
 .declineButton {
     flex: 1;
-    padding: 0.4rem;
+    padding: 8px;
+    border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
-    border-radius: 20px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
     transition: all 0.2s;
 }
+
 .acceptButton {
-    border: 1px solid #0a66c2;
-    background: #0a66c2;
-    color: white;
+    background: var(--neon-teal);
+    color: #000;
 }
 .acceptButton:hover {
-    background: #004182;
+    background: #0fd1a3;
+    box-shadow: 0 0 10px rgba(15, 255, 198, 0.4);
 }
+
 .declineButton {
-    border: 1px solid #666;
-    background: transparent;
-    color: #666;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .declineButton:hover {
-    background: #f3f3f3;
-    border-color: #333;
-    color: #333;
+    border-color: var(--neon-pink);
+    color: var(--neon-pink);
 }
 
-/* --- LIST STYLE FOR MY NETWORK (The Update) --- */
-.listGrid {
+/* --- Network List --- */
+.networkList {
     display: flex;
     flex-direction: column;
-    /* No gap needed because padding/margin will handle spacing naturally */
+    gap: 12px;
 }
 
-.networkCard {
+.networkRow {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 0.5rem; /* Vertical spacing */
-    border-radius: 6px;
-    transition: background-color 0.2s;
-    cursor: pointer;
-    border-bottom: 1px solid #f0f0f0; /* Very subtle separator */
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+.networkRow:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-.networkCard:last-child {
-    border-bottom: none;
-}
-
-.networkCard:hover {
-    background-color: #f3f3f3; /* Light grey hover like Top Profiles */
-}
-
-.networkCardInfo {
+.rowLeft {
     display: flex;
     align-items: center;
+    gap: 16px;
+    cursor: pointer;
     flex-grow: 1;
-    min-width: 0;
-    gap: 12px; /* Space between avatar and text */
 }
 
-/* Avatar Container */
-.avatarContainer {
+.avatarContainerSmall {
     position: relative;
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.profilePicture,
-.profilePictureSmall {
-    border-radius: 50%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Specific sizes */
-.profilePicture {
-    width: 72px;
-    height: 72px;
-} /* For Request Card */
-.profilePictureSmall {
     width: 48px;
     height: 48px;
-} /* For Network List */
-
-.userInfo {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
+}
+.profilePictureSmall {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-.userInfo h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #191919;
+.rowInfo h3 {
+    font-size: 1rem;
+    color: #fff;
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
 }
-
-.userInfo p {
+.rowInfo p {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--text-secondary);
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
 }
 
-/* --- Action Buttons Group --- */
-.actionsGroup {
+.rowActions {
+    display: flex;
+    gap: 10px;
+}
+
+.actionBtn,
+.actionBtnPrimary {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-/* Message Button (Outline) */
-.actionBtnSecondary {
-    background-color: transparent;
-    color: #666;
-    border: 1px solid #666;
-    border-radius: 16px;
-    padding: 5px 16px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    justify-content: center;
     cursor: pointer;
+    border: none;
     transition: all 0.2s;
 }
-.actionBtnSecondary:hover {
-    background-color: #ebebeb;
-    border-color: #191919;
-    color: #191919;
+
+.actionBtn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ccc;
+}
+.actionBtn:hover {
+    background: #fff;
+    color: #000;
 }
 
-/* Call Button (Outline Blue - optional distinction) */
 .actionBtnPrimary {
-    background-color: transparent;
-    color: #0a66c2;
-    border: 1px solid #0a66c2;
-    border-radius: 16px;
-    padding: 5px 16px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--neon-violet);
+    border: 1px solid var(--neon-violet);
 }
 .actionBtnPrimary:hover {
-    background-color: #e7f3ff;
-    border-color: #004182;
-    color: #004182;
+    background: var(--neon-violet);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
 }
 
-/* Online Dots */
-.onlineDotLarge {
+/* --- Online Dots --- */
+.onlineDot {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 2px;
+    right: 2px;
     width: 14px;
     height: 14px;
-    background-color: #057642;
-    border: 2px solid white;
+    background-color: var(--neon-teal);
+    border: 3px solid var(--holo-bg);
     border-radius: 50%;
 }
 .onlineDotSmall {
@@ -255,7 +320,20 @@
     right: 0;
     width: 10px;
     height: 10px;
-    background-color: #057642;
-    border: 2px solid white;
+    background-color: var(--neon-teal);
+    border: 2px solid var(--holo-bg);
     border-radius: 50%;
+}
+
+/* --- Mobile --- */
+@media (max-width: 576px) {
+    .requestGrid {
+        grid-template-columns: 1fr; /* Stack cards on mobile */
+    }
+    .networkRow {
+        padding: 12px;
+    }
+    .rowInfo p {
+        display: none;
+    } /* Hide username to save space on very small screens */
 }

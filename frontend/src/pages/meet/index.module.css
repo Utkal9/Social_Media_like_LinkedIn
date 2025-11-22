@@ -1,189 +1,305 @@
-/* --- Layout --- */
+/* frontend/src/pages/meet/index.module.css */
+
 .meetContainer {
-    background-color: #fff;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
     min-height: 80vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Changed from center to avoid cutoff on small screens */
-    padding: 3rem 1rem;
+    align-items: flex-start; /* Changed to top alignment */
+    padding: 2rem 1rem;
+    position: relative;
     overflow: hidden;
+    /* Removed border/background on container to blend with dashboard */
+}
+
+/* Background Effect */
+.ambientGlow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(
+        circle,
+        rgba(15, 255, 198, 0.05) 0%,
+        transparent 70%
+    );
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
 }
 
 .contentWrapper {
-    display: flex;
     width: 100%;
-    justify-content: center; /* Center the single column */
-}
-
-/* --- Action Section --- */
-.actionSection {
-    width: 100%;
-    max-width: 480px; /* Slightly narrower for better focus */
+    max-width: 500px; /* Constrain width for vertical stack */
+    z-index: 1;
     text-align: center;
 }
 
+/* --- Header --- */
 .header {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 0, 85, 0.1);
+    border: 1px solid rgba(255, 0, 85, 0.3);
+    color: #ff4d7d;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.liveDot {
+    width: 6px;
+    height: 6px;
+    background: #ff4d7d;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #ff4d7d;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 .header h1 {
-    font-size: 2.2rem;
-    font-weight: 300;
-    color: #0a66c2;
-    margin-bottom: 0.75rem;
+    font-family: "Orbitron", sans-serif;
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
 .header p {
-    font-size: 1rem;
-    color: #666;
-    line-height: 1.6;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
-/* --- Cards --- */
-.cardContainer {
+/* --- Cards Stack --- */
+.cardStack {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
 .actionCard {
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 1.5rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-    text-align: left; /* Keep card content left-aligned */
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, border-color 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
-
 .actionCard:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-    background: #fff;
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.04);
 }
 
-.cardText {
-    margin-bottom: 1.25rem;
+.cardBody {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 
-.cardText h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #191919;
-    margin-bottom: 0.25rem;
+/* Glow Effects */
+.cardGlowPrimary {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(
+        circle,
+        rgba(139, 92, 246, 0.2) 0%,
+        transparent 70%
+    );
+    filter: blur(30px);
+}
+.cardGlowSecondary {
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(
+        circle,
+        rgba(15, 255, 198, 0.2) 0%,
+        transparent 70%
+    );
+    filter: blur(30px);
 }
 
-.cardText p {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-/* --- Icons --- */
-.iconWrapperPrimary,
-.iconWrapperSecondary {
-    width: 42px;
-    height: 42px;
+/* Icon Boxes */
+.iconBoxPrimary,
+.iconBoxSecondary {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 1rem;
+    color: #fff;
+}
+.iconBoxPrimary {
+    background: linear-gradient(135deg, var(--neon-violet), #6d28d9);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+}
+.iconBoxSecondary {
+    background: linear-gradient(135deg, var(--neon-teal), #059669);
+    box-shadow: 0 10px 30px rgba(15, 255, 198, 0.2);
 }
 
-.iconWrapperPrimary {
-    background-color: #e7f3ff;
-    color: #0a66c2;
+.textContent h3 {
+    font-family: "Orbitron", sans-serif;
+    color: #fff;
+    font-size: 1.2rem;
+    margin: 0 0 0.25rem 0;
+}
+.textContent p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
 }
 
-.iconWrapperSecondary {
-    background-color: #f3f3f3;
-    color: #5e5e5e;
-}
-
-.icon {
-    width: 24px;
-    height: 24px;
-}
-
-/* --- Buttons --- */
-.primaryButton {
+/* Buttons & Inputs */
+.primaryBtn {
     width: 100%;
-    padding: 0.85rem;
-    background-color: #0a66c2;
+    background: var(--neon-violet);
     color: white;
     border: none;
-    border-radius: 25px;
+    padding: 12px 0;
+    border-radius: 12px;
     font-weight: 600;
     font-size: 1rem;
     cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.primaryButton:hover {
-    background-color: #004182;
-}
-
-/* --- Input Group --- */
-.inputGroup {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+.primaryBtn:hover {
+    background: #7c3aed;
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.5);
 }
 
-.inputGroup input {
-    flex: 1;
-    padding: 0.7rem 1rem;
-    border: 1px solid #999;
-    border-radius: 8px;
-    font-size: 0.95rem;
+.inputArea {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.inputWrapper {
+    position: relative;
+    width: 100%;
+}
+.inputIcon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    display: flex;
+}
+.inputWrapper input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 12px 12px 40px;
+    border-radius: 12px;
+    color: #fff;
     outline: none;
+    font-family: inherit;
     transition: border-color 0.2s;
 }
-
-.inputGroup input:focus {
-    border-color: #0a66c2;
-    box-shadow: 0 0 0 1px #0a66c2;
+.inputWrapper input:focus {
+    border-color: var(--neon-teal);
 }
 
-.secondaryButton {
-    padding: 0 1.5rem;
-    background-color: transparent;
-    color: #0a66c2;
-    border: 1px solid #0a66c2;
-    border-radius: 25px;
+.joinBtn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--neon-teal);
+    color: var(--neon-teal);
+    border-radius: 12px;
+    padding: 12px 0;
     font-weight: 600;
     cursor: pointer;
+    font-size: 1rem;
     transition: all 0.2s;
 }
-
-.secondaryButton:hover:not(:disabled) {
-    background-color: #e7f3ff;
-    border-color: #004182;
-    color: #004182;
+.joinBtn:hover:not(:disabled) {
+    background: var(--neon-teal);
+    color: #000;
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.3);
 }
-
-.secondaryButton:disabled {
-    border-color: #ccc;
-    color: #ccc;
+.joinBtn:disabled {
+    border-color: #444;
+    color: #666;
     cursor: not-allowed;
 }
 
-/* --- Divider --- */
+/* Divider */
 .divider {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
-    color: #888;
+    position: relative;
     margin: 0.5rem 0;
-    font-weight: 500;
+}
+.divider span {
+    background: var(--holo-bg); /* Matches page bg to hide line */
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1;
 }
 
-.divider::before,
-.divider::after {
-    content: "";
-    height: 1px;
-    background: #e0e0e0;
-    flex: 1;
-    margin: 0 1rem;
+/* --- Mobile --- */
+@media (max-width: 768px) {
+    .meetContainer {
+        padding: 1rem;
+    }
+    .header h1 {
+        font-size: 1.8rem;
+    }
 }

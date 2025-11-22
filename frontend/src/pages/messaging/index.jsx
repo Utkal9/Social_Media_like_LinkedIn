@@ -1,37 +1,60 @@
+// frontend/src/pages/messaging/index.jsx
 import React, { useEffect, useState, useRef } from "react";
 import UserLayout from "@/layout/UserLayout";
-import DashboardLayout from "@/layout/DashboardLayout";
 import clientServer from "@/config";
 import { useSelector } from "react-redux";
 import { useSocket } from "@/context/SocketContext";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 const VIDEO_CALL_URL =
     process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
 
-// --- ICONS ---
+// --- Holo Icons ---
 const SearchIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
-        fill="currentColor"
-        className={styles.searchIcon}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <circle cx="11" cy="11" r="8" />
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-4.35-4.35"
+        />
+    </svg>
+);
+const SendIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path d="M3.478 2.405a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z" />
+    </svg>
+);
+const VideoIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="22">
+        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+    </svg>
+);
+const BackIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="24"
     >
         <path
-            fillRule="evenodd"
-            d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z"
-            clipRule="evenodd"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
         />
     </svg>
 );
 const MoreIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ width: 24, height: 24 }}
-    >
+    <svg viewBox="0 0 24 24" fill="currentColor" width="24">
         <path
             fillRule="evenodd"
             d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
@@ -40,81 +63,18 @@ const MoreIcon = () => (
     </svg>
 );
 const EditIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ width: 20, height: 20 }}
-    >
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
         <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
     </svg>
 );
-const VideoIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ width: 24, height: 24, color: "#666" }}
-    >
-        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
-    </svg>
-);
-const SendIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ width: 18, height: 18 }}
-    >
-        <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-    </svg>
-);
-const EmptyStateIllustration = () => (
-    <svg
-        width="160"
-        height="160"
-        viewBox="0 0 200 200"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-    >
-        <circle cx="100" cy="100" r="90" fill="#F3F6F8" />
-        <path
-            d="M65 75C65 66.7157 71.7157 60 80 60H120C128.284 60 135 66.7157 135 75V105C135 113.284 128.284 120 120 120H85L65 140V75Z"
-            fill="white"
-            stroke="#E0E0E0"
-            strokeWidth="4"
-        />
-        <path
-            d="M80 85H120"
-            stroke="#A0A0A0"
-            strokeWidth="4"
-            strokeLinecap="round"
-        />
-        <path
-            d="M80 100H105"
-            stroke="#A0A0A0"
-            strokeWidth="4"
-            strokeLinecap="round"
-        />
-    </svg>
-);
 
-// --- HELPER ---
-function getTimeAgo(dateString) {
-    if (!dateString) return "Offline";
+const getTimeAgo = (dateString) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
 
-    if (diffInSeconds < 60) return "Just now";
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    return `${Math.floor(diffInHours / 24)}d ago`;
-}
-
-function MessagingPage() {
+export default function MessagingPage() {
     const router = useRouter();
     const auth = useSelector((state) => state.auth);
     const { socket, onlineStatuses, setOnlineStatuses } = useSocket() || {};
@@ -124,9 +84,10 @@ function MessagingPage() {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [showMenu, setShowMenu] = useState(false);
+    const [showMobileChat, setShowMobileChat] = useState(false); // Controls mobile view
     const messagesEndRef = useRef(null);
 
+    // Fetch Conversations
     const fetchConversations = async () => {
         if (auth.isTokenThere) {
             try {
@@ -135,6 +96,7 @@ function MessagingPage() {
                 });
                 setConversations(res.data);
 
+                // Update online statuses from fetched data initially
                 const initialStatuses = {};
                 res.data.forEach((user) => {
                     initialStatuses[user._id] = {
@@ -158,6 +120,7 @@ function MessagingPage() {
         fetchConversations();
     }, [auth.isTokenThere]);
 
+    // Handle "Chat With" URL param
     useEffect(() => {
         if (!router.isReady || !auth.isTokenThere) return;
         const { chatWith } = router.query;
@@ -166,8 +129,9 @@ function MessagingPage() {
                 (c) => c.username === chatWith
             );
             if (existingChat) {
-                setActiveChat(existingChat);
+                handleSelectChat(existingChat);
             } else {
+                // Fetch new user if not in list
                 const fetchTargetUser = async () => {
                     try {
                         const res = await clientServer.get(
@@ -180,9 +144,9 @@ function MessagingPage() {
                                 return prev;
                             return [targetUser, ...prev];
                         });
-                        setActiveChat(targetUser);
+                        handleSelectChat(targetUser);
                     } catch (err) {
-                        console.error("Could not fetch user:", err);
+                        console.error(err);
                     }
                 };
                 fetchTargetUser();
@@ -190,6 +154,7 @@ function MessagingPage() {
         }
     }, [router.isReady, router.query, auth.isTokenThere, conversations.length]);
 
+    // Fetch Messages
     useEffect(() => {
         if (!activeChat) return;
         const fetchMessages = async () => {
@@ -209,6 +174,7 @@ function MessagingPage() {
         fetchMessages();
     }, [activeChat]);
 
+    // Socket Listener
     useEffect(() => {
         if (!socket) return;
         const handleReceiveMessage = (data) => {
@@ -216,7 +182,7 @@ function MessagingPage() {
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
             } else {
-                fetchConversations();
+                fetchConversations(); // Refresh list to show new message indicator (if we had one)
             }
         };
         socket.on("receive-chat-message", handleReceiveMessage);
@@ -229,6 +195,20 @@ function MessagingPage() {
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }, 100);
+    };
+
+    const handleSelectChat = (user) => {
+        setActiveChat(user);
+        setShowMobileChat(true);
+        // Clear query param so back button doesn't re-trigger
+        if (router.query.chatWith) {
+            router.replace("/messaging", undefined, { shallow: true });
+        }
+    };
+
+    const handleBackToConversations = () => {
+        setShowMobileChat(false);
+        setActiveChat(null);
     };
 
     const handleSendMessage = async () => {
@@ -261,13 +241,12 @@ function MessagingPage() {
                 });
             }
         } catch (err) {
-            console.error("Failed to send message", err);
+            console.error(err);
         }
     };
 
     const handleStartVideoCall = () => {
         if (!activeChat || !auth.user?.userId || !socket) return;
-
         const roomId = [auth.user.userId._id, activeChat._id].sort().join("-");
         const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
         const returnUrl = `${window.location.origin}/dashboard`;
@@ -280,21 +259,7 @@ function MessagingPage() {
             toUserId: activeChat._id,
             roomUrl: roomUrlWithRedirect,
         });
-
         window.open(roomUrlWithRedirect, "_blank");
-    };
-
-    const handleCreateNewMessage = () => {
-        router.push("/my_connections");
-    };
-
-    const handleMenuOption = (option) => {
-        if (option === "refresh") {
-            fetchConversations();
-        } else if (option === "network") {
-            router.push("/my_connections");
-        }
-        setShowMenu(false);
     };
 
     const filteredConversations = conversations.filter(
@@ -304,258 +269,212 @@ function MessagingPage() {
     );
 
     return (
-        <div className={styles.container}>
-            <div className={styles.sidebar}>
-                <div className={styles.sidebarHeader}>
-                    <div className={styles.headerTop}>
-                        <h3>Messaging</h3>
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "5px",
-                                position: "relative",
-                            }}
+        <div className={styles.pageWrapper}>
+            <Head>
+                <title>Chat | LinkUps</title>
+            </Head>
+            <div className={styles.bgGlow}></div>
+
+            <div className={styles.messagingContainer}>
+                {/* --- Sidebar (Conversation List) --- */}
+                <div
+                    className={`${styles.sidebar} ${
+                        showMobileChat ? styles.hiddenOnMobile : ""
+                    }`}
+                >
+                    <div className={styles.sidebarHeader}>
+                        <h2 className={styles.headerTitle}>Messages</h2>
+                        <button
+                            className={styles.iconBtn}
+                            onClick={() => router.push("/my_connections")}
+                            title="New Chat"
                         >
-                            <button
-                                className={styles.iconBtn}
-                                onClick={handleCreateNewMessage}
-                                title="Start new conversation"
-                            >
-                                <EditIcon />
-                            </button>
-
-                            <button
-                                className={styles.iconBtn}
-                                onClick={() => setShowMenu(!showMenu)}
-                                title="Options"
-                            >
-                                <MoreIcon />
-                            </button>
-
-                            {showMenu && (
-                                <div className={styles.dropdownMenu}>
-                                    <div
-                                        className={styles.dropdownItem}
-                                        onClick={() =>
-                                            handleMenuOption("refresh")
-                                        }
-                                    >
-                                        Refresh List
-                                    </div>
-                                    <div
-                                        className={styles.dropdownItem}
-                                        onClick={() =>
-                                            handleMenuOption("network")
-                                        }
-                                    >
-                                        Manage Connections
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                            <EditIcon />
+                        </button>
                     </div>
-                    <div className={styles.searchContainer}>
+
+                    <div className={styles.searchBar}>
                         <SearchIcon />
                         <input
                             type="text"
-                            placeholder="Search messages"
+                            placeholder="Search nodes..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                </div>
 
-                <div className={styles.conversationList}>
-                    {filteredConversations.length === 0 && searchQuery && (
-                        <p className={styles.noResults}>No results found.</p>
-                    )}
-                    {filteredConversations.map((user) => {
-                        const statusData =
-                            onlineStatuses && onlineStatuses[user._id]
-                                ? onlineStatuses[user._id]
-                                : {
-                                      isOnline: user.isOnline,
-                                      lastSeen: user.lastSeen,
-                                  };
-                        const isOnline = statusData.isOnline;
-
-                        return (
-                            <div
-                                key={user._id}
-                                className={`${styles.conversationItem} ${
-                                    activeChat?._id === user._id
-                                        ? styles.active
-                                        : ""
-                                }`}
-                                onClick={() => setActiveChat(user)}
-                            >
-                                <div className={styles.avatarContainer}>
-                                    <img
-                                        src={user.profilePicture}
-                                        alt=""
-                                        className={styles.avatar}
-                                    />
-                                    {isOnline && (
-                                        <span
-                                            className={styles.onlineDot}
-                                        ></span>
-                                    )}
-                                </div>
-                                <div className={styles.info}>
-                                    <h4>{user.name}</h4>
-                                    {isOnline ? (
-                                        <p
-                                            className={`${styles.statusText} ${styles.online}`}
-                                        >
-                                            Active now
-                                        </p>
-                                    ) : (
-                                        <p className={styles.statusText}>
-                                            Last seen{" "}
-                                            {statusData.lastSeen
-                                                ? getTimeAgo(
-                                                      statusData.lastSeen
-                                                  )
-                                                : ""}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-
-            <div className={styles.chatArea}>
-                {activeChat ? (
-                    <>
-                        <div className={styles.chatHeader}>
-                            <div className={styles.chatHeaderInfo}>
+                    <div className={styles.conversationList}>
+                        {filteredConversations.map((user) => {
+                            const isOnline =
+                                onlineStatuses &&
+                                onlineStatuses[user._id]?.isOnline;
+                            return (
                                 <div
-                                    className={styles.avatarContainer}
-                                    style={{
-                                        width: 40,
-                                        height: 40,
-                                        cursor: "pointer",
-                                    }}
+                                    key={user._id}
+                                    className={`${styles.conversationItem} ${
+                                        activeChat?._id === user._id
+                                            ? styles.activeItem
+                                            : ""
+                                    }`}
+                                    onClick={() => handleSelectChat(user)}
+                                >
+                                    <div className={styles.avatarWrapper}>
+                                        <img
+                                            src={user.profilePicture}
+                                            alt={user.name}
+                                        />
+                                        {isOnline && (
+                                            <span
+                                                className={styles.onlineDot}
+                                            ></span>
+                                        )}
+                                    </div>
+                                    <div className={styles.info}>
+                                        <h4>{user.name}</h4>
+                                        <p>{isOnline ? "Online" : "Offline"}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* --- Chat Window --- */}
+                <div
+                    className={`${styles.chatWindow} ${
+                        !showMobileChat ? styles.hiddenOnMobile : ""
+                    }`}
+                >
+                    {activeChat ? (
+                        <>
+                            <div className={styles.chatHeader}>
+                                <button
+                                    className={styles.backBtn}
+                                    onClick={handleBackToConversations}
+                                >
+                                    <BackIcon />
+                                </button>
+                                <div
+                                    className={styles.headerUserInfo}
                                     onClick={() =>
                                         router.push(
                                             `/view_profile/${activeChat.username}`
                                         )
                                     }
                                 >
-                                    <img
-                                        src={activeChat.profilePicture}
-                                        alt=""
-                                        className={styles.avatar}
-                                    />
-                                </div>
-                                <div className={styles.headerText}>
-                                    <h3
-                                        onClick={() =>
-                                            router.push(
-                                                `/view_profile/${activeChat.username}`
-                                            )
-                                        }
-                                    >
-                                        {activeChat.name}
-                                    </h3>
-                                    {onlineStatuses &&
-                                    onlineStatuses[activeChat._id]?.isOnline ? (
-                                        <span
-                                            style={{
-                                                color: "#057642",
-                                                fontSize: "0.75rem",
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            Active now
-                                        </span>
-                                    ) : (
-                                        <span className={styles.headerStatus}>
-                                            @{activeChat.username}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <div className={styles.headerActions}>
-                                <button
-                                    className={styles.iconBtn}
-                                    title="Video Call"
-                                    onClick={handleStartVideoCall}
-                                >
-                                    <VideoIcon />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className={styles.messagesList}>
-                            {messages.map((msg, index) => {
-                                const isMe =
-                                    msg.sender === auth.user?.userId?._id;
-                                return (
-                                    <div
-                                        key={index}
-                                        className={`${styles.messageBubble} ${
-                                            isMe ? styles.sent : styles.received
-                                        }`}
-                                    >
-                                        <p>{msg.message}</p>
-                                        <span className={styles.timestamp}>
-                                            {new Date(
-                                                msg.createdAt
-                                            ).toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
-                                        </span>
+                                    <div className={styles.headerAvatar}>
+                                        <img
+                                            src={activeChat.profilePicture}
+                                            alt=""
+                                        />
+                                        {onlineStatuses &&
+                                            onlineStatuses[activeChat._id]
+                                                ?.isOnline && (
+                                                <span
+                                                    className={
+                                                        styles.onlineDotSmall
+                                                    }
+                                                ></span>
+                                            )}
                                     </div>
-                                );
-                            })}
-                            <div ref={messagesEndRef} />
-                        </div>
+                                    <div className={styles.headerText}>
+                                        <h3>{activeChat.name}</h3>
+                                        <span>@{activeChat.username}</span>
+                                    </div>
+                                </div>
+                                <div className={styles.headerActions}>
+                                    <button
+                                        className={styles.actionBtn}
+                                        onClick={handleStartVideoCall}
+                                        title="Video Call"
+                                    >
+                                        <VideoIcon />
+                                    </button>
+                                </div>
+                            </div>
 
-                        <div className={styles.inputArea}>
-                            <textarea
-                                value={inputText}
-                                onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Write a message..."
-                                onKeyDown={(e) =>
-                                    e.key === "Enter" &&
-                                    !e.shiftKey &&
-                                    handleSendMessage()
-                                }
-                            />
-                            <button
-                                onClick={handleSendMessage}
-                                className={styles.sendButton}
-                                disabled={!inputText.trim()}
-                            >
-                                Send <SendIcon />
-                            </button>
+                            <div className={styles.messagesContainer}>
+                                {messages.map((msg, index) => {
+                                    const isMe =
+                                        msg.sender === auth.user?.userId?._id;
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={`${styles.messageRow} ${
+                                                isMe
+                                                    ? styles.rowRight
+                                                    : styles.rowLeft
+                                            }`}
+                                        >
+                                            <div
+                                                className={`${styles.bubble} ${
+                                                    isMe
+                                                        ? styles.bubbleMe
+                                                        : styles.bubbleOther
+                                                }`}
+                                            >
+                                                {msg.message}
+                                                <span className={styles.time}>
+                                                    {getTimeAgo(msg.createdAt)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            <div className={styles.inputArea}>
+                                <div className={styles.inputWrapper}>
+                                    <textarea
+                                        value={inputText}
+                                        onChange={(e) =>
+                                            setInputText(e.target.value)
+                                        }
+                                        placeholder="Transmit message..."
+                                        onKeyDown={(e) =>
+                                            e.key === "Enter" &&
+                                            !e.shiftKey &&
+                                            handleSendMessage()
+                                        }
+                                    />
+                                    <button
+                                        onClick={handleSendMessage}
+                                        disabled={!inputText.trim()}
+                                        className={styles.sendBtn}
+                                    >
+                                        <SendIcon />
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            <div className={styles.emptyIconWrapper}>
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={1}
+                                    width="64"
+                                    height="64"
+                                >
+                                    <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                </svg>
+                            </div>
+                            <h3>Secure Channel Ready</h3>
+                            <p>
+                                Select a node from the list to initialize
+                                encrypted communication.
+                            </p>
                         </div>
-                    </>
-                ) : (
-                    <div className={styles.emptyState}>
-                        <EmptyStateIllustration />
-                        <h3>Select a conversation</h3>
-                        <p>
-                            Choose a connection from the left list to start
-                            chatting.
-                        </p>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );
 }
 
 MessagingPage.getLayout = function getLayout(page) {
-    return (
-        <UserLayout>
-            <DashboardLayout>{page}</DashboardLayout>
-        </UserLayout>
-    );
+    return <UserLayout>{page}</UserLayout>;
 };
-
-export default MessagingPage;

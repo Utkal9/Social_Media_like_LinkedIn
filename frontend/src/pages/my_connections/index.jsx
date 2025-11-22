@@ -1,3 +1,4 @@
+// frontend/src/pages/my_connections/index.jsx
 import {
     AcceptConnection,
     getMyConnectionRequests,
@@ -13,6 +14,54 @@ import { useRouter } from "next/router";
 
 const VIDEO_CALL_URL =
     process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
+
+// --- Holo Icons ---
+const MessageIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+        <path
+            fillRule="evenodd"
+            d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.915 6.109.203.163.3.413.216.66l-.774 2.234.574-.359Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const VideoIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
+    </svg>
+);
+const CheckIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="16"
+        height="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+        />
+    </svg>
+);
+const XIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="16"
+        height="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+        />
+    </svg>
+);
 
 export default function MyConnectionsPage() {
     const dispatch = useDispatch();
@@ -43,12 +92,14 @@ export default function MyConnectionsPage() {
         const currentUser = authState.user?.userId;
         const connectionUserId = connectionUser._id;
         if (!currentUser || !connectionUserId || !socket) return;
+
         const roomId = [currentUser._id, connectionUserId].sort().join("-");
         const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
         const returnUrl = `${window.location.origin}/dashboard`;
         const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
             returnUrl
         )}`;
+
         socket.emit("start-call", {
             fromUser: currentUser,
             toUserId: connectionUserId,
@@ -67,7 +118,6 @@ export default function MyConnectionsPage() {
             : defaultStatus;
     };
 
-    // --- FIX: Safe Array Handling ---
     const receivedRequests = Array.isArray(authState.connectionRequest)
         ? authState.connectionRequest
         : [];
@@ -78,7 +128,6 @@ export default function MyConnectionsPage() {
     const pendingRequests = receivedRequests.filter(
         (connection) => connection.status_accepted === null
     );
-
     const receivedAccepted = receivedRequests.filter(
         (connection) => connection.status_accepted === true
     );
@@ -97,79 +146,86 @@ export default function MyConnectionsPage() {
     const myNetworkList = Array.from(networkMap.values());
 
     return (
-        <div className={styles.connectionsContainer}>
-            <h2>Manage Connections</h2>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <h2>Network Command</h2>
+                <p>Manage incoming signals and established connections.</p>
+            </div>
+
             <div className={styles.tabContainer}>
                 <button
-                    className={
-                        activeTab === "received" ? styles.activeTab : styles.tab
-                    }
+                    className={`${styles.tab} ${
+                        activeTab === "received" ? styles.activeTab : ""
+                    }`}
                     onClick={() => setActiveTab("received")}
                 >
-                    Received{" "}
-                    {pendingRequests.length > 0 &&
-                        `(${pendingRequests.length})`}
+                    Incoming Signals{" "}
+                    {pendingRequests.length > 0 && (
+                        <span className={styles.badge}>
+                            {pendingRequests.length}
+                        </span>
+                    )}
                 </button>
                 <button
-                    className={
-                        activeTab === "network" ? styles.activeTab : styles.tab
-                    }
+                    className={`${styles.tab} ${
+                        activeTab === "network" ? styles.activeTab : ""
+                    }`}
                     onClick={() => setActiveTab("network")}
                 >
-                    My Network{" "}
-                    {myNetworkList.length > 0 && `(${myNetworkList.length})`}
+                    Active Nodes ({myNetworkList.length})
                 </button>
             </div>
 
-            <div className={styles.tabContent}>
+            <div className={styles.contentArea}>
                 {activeTab === "received" && (
-                    <div className={styles.contentGrid}>
+                    <div className={styles.requestGrid}>
                         {pendingRequests.length === 0 ? (
-                            <p className={styles.noItemsMessage}>
-                                No pending connection requests.
-                            </p>
+                            <div className={styles.emptyState}>
+                                <p>No incoming signals detected.</p>
+                            </div>
                         ) : (
                             pendingRequests.map((req) => (
                                 <div
                                     className={styles.requestCard}
                                     key={req._id}
                                 >
-                                    <div
-                                        className={styles.avatarContainer}
-                                        onClick={() =>
-                                            router.push(
-                                                `/view_profile/${req.userId.username}`
-                                            )
-                                        }
-                                        style={{ cursor: "pointer" }}
-                                    >
-                                        <img
-                                            src={req.userId.profilePicture}
-                                            alt=""
-                                            className={styles.profilePicture}
-                                        />
-                                        {isUserOnline(
-                                            req.userId._id,
-                                            req.userId.isOnline
-                                        ) && (
-                                            <span
-                                                className={
-                                                    styles.onlineDotLarge
-                                                }
-                                            ></span>
-                                        )}
-                                    </div>
-                                    <div className={styles.userInfo}>
-                                        <h3
+                                    <div className={styles.cardHeader}>
+                                        <div
+                                            className={styles.avatarContainer}
                                             onClick={() =>
                                                 router.push(
                                                     `/view_profile/${req.userId.username}`
                                                 )
                                             }
                                         >
-                                            {req.userId.name}
-                                        </h3>
-                                        <p>@{req.userId.username}</p>
+                                            <img
+                                                src={req.userId.profilePicture}
+                                                alt=""
+                                                className={
+                                                    styles.profilePicture
+                                                }
+                                            />
+                                            {isUserOnline(
+                                                req.userId._id,
+                                                req.userId.isOnline
+                                            ) && (
+                                                <span
+                                                    className={styles.onlineDot}
+                                                ></span>
+                                            )}
+                                        </div>
+                                        <div className={styles.userInfo}>
+                                            <h3
+                                                onClick={() =>
+                                                    router.push(
+                                                        `/view_profile/${req.userId.username}`
+                                                    )
+                                                }
+                                            >
+                                                {req.userId.name}
+                                            </h3>
+                                            <p>@{req.userId.username}</p>
+                                        </div>
                                     </div>
                                     <div className={styles.buttonGroup}>
                                         <button
@@ -182,7 +238,7 @@ export default function MyConnectionsPage() {
                                             }}
                                             className={styles.declineButton}
                                         >
-                                            Decline
+                                            <XIcon /> Ignore
                                         </button>
                                         <button
                                             onClick={(e) => {
@@ -194,7 +250,7 @@ export default function MyConnectionsPage() {
                                             }}
                                             className={styles.acceptButton}
                                         >
-                                            Accept
+                                            <CheckIcon /> Connect
                                         </button>
                                     </div>
                                 </div>
@@ -204,24 +260,39 @@ export default function MyConnectionsPage() {
                 )}
 
                 {activeTab === "network" && (
-                    <div className={styles.listGrid}>
+                    <div className={styles.networkList}>
                         {myNetworkList.length === 0 ? (
-                            <p className={styles.noItemsMessage}>
-                                Your network is empty. Go discover people!
-                            </p>
+                            <div className={styles.emptyState}>
+                                <p>
+                                    Network empty. Initialize new connections in
+                                    Discover.
+                                </p>
+                                <button
+                                    className={styles.discoverBtn}
+                                    onClick={() => router.push("/discover")}
+                                >
+                                    Go to Discover
+                                </button>
+                            </div>
                         ) : (
                             myNetworkList.map((user) => (
                                 <div
-                                    className={styles.networkCard}
+                                    className={styles.networkRow}
                                     key={user._id}
-                                    onClick={() =>
-                                        router.push(
-                                            `/view_profile/${user.username}`
-                                        )
-                                    }
                                 >
-                                    <div className={styles.networkCardInfo}>
-                                        <div className={styles.avatarContainer}>
+                                    <div
+                                        className={styles.rowLeft}
+                                        onClick={() =>
+                                            router.push(
+                                                `/view_profile/${user.username}`
+                                            )
+                                        }
+                                    >
+                                        <div
+                                            className={
+                                                styles.avatarContainerSmall
+                                            }
+                                        >
                                             <img
                                                 src={user.profilePicture}
                                                 alt=""
@@ -240,16 +311,14 @@ export default function MyConnectionsPage() {
                                                 ></span>
                                             )}
                                         </div>
-                                        <div className={styles.userInfo}>
+                                        <div className={styles.rowInfo}>
                                             <h3>{user.name}</h3>
                                             <p>@{user.username}</p>
                                         </div>
                                     </div>
-                                    <div className={styles.actionsGroup}>
+                                    <div className={styles.rowActions}>
                                         <button
-                                            className={
-                                                styles.actionBtnSecondary
-                                            }
+                                            className={styles.actionBtn}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleMessageUser(
@@ -257,7 +326,7 @@ export default function MyConnectionsPage() {
                                                 );
                                             }}
                                         >
-                                            Message
+                                            <MessageIcon />
                                         </button>
                                         <button
                                             className={styles.actionBtnPrimary}
@@ -266,7 +335,7 @@ export default function MyConnectionsPage() {
                                                 handleStartOneOnOneCall(user);
                                             }}
                                         >
-                                            Call
+                                            <VideoIcon />
                                         </button>
                                     </div>
                                 </div>
@@ -278,6 +347,7 @@ export default function MyConnectionsPage() {
         </div>
     );
 }
+
 MyConnectionsPage.getLayout = function getLayout(page) {
     return (
         <UserLayout>

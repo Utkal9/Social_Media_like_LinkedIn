@@ -10,13 +10,133 @@ import {
     getConnectionsRequest,
     getMyConnectionRequests,
     sendConnectionRequest,
-    getAboutUser,
 } from "@/config/redux/action/authAction";
 import { useSocket } from "@/context/SocketContext";
 
 const DEFAULT_BG =
     "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80";
 
+// --- Holo Icons ---
+const MessageIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.915 6.109.203.163.3.413.216.66l-.774 2.234.574-.359Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const ConnectIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="20"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3.75 15a6.75 6.75 0 0113.5 0v.75a8.625 8.625 0 01-17.25 0v-.75z"
+        />
+    </svg>
+);
+const CheckIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+        />
+    </svg>
+);
+const ClockIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+    </svg>
+);
+const LinkIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+        />
+    </svg>
+);
+const ExternalIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="14"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+        />
+    </svg>
+);
+const CloseIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="24"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+        />
+    </svg>
+);
+const PhoneIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16">
+        <path d="M10.5 18.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" />
+        <path
+            fillRule="evenodd"
+            d="M8.625.75A3.375 3.375 0 0 0 5.25 4.125v15.75a3.375 3.375 0 0 0 3.375 3.375h6.75a3.375 3.375 0 0 0 3.375-3.375V4.125A3.375 3.375 0 0 0 15.375.75h-6.75ZM7.5 4.125C7.5 3.504 8.004 3 8.625 3h6.75c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-6.75A1.125 1.125 0 0 1 7.5 19.875V4.125Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const CodeIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16">
+        <path
+            fillRule="evenodd"
+            d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm14.25 6a.75.75 0 0 1-.22.53l-2.25 2.25a.75.75 0 1 1-1.06-1.06L15.44 12l-1.72-1.72a.75.75 0 1 1 1.06-1.06l2.25 2.25c.141.14.22.331.22.53Zm-10.28 0a.75.75 0 0 1 .22-.53l2.25-2.25a.75.75 0 1 1 1.06 1.06L8.56 12l1.72 1.72a.75.75 0 1 1-1.06 1.06l-2.25-2.25a.75.75 0 0 1-.22-.53Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+
+// --- Helper: Video Detection ---
 const isVideo = (fileType, mediaUrl) => {
     if (fileType && fileType.startsWith("video/")) return true;
     if (mediaUrl) {
@@ -26,88 +146,15 @@ const isVideo = (fileType, mediaUrl) => {
     return false;
 };
 
-// --- Icons ---
-const MessageIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
-        />
-    </svg>
-);
-const CloseIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={2}
-        stroke="currentColor"
-        width="20"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18L18 6M6 6l12 12"
-        />
-    </svg>
-);
-// Contact Icons
-const PhoneIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-    >
-        <path d="M10.5 18.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" />
-        <path
-            fillRule="evenodd"
-            d="M8.625.75A3.375 3.375 0 0 0 5.25 4.125v15.75a3.375 3.375 0 0 0 3.375 3.375h6.75a3.375 3.375 0 0 0 3.375-3.375V4.125A3.375 3.375 0 0 0 15.375.75h-6.75ZM7.5 4.125C7.5 3.504 8.004 3 8.625 3h6.75c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-6.75A1.125 1.125 0 0 1 7.5 19.875V4.125Z"
-            clipRule="evenodd"
-        />
-    </svg>
-);
-const LinkIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-    >
-        <path
-            fillRule="evenodd"
-            d="M19.902 4.098a3.75 3.75 0 0 0-5.304 0l-4.5 4.5a3.75 3.75 0 0 0 1.035 6.037.75.75 0 0 1-.646 1.353 5.25 5.25 0 0 1-1.449-8.45l4.5-4.5a5.25 5.25 0 1 1 7.424 7.424l-1.757 1.757a.75.75 0 1 1-1.06-1.06l1.757-1.757a3.75 3.75 0 0 0 0-5.304Zm-7.389 4.291a3.75 3.75 0 0 0 5.304 0l4.5 4.5a3.75 3.75 0 0 0-1.035-6.037.75.75 0 0 1 .646-1.353 5.25 5.25 0 0 1 1.449 8.45l-4.5 4.5a5.25 5.25 0 1 1-7.424-7.424l1.757-1.757a.75.75 0 1 1 1.06 1.06l-1.757-1.757a3.75 3.75 0 0 0 0 5.304Z"
-            clipRule="evenodd"
-        />
-    </svg>
-);
-const CodeIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-    >
-        <path
-            fillRule="evenodd"
-            d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6Zm14.25 6a.75.75 0 0 1-.22.53l-2.25 2.25a.75.75 0 1 1-1.06-1.06L15.44 12l-1.72-1.72a.75.75 0 1 1 1.06-1.06l2.25 2.25c.141.14.22.331.22.53Zm-10.28 0a.75.75 0 0 1 .22-.53l2.25-2.25a.75.75 0 1 1 1.06 1.06L8.56 12l1.72 1.72a.75.75 0 1 1-1.06 1.06l-2.25-2.25a.75.75 0 0 1-.22-.53Z"
-            clipRule="evenodd"
-        />
-    </svg>
-);
-
+// --- Helper: Truncated Text ---
 const TruncatedText = ({ content, postId }) => {
     const router = useRouter();
-    if (content.length <= 100)
-        return <p className={styles.postCardBody}>{content}</p>;
+    const maxLength = 60; // Shorter length for sidebar
+    if (content.length <= maxLength)
+        return <p className={styles.postBody}>{content}</p>;
     return (
-        <p className={styles.postCardBody}>
-            {content.substring(0, 100)}...
+        <p className={styles.postBody}>
+            {content.substring(0, maxLength)}...
             <span
                 className={styles.readMore}
                 onClick={(e) => {
@@ -123,8 +170,8 @@ const TruncatedText = ({ content, postId }) => {
 
 export default function ViewProfilePage({ userProfile }) {
     const router = useRouter();
-    const postReducer = useSelector((state) => state.postReducer);
     const dispatch = useDispatch();
+    const postReducer = useSelector((state) => state.postReducer);
     const authState = useSelector((state) => state.auth);
     const { onlineStatuses } = useSocket() || {};
 
@@ -141,10 +188,12 @@ export default function ViewProfilePage({ userProfile }) {
     }, [userProfile]);
 
     useEffect(() => {
-        let post = postReducer.posts.filter((post) => {
-            return post.userId.username === router.query.username;
-        });
-        setUserPosts(post);
+        if (postReducer.posts.length > 0) {
+            const posts = postReducer.posts.filter(
+                (post) => post.userId.username === router.query.username
+            );
+            setUserPosts(posts);
+        }
     }, [postReducer.posts, router.query.username]);
 
     useEffect(() => {
@@ -156,25 +205,27 @@ export default function ViewProfilePage({ userProfile }) {
             ? authState.connections
             : [];
 
-        const isConnectedRec = requestsReceived.some(
-            (req) =>
-                req.userId?._id === localProfile.userId._id &&
-                req.status_accepted === true
-        );
-        const isConnectedSent = requestsSent.some(
-            (req) =>
-                req.connectionId?._id === localProfile.userId._id &&
-                req.status_accepted === true
-        );
-        if (isConnectedRec || isConnectedSent) {
+        const isConnected =
+            requestsReceived.some(
+                (r) =>
+                    r.userId?._id === localProfile.userId._id &&
+                    r.status_accepted
+            ) ||
+            requestsSent.some(
+                (r) =>
+                    r.connectionId?._id === localProfile.userId._id &&
+                    r.status_accepted
+            );
+
+        if (isConnected) {
             setConnectStatus("Connected");
             return;
         }
 
         const isPending = requestsSent.some(
-            (req) =>
-                req.connectionId?._id === localProfile.userId._id &&
-                req.status_accepted === null
+            (r) =>
+                r.connectionId?._id === localProfile.userId._id &&
+                r.status_accepted === null
         );
         if (isPending) {
             setConnectStatus("Pending");
@@ -182,12 +233,12 @@ export default function ViewProfilePage({ userProfile }) {
         }
 
         const hasRequested = requestsReceived.some(
-            (req) =>
-                req.userId?._id === localProfile.userId._id &&
-                req.status_accepted === null
+            (r) =>
+                r.userId?._id === localProfile.userId._id &&
+                r.status_accepted === null
         );
         if (hasRequested) {
-            setConnectStatus("Pending");
+            setConnectStatus("Accept");
             return;
         }
 
@@ -228,418 +279,397 @@ export default function ViewProfilePage({ userProfile }) {
             : localProfile.userId.isOnline;
 
     return (
-        <div className={styles.container}>
-            <div className={styles.profileHeaderCard}>
+        <div className={styles.profilePage}>
+            {/* --- Header Card --- */}
+            <div className={styles.headerCard}>
                 <div
-                    className={styles.backDropContainer}
+                    className={styles.coverImage}
                     style={{
                         backgroundImage: `url("${
                             localProfile.userId.backgroundPicture || DEFAULT_BG
                         }")`,
                     }}
-                >
-                    <div className={styles.headerActionsContainer}>
-                        {!isOwnProfile && (
-                            <button
-                                className={styles.headerActionBtn}
-                                onClick={handleMessage}
-                                title="Message"
-                            >
-                                <MessageIcon />
-                            </button>
-                        )}
-                        {!isOwnProfile && (
-                            <button
-                                onClick={handleConnect}
-                                className={`${styles.connectBtn} ${
-                                    styles[connectStatus.toLowerCase()]
-                                }`}
-                                disabled={connectStatus !== "Connect"}
-                            >
-                                {connectStatus}
-                            </button>
-                        )}
+                ></div>
+
+                <div className={styles.headerContent}>
+                    <div className={styles.avatarContainer}>
+                        <img
+                            src={localProfile.userId.profilePicture}
+                            alt="Profile"
+                            className={styles.avatarImg}
+                        />
+                        {isOnline && <span className={styles.onlineDot}></span>}
                     </div>
-                    <div className={styles.avatarSection}>
-                        <div className={styles.profilePicWrapper}>
-                            <img
-                                src={localProfile.userId.profilePicture}
-                                alt="Profile"
-                                className={styles.profilePic}
-                            />
-                            {isOnline && (
-                                <span className={styles.onlineDot}></span>
+
+                    <div className={styles.identitySection}>
+                        <div className={styles.identityTop}>
+                            <div>
+                                <h1 className={styles.userName}>
+                                    {localProfile.userId.name}
+                                </h1>
+                                <p className={styles.userHeadline}>
+                                    {localProfile.currentPost || "No Headline"}
+                                </p>
+                            </div>
+                            {!isOwnProfile && (
+                                <div className={styles.actionButtons}>
+                                    <button
+                                        onClick={handleMessage}
+                                        className={styles.msgBtn}
+                                        title="Message"
+                                    >
+                                        <MessageIcon />
+                                    </button>
+                                    <button
+                                        onClick={handleConnect}
+                                        className={`${styles.connectBtn} ${
+                                            styles[connectStatus.toLowerCase()]
+                                        }`}
+                                        disabled={
+                                            connectStatus !== "Connect" &&
+                                            connectStatus !== "Accept"
+                                        }
+                                    >
+                                        {connectStatus === "Connect" && (
+                                            <>
+                                                <ConnectIcon /> Connect
+                                            </>
+                                        )}
+                                        {connectStatus === "Pending" && (
+                                            <>
+                                                <ClockIcon /> Pending
+                                            </>
+                                        )}
+                                        {connectStatus === "Connected" && (
+                                            <>
+                                                <CheckIcon /> Connected
+                                            </>
+                                        )}
+                                        {connectStatus === "Accept" &&
+                                            "Accept Request"}
+                                    </button>
+                                </div>
                             )}
                         </div>
-                    </div>
-                </div>
 
-                <div className={styles.profileInfoSection}>
-                    <div className={styles.mainInfo}>
-                        <h2 className={styles.nameDisplay}>
-                            {localProfile.userId.name}
-                        </h2>
-                        <p className={styles.usernameDisplay}>
-                            @{localProfile.userId.username}
-                        </p>
-
-                        <div className={styles.metaInfo}>
+                        <div className={styles.metaData}>
+                            <span>@{localProfile.userId.username}</span>
+                            <span className={styles.dot}>•</span>
                             <span
                                 className={styles.connectionCount}
                                 onClick={() => setShowConnectionsModal(true)}
                             >
                                 {localProfile.connectionCount || 0} connections
                             </span>
-                            <span>•</span>
-                            <span>{localProfile.userId.email}</span>
                         </div>
 
-                        {/* Contact Grid */}
                         <div className={styles.contactGrid}>
                             {localProfile.phoneNumber && (
-                                <div className={styles.contactItem}>
+                                <div className={styles.contactPill}>
                                     <PhoneIcon /> {localProfile.phoneNumber}
                                 </div>
                             )}
                             {localProfile.linkedin && (
-                                <div className={styles.contactItem}>
-                                    <LinkIcon />{" "}
-                                    <a
-                                        href={localProfile.linkedin}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        LinkedIn
-                                    </a>
-                                </div>
+                                <a
+                                    href={localProfile.linkedin}
+                                    target="_blank"
+                                    className={styles.contactPill}
+                                >
+                                    <LinkIcon /> LinkedIn
+                                </a>
                             )}
                             {localProfile.github && (
-                                <div className={styles.contactItem}>
-                                    <CodeIcon />{" "}
-                                    <a
-                                        href={localProfile.github}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        GitHub
-                                    </a>
-                                </div>
+                                <a
+                                    href={localProfile.github}
+                                    target="_blank"
+                                    className={styles.contactPill}
+                                >
+                                    <CodeIcon /> GitHub
+                                </a>
                             )}
                             {localProfile.leetcode && (
-                                <div className={styles.contactItem}>
-                                    <CodeIcon />{" "}
-                                    <a
-                                        href={localProfile.leetcode}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        LeetCode
-                                    </a>
-                                </div>
+                                <a
+                                    href={localProfile.leetcode}
+                                    target="_blank"
+                                    className={styles.contactPill}
+                                >
+                                    <CodeIcon /> LeetCode
+                                </a>
                             )}
                         </div>
 
-                        <p className={styles.bioDisplay}>{localProfile.bio}</p>
+                        {localProfile.bio && (
+                            <div className={styles.bioBox}>
+                                {localProfile.bio}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* --- RESUME SKILLS (Read Only) --- */}
-            {(localProfile.skillLanguages ||
-                localProfile.skillCloudDevOps ||
-                localProfile.skillFrameworks ||
-                localProfile.skillTools ||
-                localProfile.skillSoft) && (
-                <div className={styles.sectionCard}>
-                    <div className={styles.sectionHeader}>
-                        <h4>Technical Skills</h4>
-                    </div>
-                    <div className={styles.resumeSkillsGrid}>
-                        {localProfile.skillLanguages && (
-                            <div className={styles.skillRow}>
-                                <span className={styles.skillLabel}>
-                                    Languages:
-                                </span>
-                                <span className={styles.skillValue}>
-                                    {localProfile.skillLanguages}
-                                </span>
-                            </div>
-                        )}
-                        {localProfile.skillCloudDevOps && (
-                            <div className={styles.skillRow}>
-                                <span className={styles.skillLabel}>
-                                    Cloud/DevOps:
-                                </span>
-                                <span className={styles.skillValue}>
-                                    {localProfile.skillCloudDevOps}
-                                </span>
-                            </div>
-                        )}
-                        {localProfile.skillFrameworks && (
-                            <div className={styles.skillRow}>
-                                <span className={styles.skillLabel}>
-                                    Frameworks:
-                                </span>
-                                <span className={styles.skillValue}>
-                                    {localProfile.skillFrameworks}
-                                </span>
-                            </div>
-                        )}
-                        {localProfile.skillTools && (
-                            <div className={styles.skillRow}>
-                                <span className={styles.skillLabel}>
-                                    Tools:
-                                </span>
-                                <span className={styles.skillValue}>
-                                    {localProfile.skillTools}
-                                </span>
-                            </div>
-                        )}
-                        {localProfile.skillSoft && (
-                            <div className={styles.skillRow}>
-                                <span className={styles.skillLabel}>
-                                    Soft Skills:
-                                </span>
-                                <span className={styles.skillValue}>
-                                    {localProfile.skillSoft}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* General Skills */}
-            {localProfile.skills && localProfile.skills.length > 0 && (
-                <div className={styles.sectionCard}>
-                    <div className={styles.sectionHeader}>
-                        <h4>Skills</h4>
-                    </div>
-                    <div className={styles.skillsContainer}>
-                        {localProfile.skills.map((skill, idx) => (
-                            <span key={idx} className={styles.skillChip}>
-                                {skill}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Work History */}
-            <div className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                    <h4>Experience</h4>
-                </div>
-                <div className={styles.listContainer}>
-                    {localProfile.pastWork.length > 0 ? (
-                        localProfile.pastWork.map((work, index) => (
-                            <div key={index} className={styles.listItem}>
-                                <div className={styles.listInfo}>
-                                    <h5>{work.position}</h5>
-                                    <p>{work.company}</p>
-                                    <span>{work.years}</span>
-                                    <div className={styles.description}>
-                                        {work.description}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p style={{ color: "#777" }}>No experience listed.</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Education */}
-            <div className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                    <h4>Education</h4>
-                </div>
-                <div className={styles.listContainer}>
-                    {localProfile.education.length > 0 ? (
-                        localProfile.education.map((edu, index) => (
-                            <div key={index} className={styles.listItem}>
-                                <div className={styles.listInfo}>
-                                    <h5>{edu.school}</h5>
-                                    <p>
-                                        {edu.degree}{" "}
-                                        {edu.fieldOfStudy
-                                            ? `, ${edu.fieldOfStudy}`
-                                            : ""}
-                                    </p>
-                                    <span>{edu.years}</span>
-                                    {edu.location && (
-                                        <span style={{ color: "#444" }}>
-                                            {edu.location}
-                                        </span>
-                                    )}
-                                    {edu.grade && (
-                                        <span>Grade: {edu.grade}</span>
-                                    )}
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p style={{ color: "#777" }}>No education listed.</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Projects */}
-            <div className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                    <h4>Projects</h4>
-                </div>
-                <div className={styles.listContainer}>
-                    {localProfile.projects &&
-                    localProfile.projects.length > 0 ? (
-                        localProfile.projects.map((proj, index) => (
-                            <div key={index} className={styles.listItem}>
-                                <div className={styles.listInfo}>
-                                    <h5>{proj.title}</h5>
-                                    <span>{proj.duration}</span>
-                                    {proj.link && (
-                                        <a
-                                            href={proj.link}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            style={{ color: "#0a66c2" }}
-                                        >
-                                            View Project
-                                        </a>
-                                    )}
+            <div className={styles.gridLayout}>
+                {/* --- Left Column: Main Info (Wide) --- */}
+                <div className={styles.mainColumn}>
+                    {/* Experience */}
+                    <div className={styles.dataCard}>
+                        <h4 className={styles.cardTitle}>Experience</h4>
+                        <div className={styles.timeline}>
+                            {localProfile.pastWork.length > 0 ? (
+                                localProfile.pastWork.map((work, i) => (
                                     <div
-                                        className={styles.description}
-                                        style={{ marginTop: "5px" }}
+                                        key={i}
+                                        className={styles.timelineItem}
                                     >
-                                        {proj.description}
+                                        <div className={styles.timelineContent}>
+                                            <h4>
+                                                {work.position}{" "}
+                                                <span>@ {work.company}</span>
+                                            </h4>
+                                            <small>{work.years}</small>
+                                            <p>{work.description}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p style={{ color: "#777" }}>No projects listed.</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Certificates & Achievements */}
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "1.5rem",
-                }}
-            >
-                <div className={styles.sectionCard}>
-                    <div className={styles.sectionHeader}>
-                        <h4>Certificates</h4>
+                                ))
+                            ) : (
+                                <p className={styles.emptyText}>
+                                    No experience listed.
+                                </p>
+                            )}
+                        </div>
                     </div>
-                    <div className={styles.listContainer}>
-                        {localProfile.certificates &&
-                        localProfile.certificates.length > 0 ? (
-                            localProfile.certificates.map((cert, index) => (
-                                <div key={index} className={styles.listItem}>
-                                    <div className={styles.listInfo}>
-                                        <h5>{cert.name}</h5>
-                                        <span>{cert.date}</span>
-                                        {cert.link && (
+
+                    {/* Projects */}
+                    <div className={styles.dataCard}>
+                        <h4 className={styles.cardTitle}>Projects</h4>
+                        <div className={styles.projectList}>
+                            {localProfile.projects &&
+                            localProfile.projects.length > 0 ? (
+                                localProfile.projects.map((proj, i) => (
+                                    <div key={i} className={styles.projectItem}>
+                                        <div className={styles.projectHeader}>
+                                            <h5>{proj.title}</h5>
+                                            <span>{proj.duration}</span>
+                                        </div>
+                                        <p>{proj.description}</p>
+                                        {proj.link && (
                                             <a
-                                                href={cert.link}
+                                                href={proj.link}
                                                 target="_blank"
-                                                rel="noreferrer"
-                                                style={{ color: "#0a66c2" }}
+                                                className={styles.projectLink}
                                             >
-                                                View Credential
+                                                <LinkIcon /> Code
                                             </a>
                                         )}
                                     </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p style={{ color: "#777" }}>No certificates.</p>
-                        )}
+                                ))
+                            ) : (
+                                <p className={styles.emptyText}>
+                                    No projects listed.
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                <div className={styles.sectionCard}>
-                    <div className={styles.sectionHeader}>
-                        <h4>Achievements</h4>
+                    {/* Education */}
+                    <div className={styles.dataCard}>
+                        <h4 className={styles.cardTitle}>Education</h4>
+                        <div className={styles.timeline}>
+                            {localProfile.education.length > 0 ? (
+                                localProfile.education.map((edu, i) => (
+                                    <div
+                                        key={i}
+                                        className={styles.timelineItem}
+                                    >
+                                        <div className={styles.timelineContent}>
+                                            <h4>{edu.school}</h4>
+                                            <p>
+                                                {edu.degree}, {edu.fieldOfStudy}
+                                            </p>
+                                            <small>{edu.years}</small>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className={styles.emptyText}>
+                                    No education listed.
+                                </p>
+                            )}
+                        </div>
                     </div>
-                    <div className={styles.listContainer}>
-                        {localProfile.achievements &&
-                        localProfile.achievements.length > 0 ? (
-                            localProfile.achievements.map((ach, index) => (
-                                <div key={index} className={styles.listItem}>
-                                    <div className={styles.listInfo}>
+
+                    {/* Certificates & Achievements */}
+                    <div className={styles.splitRow}>
+                        <div className={styles.dataCard}>
+                            <h4 className={styles.cardTitle}>Certificates</h4>
+                            {localProfile.certificates &&
+                            localProfile.certificates.length > 0 ? (
+                                localProfile.certificates.map((cert, i) => (
+                                    <div key={i} className={styles.miniItem}>
+                                        <h5>{cert.name}</h5>
+                                        <div className={styles.miniItemMeta}>
+                                            <small>{cert.date}</small>
+                                            {cert.link && (
+                                                <a
+                                                    href={cert.link}
+                                                    target="_blank"
+                                                    className={styles.viewLink}
+                                                >
+                                                    View <ExternalIcon />
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className={styles.emptyText}>None.</p>
+                            )}
+                        </div>
+                        <div className={styles.dataCard}>
+                            <h4 className={styles.cardTitle}>Achievements</h4>
+                            {localProfile.achievements &&
+                            localProfile.achievements.length > 0 ? (
+                                localProfile.achievements.map((ach, i) => (
+                                    <div key={i} className={styles.miniItem}>
                                         <h5>{ach.title}</h5>
-                                        <span>{ach.date}</span>
-                                        <p className={styles.description}>
+                                        <small>{ach.date}</small>
+                                        <p
+                                            style={{
+                                                fontSize: "0.85rem",
+                                                color: "#aaa",
+                                                marginTop: "4px",
+                                            }}
+                                        >
                                             {ach.description}
                                         </p>
                                     </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p style={{ color: "#777" }}>No achievements.</p>
-                        )}
+                                ))
+                            ) : (
+                                <p className={styles.emptyText}>None.</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- Right Column: Skills + Recent Activity (Sidebar) --- */}
+                <div className={styles.sideColumn}>
+                    <div className={styles.dataCard}>
+                        <h4 className={styles.cardTitle}>Tech Stack</h4>
+                        <div className={styles.stackList}>
+                            {[
+                                "skillLanguages",
+                                "skillCloudDevOps",
+                                "skillFrameworks",
+                                "skillTools",
+                                "skillSoft",
+                            ].map((field) => {
+                                const labels = {
+                                    skillLanguages: "Languages",
+                                    skillCloudDevOps: "Cloud/DevOps",
+                                    skillFrameworks: "Frameworks",
+                                    skillTools: "Tools",
+                                    skillSoft: "Soft Skills",
+                                };
+                                if (!localProfile[field]) return null;
+                                return (
+                                    <div
+                                        key={field}
+                                        className={styles.stackItem}
+                                    >
+                                        <label>{labels[field]}</label>
+                                        <p>{localProfile[field]}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {localProfile.skills && localProfile.skills.length > 0 && (
+                        <div className={styles.dataCard}>
+                            <h4 className={styles.cardTitle}>General Skills</h4>
+                            <div className={styles.skillsWrapper}>
+                                {localProfile.skills.map((skill, i) => (
+                                    <span key={i} className={styles.skillTag}>
+                                        {skill}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Recent Activity (Moved to Side Column) */}
+                    <div className={styles.dataCard}>
+                        <h4 className={styles.cardTitle}>Recent Activity</h4>
+                        <div className={styles.activityGrid}>
+                            {userPosts.length > 0 ? (
+                                <>
+                                    {userPosts.slice(0, 4).map((post) => (
+                                        <div
+                                            key={post._id}
+                                            className={styles.activityCard}
+                                            onClick={() =>
+                                                router.push(`/post/${post._id}`)
+                                            }
+                                        >
+                                            {post.media ? (
+                                                <div
+                                                    className={
+                                                        styles.mediaPreview
+                                                    }
+                                                >
+                                                    {post.fileType &&
+                                                    post.fileType.startsWith(
+                                                        "video"
+                                                    ) ? (
+                                                        <video
+                                                            src={post.media}
+                                                            muted
+                                                            className={
+                                                                styles.mediaImg
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={post.media}
+                                                            alt="Post"
+                                                            className={
+                                                                styles.mediaImg
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
+                                            ) : null}
+                                            <div className={styles.textPreview}>
+                                                <TruncatedText
+                                                    content={post.body}
+                                                    postId={post._id}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {userPosts.length > 4 && (
+                                        <button
+                                            className={styles.viewAllBtn}
+                                            onClick={() =>
+                                                router.push(
+                                                    `/dashboard?username=${localProfile.userId.username}`
+                                                )
+                                            }
+                                        >
+                                            View All Activity
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <p className={styles.emptyText}>
+                                    No recent activity.
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                    <h4>Recent Activity</h4>
-                </div>
-                <div className={styles.activityContainer}>
-                    {userPosts.length > 0 ? (
-                        userPosts.map((post) => (
-                            <div
-                                className={styles.postCard}
-                                key={post._id}
-                                onClick={() => router.push(`/post/${post._id}`)}
-                            >
-                                <div className={styles.mediaPreview}>
-                                    {post.media ? (
-                                        isVideo(post.fileType, post.media) ? (
-                                            <video
-                                                src={post.media}
-                                                className={styles.postCardImage}
-                                                muted
-                                            />
-                                        ) : (
-                                            <img
-                                                src={post.media}
-                                                alt="Post"
-                                                className={styles.postCardImage}
-                                            />
-                                        )
-                                    ) : (
-                                        <div className={styles.textOnlyPreview}>
-                                            <p>
-                                                {post.body.substring(0, 80)}...
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles.postCardFooter}>
-                                    <TruncatedText
-                                        content={post.body}
-                                        postId={post._id}
-                                    />
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p style={{ color: "#777", fontStyle: "italic" }}>
-                            No recent activity.
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            {/* Connections Modal */}
+            {/* --- Connections Modal --- */}
             {showConnectionsModal && (
                 <div
                     className={styles.modalOverlay}
