@@ -1,3 +1,4 @@
+// frontend/src/context/SocketContext.jsx
 import React, {
     createContext,
     useContext,
@@ -14,7 +15,7 @@ export const useSocket = () => {
     return useContext(SocketContext);
 };
 
-// This component will show the pop-up
+// --- Incoming Call Modal ---
 const IncomingCallHandler = ({ socket }) => {
     const [call, setCall] = useState(null);
 
@@ -43,20 +44,24 @@ const IncomingCallHandler = ({ socket }) => {
 
     return (
         <div style={styles.modalOverlay}>
-            <div style={styles.modalContent}>
-                <img
-                    src={call.fromUser.profilePicture}
-                    alt="caller"
-                    style={styles.profilePic}
-                />
-                <h3>{call.fromUser.name} is calling...</h3>
-                <p>@{call.fromUser.username}</p>
+            <div style={styles.holoCard}>
+                <div style={styles.avatarWrapper}>
+                    <img
+                        src={call.fromUser.profilePicture}
+                        alt="caller"
+                        style={styles.profilePic}
+                    />
+                    <div style={styles.pulseRing}></div>
+                </div>
+                <h3 style={styles.callerName}>{call.fromUser.name}</h3>
+                <p style={styles.callStatus}>Incoming Secure Transmission...</p>
+
                 <div style={styles.buttonGroup}>
                     <button onClick={declineCall} style={styles.declineButton}>
                         Decline
                     </button>
                     <button onClick={joinCall} style={styles.acceptButton}>
-                        Accept
+                        Accept Uplink
                     </button>
                 </div>
             </div>
@@ -123,7 +128,7 @@ export const SocketProvider = ({ children }) => {
     );
 };
 
-// --- Styles for the modal ---
+// --- Holo Styles ---
 const styles = {
     modalOverlay: {
         position: "fixed",
@@ -131,51 +136,117 @@ const styles = {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1000,
-        fontFamily: "'Inter', sans-serif",
+        zIndex: 9999,
+        backdropFilter: "blur(8px)",
+        animation: "fadeIn 0.3s ease-out",
     },
-    modalContent: {
-        backgroundColor: "white",
-        padding: "24px",
-        borderRadius: "12px",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+    holoCard: {
+        backgroundColor: "#0b0f2a",
+        border: "1px solid rgba(139, 92, 246, 0.5)",
+        padding: "30px",
+        borderRadius: "20px",
+        boxShadow: "0 0 60px rgba(139, 92, 246, 0.4)",
         textAlign: "center",
         width: "320px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        position: "relative",
+        overflow: "hidden",
+    },
+    avatarWrapper: {
+        position: "relative",
+        marginBottom: "20px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
     },
     profilePic: {
-        width: "80px",
-        height: "80px",
+        width: "100px",
+        height: "100px",
         borderRadius: "50%",
         objectFit: "cover",
-        marginBottom: "12px",
+        border: "3px solid #0fffc6",
+        zIndex: 2,
+        background: "#000",
+    },
+    pulseRing: {
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        borderRadius: "50%",
+        border: "2px solid #0fffc6",
+        animation: "pulseRing 2s infinite",
+        opacity: 0.5,
+        zIndex: 1,
+    },
+    callerName: {
+        margin: "0 0 5px 0",
+        color: "#fff",
+        fontFamily: "'Orbitron', sans-serif",
+        fontSize: "1.2rem",
+        fontWeight: "600",
+        letterSpacing: "1px",
+    },
+    callStatus: {
+        margin: "0 0 25px 0",
+        color: "#0fffc6",
+        fontSize: "0.9rem",
+        fontFamily: "monospace",
+        animation: "blink 1.5s infinite",
     },
     buttonGroup: {
-        marginTop: "24px",
         display: "flex",
-        justifyContent: "space-between",
+        gap: "15px",
+        width: "100%",
     },
     acceptButton: {
-        backgroundColor: "#28a745",
-        color: "white",
+        flex: 1,
+        background: "linear-gradient(135deg, #0fffc6, #059669)",
+        color: "#000",
         border: "none",
-        padding: "10px 20px",
-        borderRadius: "20px",
+        padding: "12px",
+        borderRadius: "30px",
         cursor: "pointer",
-        fontSize: "16px",
-        fontWeight: 600,
+        fontSize: "0.95rem",
+        fontWeight: "700",
+        boxShadow: "0 0 15px rgba(15, 255, 198, 0.4)",
+        transition: "transform 0.2s",
     },
     declineButton: {
-        backgroundColor: "#dc3545",
-        color: "white",
-        border: "none",
-        padding: "10px 20px",
-        borderRadius: "20px",
+        flex: 1,
+        background: "transparent",
+        color: "#ff4d7d",
+        border: "1px solid #ff4d7d",
+        padding: "12px",
+        borderRadius: "30px",
         cursor: "pointer",
-        fontSize: "16px",
-        fontWeight: 600,
+        fontSize: "0.95rem",
+        fontWeight: "600",
+        transition: "background 0.2s",
     },
 };
+
+// Add keyframes dynamically
+if (typeof document !== "undefined") {
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+        @keyframes pulseRing {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+}
