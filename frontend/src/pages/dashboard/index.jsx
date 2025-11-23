@@ -35,14 +35,9 @@ function getTimeAgo(dateString) {
     return `${Math.floor(diffInDays / 7)}w`;
 }
 
-// --- FIXED: Robust Video Detection ---
 const isVideo = (fileType, fileNameOrUrl) => {
-    // 1. Trust MIME type if available
     if (fileType && fileType.startsWith("video/")) return true;
-
-    // 2. Fallback: Check extension from filename or URL
     if (fileNameOrUrl) {
-        // Remove query params if it's a URL
         const cleanStr = fileNameOrUrl.split("?")[0].split("#")[0];
         const ext = cleanStr.split(".").pop().toLowerCase();
         return ["mp4", "webm", "ogg", "mov", "avi", "mkv"].includes(ext);
@@ -71,7 +66,7 @@ const getReactionColor = (type) => {
     return map[type] || "#0fffc6";
 };
 
-// --- Holo Icons ---
+// --- ICONS (ALL DEFINED HERE) ---
 const MoreHorizIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="24">
         <path
@@ -171,13 +166,14 @@ const LikeIconFilled = () => (
         <path d="M7.493 18.5c-.425 0-.82-.236-.975-.632A7.48 7.48 0 0 1 6 15.125c0-1.75.584-3.377 1.57-4.7.397-.532.79-1.063 1.18-1.594a5.97 5.97 0 0 0 .944-2.805c0-.953.33-1.872.936-2.586a4.48 4.48 0 0 1 3.626-1.434c.98.054 1.88.472 2.526 1.2.638.72.953 1.66.885 2.624-.037.526-.074 1.05-.074 1.575a5.98 5.98 0 0 1 1.755.036c1.673.376 2.905 1.76 3.094 3.466.064.58.08 1.167.048 1.75a5.99 5.99 0 0 1 1.213 3.554c.047.546.017 1.096-.09 1.634a4.49 4.49 0 0 1-2.046 2.75c-.72.392-1.528.602-2.347.613H7.493zM6 18.5a1.5 1.5 0 0 1-1.5-1.5V7.625a1.5 1.5 0 0 1 1.5-1.5h.05c.706 0 1.31.49 1.457 1.18.094.44.258.864.488 1.258.12.206.255.402.403.591l.002.003c.398.532.79 1.063 1.183 1.594.95 1.274 1.417 2.817 1.417 4.374 0 1.924-.727 3.78-2.05 5.22A5.97 5.97 0 0 0 6 18.5z" />
     </svg>
 );
+// --- Fixed Close Icon ---
 const CloseIcon = () => (
     <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth={2}
-        width="24"
+        width="20"
     >
         <path
             strokeLinecap="round"
@@ -246,6 +242,7 @@ export default function Dashboard() {
             setPostError("");
         }
     };
+
     const handleUpload = async () => {
         await dispatch(createPost({ file: fileContent, body: postContent }));
         setPostContent("");
@@ -253,6 +250,7 @@ export default function Dashboard() {
         setFilePreview(null);
         setPostError("");
     };
+
     const handleEditFileChange = (e) => {
         const file = e.target.files[0];
         if (file && file.size > 10 * 1024 * 1024) {
@@ -319,7 +317,7 @@ export default function Dashboard() {
 
     const handleShare = (postBody) => {
         const text = encodeURIComponent(postBody);
-        const url = encodeURIComponent(window.location.href);
+        const url = encodeURIComponent("proconnect.com");
         const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
         window.open(twitterUrl, "_blank");
     };
@@ -343,6 +341,8 @@ export default function Dashboard() {
         setCurrentReactionList(reactions || []);
         setShowReactionListModal(true);
     };
+
+    // Helper: Check if current user has reacted to a post
     const getUserReaction = (post, userId) => {
         return post.reactions?.find(
             (r) => r.userId?._id === userId || r.userId === userId
@@ -385,6 +385,8 @@ export default function Dashboard() {
                         </div>
                         <div className={styles.inputWrapper}>
                             <textarea
+                                id="postContent"
+                                name="postContent"
                                 onChange={(e) => setPostContent(e.target.value)}
                                 value={postContent}
                                 className={styles.textAreaOfContent}
@@ -397,19 +399,7 @@ export default function Dashboard() {
                     )}
                     {filePreview && (
                         <div className={styles.previewBox}>
-                            {isVideo(fileContent?.type, fileContent?.name) ? (
-                                <video
-                                    src={filePreview}
-                                    controls
-                                    style={{
-                                        width: "100%",
-                                        maxHeight: "250px",
-                                        borderRadius: "8px",
-                                    }}
-                                />
-                            ) : (
-                                <img src={filePreview} alt="Preview" />
-                            )}
+                            <img src={filePreview} alt="Preview" />
                         </div>
                     )}
                     <div className={styles.createPostBottom}>
@@ -420,10 +410,11 @@ export default function Dashboard() {
                             <ImageIcon /> <span>Attach Media</span>
                         </label>
                         <input
+                            id="fileUpload"
+                            name="fileUpload"
                             onChange={handleFileChange}
                             type="file"
                             hidden
-                            id="fileUpload"
                             accept="image/*,video/*"
                         />
                         <button
@@ -784,6 +775,8 @@ export default function Dashboard() {
                             <div className={styles.commentInputWrapper}>
                                 <input
                                     ref={commentInputRef}
+                                    id="commentText"
+                                    name="commentText"
                                     value={commentText}
                                     onChange={(e) =>
                                         setCommentText(e.target.value)
@@ -824,6 +817,8 @@ export default function Dashboard() {
                         </div>
                         <div style={{ padding: 20 }}>
                             <textarea
+                                id="editBody"
+                                name="editBody"
                                 className={styles.textAreaOfContent}
                                 value={editBody}
                                 onChange={(e) => setEditBody(e.target.value)}
@@ -888,6 +883,7 @@ export default function Dashboard() {
                                 </label>
                                 <input
                                     id="editFileUpload"
+                                    name="editFileUpload"
                                     type="file"
                                     hidden
                                     accept="image/*,video/*"
@@ -920,7 +916,7 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* --- Reaction List Modal --- */}
+            {/* --- Reaction List Modal (FIXED STYLE) --- */}
             {showReactionListModal && (
                 <div
                     className={styles.commentModalBackdrop}
