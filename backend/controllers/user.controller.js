@@ -461,7 +461,41 @@ export const downloadProfile = async (req, res) => {
                             ].filter(Boolean),
                         }),
 
-                        // --- 4. PROJECTS SECTION ---
+                        // --- 4. EXPERIENCE SECTION (Moved Up) ---
+                        ...(userProfile.pastWork.length > 0
+                            ? [
+                                  createSectionHeader("EXPERIENCE"),
+                                  ...userProfile.pastWork.flatMap((work) => [
+                                      new Paragraph({
+                                          children: [
+                                              new TextRun({
+                                                  text: work.company,
+                                                  bold: true,
+                                                  size: 22,
+                                              }),
+                                              new TextRun({
+                                                  text: `\t${work.years}`,
+                                              }),
+                                          ],
+                                          tabStops: [
+                                              {
+                                                  type: TabStopType.RIGHT,
+                                                  position: 10500,
+                                              },
+                                          ],
+                                          spacing: { after: 0 },
+                                      }),
+                                      new Paragraph({
+                                          text: work.position,
+                                          italics: true,
+                                          spacing: { after: 0 },
+                                      }),
+                                      ...createSmartBullets(work.description),
+                                  ]),
+                              ]
+                            : []),
+
+                        // --- 5. PROJECTS SECTION ---
                         ...(userProfile.projects.length > 0
                             ? [
                                   createSectionHeader("PROJECTS"),
@@ -513,7 +547,7 @@ export const downloadProfile = async (req, res) => {
                               ]
                             : []),
 
-                        // --- 5. CERTIFICATES SECTION ---
+                        // --- 6. CERTIFICATES SECTION ---
                         ...(userProfile.certificates.length > 0
                             ? [
                                   createSectionHeader("CERTIFICATES"),
@@ -567,7 +601,7 @@ export const downloadProfile = async (req, res) => {
                               ]
                             : []),
 
-                        // --- 6. ACHIEVEMENTS SECTION ---
+                        // --- 7. ACHIEVEMENTS SECTION ---
                         ...(userProfile.achievements.length > 0
                             ? [
                                   createSectionHeader("ACHIEVEMENTS"),
@@ -595,7 +629,7 @@ export const downloadProfile = async (req, res) => {
                               ]
                             : []),
 
-                        // --- 7. EDUCATION SECTION ---
+                        // --- 8. EDUCATION SECTION ---
                         ...(userProfile.education.length > 0
                             ? [
                                   createSectionHeader("EDUCATION"),
@@ -643,40 +677,6 @@ export const downloadProfile = async (req, res) => {
                                           ],
                                           spacing: { after: 80 },
                                       }),
-                                  ]),
-                              ]
-                            : []),
-
-                        // --- 8. EXPERIENCE SECTION ---
-                        ...(userProfile.pastWork.length > 0
-                            ? [
-                                  createSectionHeader("EXPERIENCE"),
-                                  ...userProfile.pastWork.flatMap((work) => [
-                                      new Paragraph({
-                                          children: [
-                                              new TextRun({
-                                                  text: work.company,
-                                                  bold: true,
-                                                  size: 22,
-                                              }),
-                                              new TextRun({
-                                                  text: `\t${work.years}`,
-                                              }),
-                                          ],
-                                          tabStops: [
-                                              {
-                                                  type: TabStopType.RIGHT,
-                                                  position: 10500,
-                                              },
-                                          ],
-                                          spacing: { after: 0 },
-                                      }),
-                                      new Paragraph({
-                                          text: work.position,
-                                          italics: true,
-                                          spacing: { after: 0 },
-                                      }),
-                                      ...createSmartBullets(work.description),
                                   ]),
                               ]
                             : []),

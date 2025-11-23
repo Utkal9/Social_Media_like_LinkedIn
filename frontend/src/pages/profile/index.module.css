@@ -52,18 +52,26 @@
     background: linear-gradient(to bottom, transparent, rgba(11, 15, 42, 1));
 }
 
-/* Resume Ring */
-.resumeWrapper {
+/* --- UNIFIED RESUME WRAPPER --- */
+.resumeActionWrapper {
     position: absolute;
     top: 16px;
     left: 16px;
     width: 56px;
     height: 56px;
-    z-index: 5;
+    z-index: 20;
     cursor: pointer;
 }
+
+/* Progress Ring */
 .progressSvg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     transform: rotate(-90deg);
+    pointer-events: none;
 }
 .circleBg {
     fill: none;
@@ -75,7 +83,9 @@
     stroke-width: 3;
     transition: stroke-dasharray 0.5s ease;
 }
-.resumeBtn {
+
+/* Inner Button */
+.downloadResumeBtn {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -90,32 +100,81 @@
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 21;
 }
-.resumeBtn:hover:not(:disabled) {
+.downloadResumeBtn:hover:not(:disabled) {
     background: var(--neon-violet);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
 }
-.tooltip {
+.downloadResumeBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* --- Tooltip (Holo Themed) --- */
+.resumeActionWrapper:hover .completionTooltip {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.completionTooltip {
     display: none;
     position: absolute;
     top: 110%;
     left: 0;
-    background: rgba(11, 15, 42, 0.95);
+    width: 280px;
+    background: rgba(11, 15, 42, 0.95); /* Holo Dark */
+    backdrop-filter: blur(12px);
     border: 1px solid var(--holo-border);
-    padding: 10px;
-    border-radius: 8px;
-    width: 200px;
-    font-size: 0.8rem;
-    color: #fff;
-    z-index: 20;
-}
-.resumeRingWrapper:hover .tooltip {
-    display: block;
-}
-.readyText {
-    color: var(--neon-teal);
-    font-weight: bold;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: #eee;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    text-align: left;
+    animation: fadeInTooltip 0.2s ease-in-out;
 }
 
+@keyframes fadeInTooltip {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.completionTooltip h5 {
+    margin: 0 0 10px 0;
+    color: var(--neon-blue);
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-family: "Orbitron", sans-serif;
+}
+
+.completionTooltip ul {
+    padding-left: 18px;
+    margin: 0;
+}
+
+.completionTooltip li {
+    margin-bottom: 4px;
+    line-height: 1.4;
+    color: var(--neon-pink); /* Error / Missing Color */
+    font-size: 0.8rem;
+}
+
+/* --- Upload Buttons --- */
 .uploadBtnCover,
 .uploadBtnAvatar {
     position: absolute;
