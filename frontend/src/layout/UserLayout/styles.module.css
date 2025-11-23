@@ -1,3 +1,5 @@
+/* frontend/src/layout/UserLayout/styles.module.css */
+
 .layoutWrapper {
     display: flex;
     flex-direction: column;
@@ -5,6 +7,13 @@
 }
 
 .mainContent {
-    flex: 1; /* This is the key change */
+    flex: 1;
     /* It pushes the footer to the bottom */
+}
+
+/* --- FIX: Add padding on mobile to prevent Bottom Nav overlap --- */
+@media (max-width: 768px) {
+    .layoutWrapper {
+        padding-bottom: 80px; /* 65px (Nav Height) + 15px (Spacing Buffer) */
+    }
 }

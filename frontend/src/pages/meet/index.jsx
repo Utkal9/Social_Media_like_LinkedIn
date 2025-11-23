@@ -4,10 +4,11 @@ import UserLayout from "@/layout/UserLayout";
 import DashboardLayout from "@/layout/DashboardLayout";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
+import Head from "next/head";
 
 // --- Holo Icons ---
 const VideoIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="32">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
         <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
     </svg>
 );
@@ -18,6 +19,7 @@ const KeyboardIcon = () => (
         stroke="currentColor"
         strokeWidth={2}
         width="20"
+        height="20"
     >
         <path
             strokeLinecap="round"
@@ -26,18 +28,19 @@ const KeyboardIcon = () => (
         />
     </svg>
 );
-const LinkIcon = () => (
+const PlusIcon = () => (
     <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth={2}
-        width="24"
+        strokeWidth={3}
+        width="20"
+        height="20"
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+            d="M12 4.5v15m7.5-7.5h-15"
         />
     </svg>
 );
@@ -48,6 +51,7 @@ const ArrowRightIcon = () => (
         stroke="currentColor"
         strokeWidth={3}
         width="18"
+        height="18"
     >
         <path
             strokeLinecap="round"
@@ -58,7 +62,7 @@ const ArrowRightIcon = () => (
 );
 
 function MeetPage() {
-    const [meetingCode, setMeetingCode] = useState("");
+    const [roomId, setRoomId] = useState("");
     const [returnUrl, setReturnUrl] = useState("");
     const router = useRouter();
 
@@ -68,24 +72,21 @@ function MeetPage() {
         }
     }, []);
 
-    const handleJoinVideoCall = () => {
-        if (!meetingCode.trim()) {
-            alert("Please enter a secure channel code.");
-            return;
-        }
-        const baseUrl = `${
-            process.env.NEXT_PUBLIC_VIDEO_CALL_URL
-        }/${meetingCode.trim()}`;
-        const finalUrl = `${baseUrl}?redirect_url=${encodeURIComponent(
-            returnUrl
-        )}`;
-        window.open(finalUrl, "_blank");
+    const handleCreateMeeting = () => {
+        // Generate a random 7-character ID
+        const newRoomId = Math.random().toString(36).substring(2, 9);
+        openVideoCall(newRoomId);
     };
 
-    const handleStartNewCall = () => {
-        const newRoomId = crypto.randomUUID();
-        const baseUrl = `${process.env.NEXT_PUBLIC_VIDEO_CALL_URL}/${newRoomId}`;
-        const finalUrl = `${baseUrl}?redirect_url=${encodeURIComponent(
+    const handleJoinMeeting = () => {
+        if (!roomId.trim()) return;
+        openVideoCall(roomId.trim());
+    };
+
+    const openVideoCall = (id) => {
+        const baseUrl =
+            process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
+        const finalUrl = `${baseUrl}/${id}?redirect_url=${encodeURIComponent(
             returnUrl
         )}`;
         window.open(finalUrl, "_blank");
@@ -93,81 +94,91 @@ function MeetPage() {
 
     return (
         <div className={styles.meetContainer}>
-            <div className={styles.ambientGlow}></div>
+            <Head>
+                <title>Meet | LinkUps</title>
+            </Head>
 
-            <div className={styles.contentWrapper}>
+            <div className={styles.bgGlow}></div>
+
+            <div className={styles.mainWrapper}>
                 {/* Header Section */}
-                <div className={styles.header}>
+                <div className={styles.headerSection}>
                     <div className={styles.badge}>
                         <span className={styles.liveDot}></span> Live Uplink
                     </div>
-                    <h1>Secure Video Interface</h1>
-                    <p>Initialize high-fidelity holographic communication.</p>
+                    {/* --- FIXED: Updated Title Name --- */}
+                    <h1 className={styles.title}>
+                        LinkUps <span className={styles.highlight}>Meet</span>
+                    </h1>
+                    <p className={styles.subtitle}>
+                        Secure, high-fidelity video conferencing. Connect with
+                        your network instantly.
+                    </p>
                 </div>
 
-                {/* Cards Container (Vertical Stack) */}
-                <div className={styles.cardStack}>
-                    {/* Card 1: Host */}
-                    <div className={styles.actionCard}>
-                        <div className={styles.cardGlowPrimary}></div>
-                        <div className={styles.cardBody}>
-                            <div className={styles.iconBoxPrimary}>
-                                <VideoIcon />
-                            </div>
-                            <div className={styles.textContent}>
-                                <h3>Initialize Session</h3>
-                                <p>Generate a new encrypted room.</p>
-                            </div>
+                {/* Split Action Cards */}
+                <div className={styles.actionGrid}>
+                    {/* Card 1: New Meeting */}
+                    <div className={styles.glassCard}>
+                        <div
+                            className={styles.cardIconWrapper}
+                            style={{
+                                background:
+                                    "linear-gradient(135deg, #8b5cf6, #6d28d9)",
+                            }}
+                        >
+                            <VideoIcon />
                         </div>
+                        <h3 className={styles.cardTitle}>New Meeting</h3>
+                        <p className={styles.cardDesc}>
+                            Create a secure room and invite others.
+                        </p>
                         <button
-                            onClick={handleStartNewCall}
+                            onClick={handleCreateMeeting}
                             className={styles.primaryBtn}
                         >
-                            Start Meeting <ArrowRightIcon />
+                            <PlusIcon /> Start Instant Meeting
                         </button>
                     </div>
 
+                    {/* Divider */}
                     <div className={styles.divider}>
                         <span>OR</span>
                     </div>
 
-                    {/* Card 2: Join */}
-                    <div className={styles.actionCard}>
-                        <div className={styles.cardGlowSecondary}></div>
-                        <div className={styles.cardBody}>
-                            <div className={styles.iconBoxSecondary}>
-                                <LinkIcon />
-                            </div>
-                            <div className={styles.textContent}>
-                                <h3>Join Channel</h3>
-                                <p>Enter destination code.</p>
-                            </div>
+                    {/* Card 2: Join Meeting */}
+                    <div className={styles.glassCard}>
+                        <div
+                            className={styles.cardIconWrapper}
+                            style={{
+                                background:
+                                    "linear-gradient(135deg, #0fffc6, #059669)",
+                            }}
+                        >
+                            <KeyboardIcon />
                         </div>
+                        <h3 className={styles.cardTitle}>Join Meeting</h3>
+                        <p className={styles.cardDesc}>
+                            Enter a code or link to connect.
+                        </p>
 
-                        <div className={styles.inputArea}>
-                            <div className={styles.inputWrapper}>
-                                <div className={styles.inputIcon}>
-                                    <KeyboardIcon />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Enter Code (e.g. room-123)"
-                                    value={meetingCode}
-                                    onChange={(e) =>
-                                        setMeetingCode(e.target.value)
-                                    }
-                                    onKeyDown={(e) =>
-                                        e.key === "Enter" &&
-                                        handleJoinVideoCall()
-                                    }
-                                />
-                            </div>
+                        <div className={styles.inputGroup}>
+                            <input
+                                type="text"
+                                placeholder="Enter Room ID"
+                                className={styles.inputField}
+                                value={roomId}
+                                onChange={(e) => setRoomId(e.target.value)}
+                                onKeyDown={(e) =>
+                                    e.key === "Enter" && handleJoinMeeting()
+                                }
+                            />
                             <button
-                                onClick={handleJoinVideoCall}
+                                onClick={handleJoinMeeting}
                                 className={styles.joinBtn}
-                                disabled={!meetingCode.trim()}
+                                disabled={!roomId.trim()}
                             >
-                                Connect
+                                <ArrowRightIcon />
                             </button>
                         </div>
                     </div>
