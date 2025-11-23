@@ -103,11 +103,15 @@ const TruncatedText = ({ content, postId }) => {
     );
 };
 
+// --- RESTORED & UPGRADED LOGIC ---
 const calculateProfileCompletion = (profile) => {
     if (!profile || !profile.userId) return { percentage: 0, missing: [] };
+
     let score = 0;
+    const totalPoints = 20; // Total weighted points
     const missing = [];
 
+    // 1. Basic Contact Details (5 points)
     if (profile.userId.name) score++;
     else missing.push("Full Name");
     if (profile.userId.email) score++;
@@ -115,21 +119,65 @@ const calculateProfileCompletion = (profile) => {
     if (profile.phoneNumber) score++;
     else missing.push("Mobile Number");
     if (profile.github) score++;
-    else missing.push("GitHub");
+    else missing.push("GitHub Profile Link");
     if (profile.leetcode) score++;
-    else missing.push("LeetCode");
-    if (profile.skillLanguages) score++;
-    else missing.push("Languages");
-    if (profile.skillFrameworks) score++;
-    else missing.push("Frameworks");
-    if (profile.skills && profile.skills.length > 0) score += 3;
-    else missing.push("Add at least 1 General Skill");
-    const projects = profile.projects || [];
-    if (projects.length >= 2) score += 5;
-    else missing.push(`Add Projects`);
+    else missing.push("LeetCode Profile Link");
 
-    const percentage = Math.round((score / 15) * 100);
-    return { percentage: Math.min(percentage, 100), missing };
+    // 2. Resume Specific Skills (5 points) - One in each field
+    if (profile.skillLanguages) score++;
+    else missing.push("Skills: Languages");
+    if (profile.skillCloudDevOps) score++;
+    else missing.push("Skills: Cloud/DevOps");
+    if (profile.skillFrameworks) score++;
+    else missing.push("Skills: Frameworks");
+    if (profile.skillTools) score++;
+    else missing.push("Skills: Tools");
+    if (profile.skillSoft) score++;
+    else missing.push("Skills: Soft Skills");
+
+    // 3. Projects (Minimum 2) (10 points total) - Adjusted weight slightly for balance
+    const projects = profile.projects || [];
+
+    // Base point for having at least 2 projects
+    if (projects.length >= 2) {
+        score += 2; // Weighted heavier
+    } else {
+        missing.push(`Add ${2 - projects.length} more Project(s)`);
+    }
+
+    // Details check for the first 2 projects
+    for (let i = 0; i < 2; i++) {
+        const proj = projects[i];
+        if (proj) {
+            // Description length check (approx 3 lines ~ 80 chars for validation)
+            if (proj.description && proj.description.length >= 80) {
+                score += 2;
+            } else {
+                missing.push(
+                    `Project ${i + 1}: Description too short (min 80 chars)`
+                );
+            }
+
+            // Link check
+            if (proj.link) {
+                score += 1;
+            } else {
+                missing.push(`Project ${i + 1}: Missing GitHub/Live Link`);
+            }
+
+            // Timeline check
+            if (proj.duration) {
+                score += 1;
+            } else {
+                missing.push(`Project ${i + 1}: Missing Duration`);
+            }
+        } else {
+            // Project missing entirely
+        }
+    }
+
+    const percentage = Math.round((score / totalPoints) * 100);
+    return { percentage: Math.min(percentage, 100), missing }; // Cap at 100
 };
 
 export default function Profilepage() {
@@ -274,11 +322,10 @@ export default function Profilepage() {
         if (!isEditing) syncProfileToBackend(updatedProfile);
     };
 
+    // --- UPDATED DOWNLOAD HANDLER ---
     const handleDownloadResume = async () => {
         if (completionStats.percentage < 90) {
-            alert(
-                `Profile Incomplete (${completionStats.percentage}%). Fill in missing details.`
-            );
+            // Visual feedback is already in the tooltip, but keep safe guard
             return;
         }
         if (!userProfile?.userId?._id) return;
@@ -354,10 +401,12 @@ export default function Profilepage() {
 
     if (!userProfile)
         return <div className={styles.loading}>Loading Identity...</div>;
+
+    // Color Logic for Ring
     const strokeColor =
         completionStats.percentage >= 90
-            ? "var(--neon-teal)"
-            : "var(--neon-pink)";
+            ? "var(--neon-teal)" // Ready
+            : "var(--neon-pink)"; // Incomplete
 
     return (
         <div className={styles.profilePage}>
@@ -371,7 +420,9 @@ export default function Profilepage() {
                         }")`,
                     }}
                 >
-                    <div className={styles.resumeWrapper}>
+                    {/* --- UPDATED: Resume Ring & Tooltip --- */}
+                    <div className={styles.resumeActionWrapper}>
+                        {/* The Ring SVG */}
                         <svg viewBox="0 0 36 36" className={styles.progressSvg}>
                             <path
                                 className={styles.circleBg}
@@ -384,14 +435,57 @@ export default function Profilepage() {
                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                             />
                         </svg>
+
+                        {/* Download Button */}
                         <button
                             onClick={handleDownloadResume}
-                            className={styles.resumeBtn}
-                            title="Download Resume"
+                            className={styles.downloadResumeBtn}
+                            disabled={completionStats.percentage < 90}
                         >
                             <DownloadIcon />
                         </button>
+
+                        {/* Hover Tooltip with Missing Items */}
+                        <div className={styles.completionTooltip}>
+                            <h5>
+                                {completionStats.percentage}% Ready
+                                <span
+                                    style={{
+                                        color:
+                                            completionStats.percentage >= 90
+                                                ? "var(--neon-teal)"
+                                                : "var(--neon-pink)",
+                                    }}
+                                >
+                                    {completionStats.percentage >= 90
+                                        ? "Unlocked"
+                                        : "Locked"}
+                                </span>
+                            </h5>
+                            {completionStats.missing.length > 0 ? (
+                                <ul>
+                                    {completionStats.missing.map(
+                                        (item, idx) => (
+                                            <li key={idx}>{item}</li>
+                                        )
+                                    )}
+                                </ul>
+                            ) : (
+                                <p
+                                    style={{
+                                        fontSize: "0.8rem",
+                                        color: "#aaa",
+                                        margin: 0,
+                                    }}
+                                >
+                                    Profile complete! You can now generate your
+                                    Holo-Resume.
+                                </p>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Image Upload Buttons */}
                     {isEditing && (
                         <>
                             <label
@@ -503,7 +597,6 @@ export default function Profilepage() {
                                 @{userProfile.userId.username}
                             </span>
                             <span className={styles.metaDivider}>•</span>
-                            {/* --- FIXED: Added onClick for Connections Modal --- */}
                             <span
                                 className={styles.linkAction}
                                 onClick={() => setShowConnectionsModal(true)}
@@ -1034,7 +1127,7 @@ export default function Profilepage() {
                 </div>
             </div>
 
-            {/* --- Connections List Modal (ADDED) --- */}
+            {/* --- Connections List Modal --- */}
             {showConnectionsModal && (
                 <div
                     className={styles.modalOverlay}
