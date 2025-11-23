@@ -134,7 +134,7 @@
 .postsContainer {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Increased gap between posts */
+    gap: 24px; /* Correct gap for spacing */
 }
 
 /* --- Post Card --- */
@@ -143,10 +143,9 @@
     backdrop-filter: blur(16px);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
-    overflow: visible;
+    overflow: visible; /* For Dropdown */
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     position: relative;
-    margin-bottom: 0; /* Reset margin as gap handles spacing */
 }
 
 .postCardHeader {
@@ -315,6 +314,7 @@
     border: 1px solid var(--holo-border);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
     animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
 }
 @keyframes popUp {
     from {
@@ -392,13 +392,58 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 .closeModalButton:hover {
     background: var(--neon-pink);
     color: #fff;
+    transform: rotate(90deg);
+}
+.closeModalButton svg {
+    width: 20px;
+    height: 20px;
 }
 
+/* Edit Modal Specifics */
+.editModalBody {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.previewContainer {
+    width: 100%;
+    background: #000;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 1px dashed #ccc;
+    min-height: 100px;
+}
+
+.cancelButton {
+    background: transparent;
+    border: 1px solid #666;
+    color: #666;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.cancelButton:hover {
+    background-color: #f3f3f3;
+    border-color: #333;
+    color: #333;
+}
+
+/* Comments */
 .allCommentsContainer {
     flex: 1;
     overflow-y: auto;
@@ -442,6 +487,13 @@
     display: flex;
     gap: 12px;
 }
+.commentActions span {
+    color: #888;
+    transition: color 0.2s;
+}
+.commentActions span:hover {
+    color: var(--neon-teal);
+}
 
 .postCommentContainer {
     padding: 16px 24px;
@@ -472,8 +524,18 @@
     font-weight: 600;
     cursor: pointer;
 }
+.postCommentButton {
+    background: var(--neon-teal);
+    color: #000;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
 
-/* Reaction List Styles */
+/* Reaction List Item Styles */
 .reactionUserItem {
     display: flex;
     align-items: center;
@@ -541,4 +603,10 @@
     color: var(--text-secondary);
     font-style: italic;
     padding: 40px;
+}
+.errorMessage {
+    color: #ff4d7d;
+    font-size: 0.85rem;
+    text-align: center;
+    margin: 5px 0;
 }
