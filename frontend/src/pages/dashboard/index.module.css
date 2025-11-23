@@ -4,6 +4,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    padding-bottom: 80px;
 }
 
 /* --- Create Post --- */
@@ -21,14 +22,25 @@
     gap: 16px;
     align-items: flex-start;
 }
-.userProfilePic {
+
+/* FIXED: Container size matches the image size now (48px) */
+.avatarContainer {
+    position: relative;
     width: 48px;
     height: 48px;
+    flex-shrink: 0;
+}
+
+/* FIXED: Image fills the container completely */
+.userProfilePic {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     border: 2px solid var(--neon-teal);
     object-fit: cover;
     cursor: pointer;
 }
+
 .inputWrapper {
     flex-grow: 1;
 }
@@ -134,7 +146,7 @@
 .postsContainer {
     display: flex;
     flex-direction: column;
-    gap: 24px; /* Correct gap for spacing */
+    gap: 24px;
 }
 
 /* --- Post Card --- */
@@ -143,7 +155,7 @@
     backdrop-filter: blur(16px);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
-    overflow: visible; /* For Dropdown */
+    overflow: visible;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     position: relative;
 }
@@ -155,6 +167,7 @@
     align-items: center;
     position: relative;
 }
+
 .postCardHeaderInfo {
     flex: 1;
 }
@@ -254,9 +267,12 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
 }
 .reactionsCountWrapper:hover {
-    color: var(--neon-teal);
+    background: rgba(255, 255, 255, 0.05);
 }
 .reactionIconsStack {
     display: flex;
@@ -296,50 +312,111 @@
     color: var(--neon-blue);
 }
 
-/* Reaction Popup */
+/* --- Reaction Popup (The Dock) --- */
 .reactionWrapper {
     position: relative;
     flex: 1;
     display: flex;
+    justify-content: center;
 }
 .reactionPopup {
-    display: none;
+    display: flex;
     position: absolute;
-    bottom: 100%;
-    left: 10px;
-    background: rgba(11, 15, 42, 0.95);
-    border-radius: 30px;
-    padding: 6px 12px;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(2, 4, 16, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 50px;
+    padding: 8px 12px;
     gap: 8px;
-    border: 1px solid var(--holo-border);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--neon-violet);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
     animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 100;
+    white-space: nowrap;
 }
+
+/* --- CSS BRIDGE: Prevents hover loss gap --- */
+.reactionPopup::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* Starts at bottom of popup */
+    left: 0;
+    right: 0;
+    height: 20px; /* Covers the gap to the button */
+    background: transparent;
+}
+
 @keyframes popUp {
     from {
-        transform: translateY(10px) scale(0.8);
+        transform: translateX(-50%) translateY(10px) scale(0.8);
         opacity: 0;
     }
     to {
-        transform: translateY(0) scale(1);
+        transform: translateX(-50%) translateY(0) scale(1);
         opacity: 1;
     }
 }
-.reactionWrapper:hover .reactionPopup {
-    display: flex;
-}
+
 .reactionBtn {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     cursor: pointer;
     transition: transform 0.2s;
     padding: 0;
     line-height: 1;
+    display: flex;
+    align-items: center;
 }
 .reactionBtn:hover {
     transform: scale(1.3) translateY(-5px);
+}
+
+/* --- MOBILE FIX: Adjust Reaction Popup for Small Screens --- */
+@media (max-width: 576px) {
+    .reactionPopup {
+        bottom: 140%;
+        padding: 6px 10px;
+        gap: 6px;
+        border-radius: 30px;
+    }
+
+    .reactionBtn {
+        font-size: 1.4rem;
+    }
+}
+
+/* Removed Hover CSS - Now Controlled by JS */
+
+.reactionBtn {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 0;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+.reactionBtn:hover {
+    transform: scale(1.3) translateY(-5px);
+}
+
+/* --- MOBILE FIX: Adjust Reaction Popup for Small Screens --- */
+@media (max-width: 576px) {
+    .reactionPopup {
+        bottom: 140%;
+        padding: 6px 10px;
+        gap: 6px;
+        border-radius: 30px;
+    }
+
+    .reactionBtn {
+        font-size: 1.4rem;
+    }
 }
 
 /* --- Modals --- */
@@ -380,7 +457,6 @@
     color: #fff;
 }
 
-/* --- FIXED: Close Button Style --- */
 .closeModalButton {
     background: rgba(255, 255, 255, 0.1);
     border: none;
@@ -414,18 +490,6 @@
     overflow-y: auto;
 }
 
-.previewContainer {
-    width: 100%;
-    background: #000;
-    border-radius: 8px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    border: 1px dashed #ccc;
-    min-height: 100px;
-}
-
 .cancelButton {
     background: transparent;
     border: 1px solid #666;
@@ -448,6 +512,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 20px;
+    min-height: 0;
 }
 .singleComment {
     display: flex;
@@ -495,6 +560,29 @@
     color: var(--neon-teal);
 }
 
+/* --- FIXED: Comment Avatar Container --- */
+.commentAvatarContainer {
+    position: relative;
+    width: 40px; /* Standard Size */
+    height: 40px;
+    flex-shrink: 0;
+    margin-right: 4px;
+    cursor: pointer;
+}
+
+/* --- FIXED: Comment Online Dot --- */
+.onlineDotSmall {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: var(--neon-teal);
+    border: 2px solid var(--holo-bg);
+    border-radius: 50%;
+    z-index: 2;
+}
+
 .postCommentContainer {
     padding: 16px 24px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -524,16 +612,6 @@
     font-weight: 600;
     cursor: pointer;
 }
-.postCommentButton {
-    background: var(--neon-teal);
-    color: #000;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-}
 
 /* Reaction List Item Styles */
 .reactionUserItem {
@@ -543,15 +621,17 @@
     padding: 10px 12px;
     cursor: pointer;
     border-radius: 8px;
+    transition: background 0.2s;
 }
 .reactionUserItem:hover {
     background: rgba(255, 255, 255, 0.05);
 }
+
 .reactionTypeIconOnAvatar {
     position: absolute;
     bottom: -2px;
     right: -2px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     background: #0b0f2a;
     border-radius: 50%;
     width: 20px;
@@ -559,7 +639,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 1px solid var(--holo-border);
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
+
 .userInfo h4 {
     margin: 0;
     font-size: 0.95rem;
