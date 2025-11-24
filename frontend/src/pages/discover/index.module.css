@@ -47,14 +47,14 @@
     transform: translateY(-50%);
     color: var(--text-secondary);
     transition: color 0.2s;
-    pointer-events: none; /* Let clicks pass through icon */
+    pointer-events: none;
 }
 .searchWrapper input {
     width: 100%;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 30px;
-    padding: 10px 40px 10px 40px; /* Left and Right padding for icons */
+    padding: 10px 40px 10px 40px;
     color: #fff;
     font-family: "Poppins", sans-serif;
     font-size: 0.95rem;
@@ -70,7 +70,6 @@
     color: var(--neon-teal);
 }
 
-/* Clear Button inside input */
 .clearBtn {
     position: absolute;
     right: 8px;
@@ -87,13 +86,39 @@
     transition: color 0.2s, background 0.2s;
 }
 .clearBtn svg {
-    position: static; /* Reset absolute from parent selector */
+    position: static;
     transform: none;
     pointer-events: auto;
 }
 .clearBtn:hover {
     color: #fff;
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Loading State --- */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    color: var(--neon-teal);
+    font-family: "Orbitron", sans-serif;
+    gap: 16px;
+}
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(15, 255, 198, 0.1);
+    border-top-color: var(--neon-teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.2);
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* --- Grid --- */
@@ -143,7 +168,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    margin-top: -40px; /* Pull avatar up */
+    margin-top: -40px;
     flex-grow: 1;
 }
 
@@ -198,7 +223,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 40px; /* Fixed height for alignment */
+    height: 40px;
 }
 
 /* --- Action Buttons --- */
@@ -215,10 +240,9 @@
     gap: 8px;
     transition: all 0.2s;
     border: 1px solid transparent;
-    margin-top: auto; /* Push to bottom */
+    margin-top: auto;
 }
 
-/* Connect (Default) */
 .connect {
     background: transparent;
     border-color: var(--neon-violet);
@@ -230,7 +254,6 @@
     box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
 }
 
-/* Pending */
 .pending {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.2);
@@ -238,7 +261,6 @@
     cursor: not-allowed;
 }
 
-/* Connected */
 .connected {
     background: rgba(15, 255, 198, 0.1);
     border-color: var(--neon-teal);
@@ -246,7 +268,6 @@
     cursor: default;
 }
 
-/* Accept */
 .accept {
     background: var(--neon-teal);
     color: #000;

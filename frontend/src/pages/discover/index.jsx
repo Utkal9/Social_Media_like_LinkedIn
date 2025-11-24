@@ -98,13 +98,17 @@ export default function DiscoverPage() {
     const router = useRouter();
     const { onlineStatuses } = useSocket() || {};
     const [searchQuery, setSearchQuery] = useState("");
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
         const token = localStorage.getItem("token");
+        // Ensure we fetch users if not already fetched
         if (!authState.all_profiles_fetched) {
             dispatch(getAllUsers());
         }
         if (token) {
+            // Refresh connections to ensure buttons show correct status
             dispatch(getConnectionsRequest({ token }));
             dispatch(getMyConnectionRequests({ token }));
         }
@@ -164,29 +168,27 @@ export default function DiscoverPage() {
             : defaultStatus;
     };
 
-    // --- ROBUST FILTER LOGIC ---
+    // --- FILTER LOGIC ---
     const filteredUsers = useMemo(() => {
-        if (!authState.all_users) return [];
+        // If current user isn't loaded yet, return empty to prevent errors
+        if (!authState.user || !authState.all_users) return [];
 
         return (
             authState.all_users
-                // 1. Safety: Ensure profile and userId exist (prevents crash on deleted users)
+                // 1. Safety: Ensure profile and userId exist
                 .filter((profile) => profile && profile.userId)
                 // 2. Exclude Self
                 .filter(
                     (profile) =>
-                        authState.user &&
                         profile.userId._id !== authState.user.userId._id
                 )
-                // 3. Search Filter (Case Insensitive & Trimmed)
+                // 3. Search Filter
                 .filter((profile) => {
                     const term = searchQuery.toLowerCase().trim();
                     if (!term) return true;
-
                     const name = profile.userId.name?.toLowerCase() || "";
                     const username =
                         profile.userId.username?.toLowerCase() || "";
-
                     return name.includes(term) || username.includes(term);
                 })
         );
@@ -196,7 +198,6 @@ export default function DiscoverPage() {
         setSearchQuery("");
     };
 
-    // Animation
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
@@ -205,6 +206,17 @@ export default function DiscoverPage() {
         hidden: { opacity: 0, y: 15 },
         visible: { opacity: 1, y: 0 },
     };
+
+    // --- LOADING STATE ---
+    // Show loading if:
+    // 1. Component hasn't mounted yet (Next.js hydration)
+    // 2. Current User Profile is not yet loaded (needed for excluding self)
+    // 3. All Users list is not yet fetched
+    const isLoading =
+        !isMounted ||
+        !authState.user ||
+        (!authState.all_profiles_fetched &&
+            (!authState.all_users || authState.all_users.length === 0));
 
     return (
         <div className={styles.discoverContainer}>
@@ -235,122 +247,134 @@ export default function DiscoverPage() {
                 </div>
             </div>
 
-            {/* Grid */}
-            <motion.div
-                className={styles.grid}
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                key={searchQuery} // Force re-render animation on search change
-            >
-                {filteredUsers.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <p>No matching signals found for "{searchQuery}".</p>
-                        <button onClick={handleClearSearch}>
-                            Clear Filter
-                        </button>
-                    </div>
-                ) : (
-                    filteredUsers.map((user) => {
-                        const status = getConnectStatus(user.userId._id);
+            {/* --- LOAD CONTENT OR SPINNER --- */}
+            {isLoading ? (
+                <div className={styles.loadingContainer}>
+                    <div className={styles.loadingSpinner}></div>
+                    <p>Scanning Neural Grid...</p>
+                </div>
+            ) : (
+                <motion.div
+                    className={styles.grid}
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    key={searchQuery}
+                >
+                    {filteredUsers.length === 0 ? (
+                        <div className={styles.emptyState}>
+                            <p>
+                                No matching signals found for "{searchQuery}".
+                            </p>
+                            <button onClick={handleClearSearch}>
+                                Clear Filter
+                            </button>
+                        </div>
+                    ) : (
+                        filteredUsers.map((user) => {
+                            const status = getConnectStatus(user.userId._id);
 
-                        return (
-                            <motion.div
-                                key={user._id}
-                                className={styles.userCard}
-                                variants={itemVariants}
-                                whileHover={{
-                                    y: -5,
-                                    boxShadow:
-                                        "0 10px 30px rgba(139, 92, 246, 0.2)",
-                                }}
-                                onClick={() =>
-                                    router.push(
-                                        `/view_profile/${user.userId.username}`
-                                    )
-                                }
-                            >
-                                <div
-                                    className={styles.cardBanner}
-                                    style={{
-                                        backgroundImage: `url(${
-                                            user.userId.backgroundPicture ||
-                                            "https://via.placeholder.com/300"
-                                        })`,
+                            return (
+                                <motion.div
+                                    key={user._id}
+                                    className={styles.userCard}
+                                    variants={itemVariants}
+                                    whileHover={{
+                                        y: -5,
+                                        boxShadow:
+                                            "0 10px 30px rgba(139, 92, 246, 0.2)",
                                     }}
-                                ></div>
+                                    onClick={() =>
+                                        router.push(
+                                            `/view_profile/${user.userId.username}`
+                                        )
+                                    }
+                                >
+                                    <div
+                                        className={styles.cardBanner}
+                                        style={{
+                                            backgroundImage: `url(${
+                                                user.userId.backgroundPicture ||
+                                                "https://via.placeholder.com/300"
+                                            })`,
+                                        }}
+                                    ></div>
 
-                                <div className={styles.cardContent}>
-                                    <div className={styles.avatarWrapper}>
-                                        <img
-                                            src={user.userId.profilePicture}
-                                            alt={user.userId.name}
-                                        />
-                                        {isUserOnline(
-                                            user.userId._id,
-                                            user.userId.isOnline
-                                        ) && (
-                                            <span
-                                                className={styles.onlineDot}
-                                            ></span>
-                                        )}
+                                    <div className={styles.cardContent}>
+                                        <div className={styles.avatarWrapper}>
+                                            <img
+                                                src={user.userId.profilePicture}
+                                                alt={user.userId.name}
+                                            />
+                                            {isUserOnline(
+                                                user.userId._id,
+                                                user.userId.isOnline
+                                            ) && (
+                                                <span
+                                                    className={styles.onlineDot}
+                                                ></span>
+                                            )}
+                                        </div>
+
+                                        <div className={styles.userInfo}>
+                                            <h3>{user.userId.name}</h3>
+                                            <p className={styles.userHandle}>
+                                                @{user.userId.username}
+                                            </p>
+                                            <p className={styles.userBio}>
+                                                {user.currentPost ||
+                                                    (user.bio
+                                                        ? user.bio.substring(
+                                                              0,
+                                                              50
+                                                          ) +
+                                                          (user.bio.length > 50
+                                                              ? "..."
+                                                              : "")
+                                                        : "Digital Nomad")}
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            className={`${styles.actionBtn} ${
+                                                styles[status.toLowerCase()]
+                                            }`}
+                                            onClick={(e) =>
+                                                handleConnect(
+                                                    e,
+                                                    user.userId._id
+                                                )
+                                            }
+                                            disabled={
+                                                status !== "Connect" &&
+                                                status !== "Accept"
+                                            }
+                                        >
+                                            {status === "Connect" && (
+                                                <>
+                                                    <UserPlusIcon /> Connect
+                                                </>
+                                            )}
+                                            {status === "Pending" && (
+                                                <>
+                                                    <ClockIcon /> Pending
+                                                </>
+                                            )}
+                                            {status === "Connected" && (
+                                                <>
+                                                    <CheckIcon /> Connected
+                                                </>
+                                            )}
+                                            {status === "Accept" &&
+                                                "Accept Request"}
+                                        </button>
                                     </div>
-
-                                    <div className={styles.userInfo}>
-                                        <h3>{user.userId.name}</h3>
-                                        <p className={styles.userHandle}>
-                                            @{user.userId.username}
-                                        </p>
-                                        <p className={styles.userBio}>
-                                            {user.currentPost ||
-                                                (user.bio
-                                                    ? user.bio.substring(
-                                                          0,
-                                                          50
-                                                      ) +
-                                                      (user.bio.length > 50
-                                                          ? "..."
-                                                          : "")
-                                                    : "Digital Nomad")}
-                                        </p>
-                                    </div>
-
-                                    <button
-                                        className={`${styles.actionBtn} ${
-                                            styles[status.toLowerCase()]
-                                        }`}
-                                        onClick={(e) =>
-                                            handleConnect(e, user.userId._id)
-                                        }
-                                        disabled={
-                                            status !== "Connect" &&
-                                            status !== "Accept"
-                                        }
-                                    >
-                                        {status === "Connect" && (
-                                            <>
-                                                <UserPlusIcon /> Connect
-                                            </>
-                                        )}
-                                        {status === "Pending" && (
-                                            <>
-                                                <ClockIcon /> Pending
-                                            </>
-                                        )}
-                                        {status === "Connected" && (
-                                            <>
-                                                <CheckIcon /> Connected
-                                            </>
-                                        )}
-                                        {status === "Accept" &&
-                                            "Accept Request"}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        );
-                    })
-                )}
-            </motion.div>
+                                </motion.div>
+                            );
+                        })
+                    )}
+                </motion.div>
+            )}
         </div>
     );
 }

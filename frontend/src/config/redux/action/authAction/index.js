@@ -1,3 +1,4 @@
+// frontend/src/config/redux/action/authAction/index.js
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import clientServer from "../../../index.jsx";
 
@@ -11,6 +12,8 @@ export const loginUser = createAsyncThunk(
             });
             if (response.data.token) {
                 localStorage.setItem("token", response.data.token);
+                // --- NEW: Save Login Timestamp for 12-hour expiry ---
+                localStorage.setItem("tokenTimestamp", Date.now().toString());
             } else {
                 return thunkAPI.rejectWithValue({
                     message: "Token not found",
@@ -119,7 +122,6 @@ export const getMyConnectionRequests = createAsyncThunk(
                     },
                 }
             );
-            // --- FIX: Added .connections to extract the array ---
             return thunkAPI.fulfillWithValue(response.data.connections);
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data.message);

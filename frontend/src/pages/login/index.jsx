@@ -45,9 +45,10 @@ export default function LoginComponent() {
     const [forgotEmail, setForgotEmail] = useState("");
     const [forgotMessage, setForgotMessage] = useState("");
 
+    // --- MODIFIED: Redirect to Home (/) instead of Dashboard ---
     useEffect(() => {
         if (authState.loggedIn || localStorage.getItem("token")) {
-            router.push("/dashboard");
+            router.push("/");
         }
     }, [authState.loggedIn, router]);
 
@@ -132,7 +133,6 @@ export default function LoginComponent() {
                     {/* RIGHT SIDE: Form */}
                     <div className="col-lg-6 col-12 d-flex align-items-center justify-content-center position-relative">
                         <div className={styles.glassForm}>
-                            {/* --- BRANDING ADDED HERE --- */}
                             <div className={styles.formHeader}>
                                 <div className={styles.loginLogo}>
                                     <span>Link</span>Ups

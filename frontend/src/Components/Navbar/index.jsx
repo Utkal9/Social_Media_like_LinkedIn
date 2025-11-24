@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "./styles.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import { reset } from "@/config/redux/reducer/authReducer";
+import { reset, setTokenIsThere } from "@/config/redux/reducer/authReducer";
+import { getAboutUser } from "@/config/redux/action/authAction";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 
@@ -103,10 +104,24 @@ export default function NavbarComponent() {
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
+    const [isTokenFound, setIsTokenFound] = useState(false);
 
     useEffect(() => {
         setHasMounted(true);
     }, []);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            setIsTokenFound(true);
+            dispatch(setTokenIsThere());
+            if (!authState.profileFetched) {
+                dispatch(getAboutUser({ token }));
+            }
+        } else {
+            setIsTokenFound(false);
+        }
+    }, [dispatch, authState.profileFetched]);
 
     const dropdownRef = useRef(null);
     useEffect(() => {
@@ -126,6 +141,7 @@ export default function NavbarComponent() {
     const handleLogout = () => {
         if (socket) socket.disconnect();
         localStorage.removeItem("token");
+        setIsTokenFound(false);
         dispatch(reset());
         setDropdownOpen(false);
         router.push("/login");
@@ -145,36 +161,69 @@ export default function NavbarComponent() {
           true
         : false;
 
-    // Navigation Items Config
+    // Filter Links based on Auth
     const navItems = [
-        { path: "/dashboard", icon: HomeIcon, label: "Feed" },
-        { path: "/my_connections", icon: NetworkIcon, label: "Network" },
-        { path: "/discover", icon: DiscoverIcon, label: "Discover" },
-        { path: "/meet", icon: MeetIcon, label: "Meet" },
-        { path: "/messaging", icon: MessagingIcon, label: "Chat" },
+        {
+            path: "/dashboard",
+            icon: HomeIcon,
+            label: "Feed",
+            protected: true,
+        },
+        {
+            path: "/my_connections",
+            icon: NetworkIcon,
+            label: "Network",
+            protected: true,
+        },
+        {
+            path: "/discover",
+            icon: DiscoverIcon,
+            label: "Discover",
+            protected: false,
+        },
+        {
+            path: "/meet",
+            icon: MeetIcon,
+            label: "Meet",
+            protected: false,
+        },
+        {
+            path: "/messaging",
+            icon: MessagingIcon,
+            label: "Chat",
+            protected: true,
+        },
     ];
 
-    const renderNavLinks = () => (
-        <>
-            {navItems.map((item) => (
-                <div
-                    key={item.path}
-                    className={`${styles.navLink} ${
-                        router.pathname === item.path ? styles.active : ""
-                    }`}
-                    onClick={() => handleNavigation(item.path)}
-                >
-                    <div className={styles.iconGlow}>
-                        <item.icon isActive={router.pathname === item.path} />
+    const renderNavLinks = () => {
+        const filteredItems = navItems.filter((item) =>
+            isTokenFound ? true : !item.protected
+        );
+
+        return (
+            <>
+                {filteredItems.map((item) => (
+                    <div
+                        key={item.path}
+                        className={`${styles.navLink} ${
+                            router.pathname === item.path ? styles.active : ""
+                        }`}
+                        onClick={() => handleNavigation(item.path)}
+                    >
+                        <div className={styles.iconGlow}>
+                            <item.icon
+                                isActive={router.pathname === item.path}
+                            />
+                        </div>
+                        <span className={styles.navLabel}>{item.label}</span>
+                        {router.pathname === item.path && (
+                            <div className={styles.activeBar} />
+                        )}
                     </div>
-                    <span className={styles.navLabel}>{item.label}</span>
-                    {router.pathname === item.path && (
-                        <div className={styles.activeBar} />
-                    )}
-                </div>
-            ))}
-        </>
-    );
+                ))}
+            </>
+        );
+    };
 
     if (!hasMounted) return <nav className={styles.container} />;
 
@@ -195,7 +244,9 @@ export default function NavbarComponent() {
 
                     {/* Right Side (Profile / Login) - Visible on Mobile too */}
                     <div className={styles.navRight}>
-                        {authState.profileFetched && authState.user ? (
+                        {authState.profileFetched &&
+                        authState.user &&
+                        isTokenFound ? (
                             <div
                                 className={styles.profileMenu}
                                 ref={dropdownRef}
@@ -308,24 +359,28 @@ export default function NavbarComponent() {
             </nav>
 
             {/* --- BOTTOM NAV (Mobile Only) --- */}
-            <div className={styles.bottomNav}>
-                {navItems.map((item) => (
-                    <div
-                        key={item.path}
-                        className={`${styles.bottomNavItem} ${
-                            router.pathname === item.path
-                                ? styles.bottomNavActive
-                                : ""
-                        }`}
-                        onClick={() => handleNavigation(item.path)}
-                    >
-                        <item.icon isActive={router.pathname === item.path} />
-                        <span className={styles.bottomNavLabel}>
-                            {item.label}
-                        </span>
-                    </div>
-                ))}
-            </div>
+            {isTokenFound && (
+                <div className={styles.bottomNav}>
+                    {navItems.map((item) => (
+                        <div
+                            key={item.path}
+                            className={`${styles.bottomNavItem} ${
+                                router.pathname === item.path
+                                    ? styles.bottomNavActive
+                                    : ""
+                            }`}
+                            onClick={() => handleNavigation(item.path)}
+                        >
+                            <item.icon
+                                isActive={router.pathname === item.path}
+                            />
+                            <span className={styles.bottomNavLabel}>
+                                {item.label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            )}
         </>
     );
 }

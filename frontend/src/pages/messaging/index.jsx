@@ -1,5 +1,5 @@
 // frontend/src/pages/messaging/index.jsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import UserLayout from "@/layout/UserLayout";
 import clientServer from "@/config";
 import { useSelector } from "react-redux";
@@ -53,15 +53,6 @@ const BackIcon = () => (
         />
     </svg>
 );
-const MoreIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="24">
-        <path
-            fillRule="evenodd"
-            d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
-            clipRule="evenodd"
-        />
-    </svg>
-);
 const EditIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20">
         <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
@@ -74,6 +65,22 @@ const getTimeAgo = (dateString) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
+const formatLastSeen = (dateString) => {
+    if (!dateString) return "Offline";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
+
+    if (diffInSeconds < 60) return "Active just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `Active ${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Active ${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `Active ${diffInDays}d ago`;
+    return `Active ${Math.floor(diffInDays / 7)}w ago`;
+};
+
 export default function MessagingPage() {
     const router = useRouter();
     const auth = useSelector((state) => state.auth);
@@ -84,19 +91,43 @@ export default function MessagingPage() {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
-    const [showMobileChat, setShowMobileChat] = useState(false); // Controls mobile view
+    const [showMobileChat, setShowMobileChat] = useState(false);
     const messagesEndRef = useRef(null);
 
-    // Fetch Conversations
+    // --- FIX: Hydration Error & Loading State ---
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+        if (!localStorage.getItem("token")) {
+            router.push("/login");
+        } else {
+            fetchConversations();
+        }
+    }, [router]);
+
+    const isConnected = useMemo(() => {
+        if (!activeChat || !auth.connections || !auth.connectionRequest)
+            return false;
+        const targetId = activeChat._id;
+        const isSentAccepted = auth.connections.some(
+            (c) =>
+                c.connectionId?._id === targetId && c.status_accepted === true
+        );
+        const isReceivedAccepted = auth.connectionRequest.some(
+            (c) => c.userId?._id === targetId && c.status_accepted === true
+        );
+        return isSentAccepted || isReceivedAccepted;
+    }, [activeChat, auth.connections, auth.connectionRequest]);
+
     const fetchConversations = async () => {
-        if (auth.isTokenThere) {
+        if (localStorage.getItem("token")) {
             try {
                 const res = await clientServer.get("/messages/conversations", {
                     params: { token: localStorage.getItem("token") },
                 });
                 setConversations(res.data);
 
-                // Update online statuses from fetched data initially
                 const initialStatuses = {};
                 res.data.forEach((user) => {
                     initialStatuses[user._id] = {
@@ -117,12 +148,7 @@ export default function MessagingPage() {
     };
 
     useEffect(() => {
-        fetchConversations();
-    }, [auth.isTokenThere]);
-
-    // Handle "Chat With" URL param
-    useEffect(() => {
-        if (!router.isReady || !auth.isTokenThere) return;
+        if (!router.isReady || !localStorage.getItem("token")) return;
         const { chatWith } = router.query;
         if (chatWith) {
             const existingChat = conversations.find(
@@ -131,7 +157,6 @@ export default function MessagingPage() {
             if (existingChat) {
                 handleSelectChat(existingChat);
             } else {
-                // Fetch new user if not in list
                 const fetchTargetUser = async () => {
                     try {
                         const res = await clientServer.get(
@@ -152,9 +177,8 @@ export default function MessagingPage() {
                 fetchTargetUser();
             }
         }
-    }, [router.isReady, router.query, auth.isTokenThere, conversations.length]);
+    }, [router.isReady, router.query, conversations.length]);
 
-    // Fetch Messages
     useEffect(() => {
         if (!activeChat) return;
         const fetchMessages = async () => {
@@ -174,7 +198,6 @@ export default function MessagingPage() {
         fetchMessages();
     }, [activeChat]);
 
-    // Socket Listener
     useEffect(() => {
         if (!socket) return;
         const handleReceiveMessage = (data) => {
@@ -182,7 +205,7 @@ export default function MessagingPage() {
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
             } else {
-                fetchConversations(); // Refresh list to show new message indicator (if we had one)
+                fetchConversations();
             }
         };
         socket.on("receive-chat-message", handleReceiveMessage);
@@ -200,7 +223,6 @@ export default function MessagingPage() {
     const handleSelectChat = (user) => {
         setActiveChat(user);
         setShowMobileChat(true);
-        // Clear query param so back button doesn't re-trigger
         if (router.query.chatWith) {
             router.replace("/messaging", undefined, { shallow: true });
         }
@@ -268,6 +290,9 @@ export default function MessagingPage() {
             user.username.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // --- FIX: Removed the problematic condition ---
+    // Replaced with standard loading logic inside the return statement.
+
     return (
         <div className={styles.pageWrapper}>
             <Head>
@@ -275,202 +300,241 @@ export default function MessagingPage() {
             </Head>
             <div className={styles.bgGlow}></div>
 
-            <div className={styles.messagingContainer}>
-                {/* --- Sidebar (Conversation List) --- */}
-                <div
-                    className={`${styles.sidebar} ${
-                        showMobileChat ? styles.hiddenOnMobile : ""
-                    }`}
-                >
-                    <div className={styles.sidebarHeader}>
-                        <h2 className={styles.headerTitle}>Messages</h2>
-                        <button
-                            className={styles.iconBtn}
-                            onClick={() => router.push("/my_connections")}
-                            title="New Chat"
-                        >
-                            <EditIcon />
-                        </button>
-                    </div>
+            {/* Render content ONLY after mount to prevent hydration mismatch */}
+            {isMounted ? (
+                <div className={styles.messagingContainer}>
+                    {/* --- Sidebar (Conversation List) --- */}
+                    <div
+                        className={`${styles.sidebar} ${
+                            showMobileChat ? styles.hiddenOnMobile : ""
+                        }`}
+                    >
+                        <div className={styles.sidebarHeader}>
+                            <h2 className={styles.headerTitle}>Messages</h2>
+                            <button
+                                className={styles.iconBtn}
+                                onClick={() => router.push("/my_connections")}
+                                title="New Chat"
+                            >
+                                <EditIcon />
+                            </button>
+                        </div>
 
-                    <div className={styles.searchBar}>
-                        <SearchIcon />
-                        <input
-                            type="text"
-                            placeholder="Search nodes..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
+                        <div className={styles.searchBar}>
+                            <SearchIcon />
+                            <input
+                                type="text"
+                                placeholder="Search nodes..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
 
-                    <div className={styles.conversationList}>
-                        {filteredConversations.map((user) => {
-                            const isOnline =
-                                onlineStatuses &&
-                                onlineStatuses[user._id]?.isOnline;
-                            return (
-                                <div
-                                    key={user._id}
-                                    className={`${styles.conversationItem} ${
-                                        activeChat?._id === user._id
-                                            ? styles.activeItem
-                                            : ""
-                                    }`}
-                                    onClick={() => handleSelectChat(user)}
-                                >
-                                    <div className={styles.avatarWrapper}>
-                                        <img
-                                            src={user.profilePicture}
-                                            alt={user.name}
-                                        />
-                                        {isOnline && (
-                                            <span
-                                                className={styles.onlineDot}
-                                            ></span>
-                                        )}
-                                    </div>
-                                    <div className={styles.info}>
-                                        <h4>{user.name}</h4>
-                                        <p>{isOnline ? "Online" : "Offline"}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                        <div className={styles.conversationList}>
+                            {filteredConversations.map((user) => {
+                                const isOnline =
+                                    onlineStatuses &&
+                                    onlineStatuses[user._id]?.isOnline;
+                                const lastSeenDate =
+                                    (onlineStatuses &&
+                                        onlineStatuses[user._id]?.lastSeen) ||
+                                    user.lastSeen;
 
-                {/* --- Chat Window --- */}
-                <div
-                    className={`${styles.chatWindow} ${
-                        !showMobileChat ? styles.hiddenOnMobile : ""
-                    }`}
-                >
-                    {activeChat ? (
-                        <>
-                            <div className={styles.chatHeader}>
-                                <button
-                                    className={styles.backBtn}
-                                    onClick={handleBackToConversations}
-                                >
-                                    <BackIcon />
-                                </button>
-                                <div
-                                    className={styles.headerUserInfo}
-                                    onClick={() =>
-                                        router.push(
-                                            `/view_profile/${activeChat.username}`
-                                        )
-                                    }
-                                >
-                                    <div className={styles.headerAvatar}>
-                                        <img
-                                            src={activeChat.profilePicture}
-                                            alt=""
-                                        />
-                                        {onlineStatuses &&
-                                            onlineStatuses[activeChat._id]
-                                                ?.isOnline && (
+                                return (
+                                    <div
+                                        key={user._id}
+                                        className={`${
+                                            styles.conversationItem
+                                        } ${
+                                            activeChat?._id === user._id
+                                                ? styles.activeItem
+                                                : ""
+                                        }`}
+                                        onClick={() => handleSelectChat(user)}
+                                    >
+                                        <div className={styles.avatarWrapper}>
+                                            <img
+                                                src={user.profilePicture}
+                                                alt={user.name}
+                                            />
+                                            {isOnline && (
                                                 <span
-                                                    className={
-                                                        styles.onlineDotSmall
-                                                    }
+                                                    className={styles.onlineDot}
                                                 ></span>
                                             )}
+                                        </div>
+                                        <div className={styles.info}>
+                                            <h4>{user.name}</h4>
+                                            <p
+                                                style={{
+                                                    color: isOnline
+                                                        ? "var(--neon-teal)"
+                                                        : "var(--text-secondary)",
+                                                }}
+                                            >
+                                                {isOnline
+                                                    ? "Online"
+                                                    : formatLastSeen(
+                                                          lastSeenDate
+                                                      )}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className={styles.headerText}>
-                                        <h3>{activeChat.name}</h3>
-                                        <span>@{activeChat.username}</span>
-                                    </div>
-                                </div>
-                                <div className={styles.headerActions}>
-                                    <button
-                                        className={styles.actionBtn}
-                                        onClick={handleStartVideoCall}
-                                        title="Video Call"
-                                    >
-                                        <VideoIcon />
-                                    </button>
-                                </div>
-                            </div>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                            <div className={styles.messagesContainer}>
-                                {messages.map((msg, index) => {
-                                    const isMe =
-                                        msg.sender === auth.user?.userId?._id;
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`${styles.messageRow} ${
-                                                isMe
-                                                    ? styles.rowRight
-                                                    : styles.rowLeft
-                                            }`}
-                                        >
+                    {/* --- Chat Window --- */}
+                    <div
+                        className={`${styles.chatWindow} ${
+                            !showMobileChat ? styles.hiddenOnMobile : ""
+                        }`}
+                    >
+                        {activeChat ? (
+                            <>
+                                <div className={styles.chatHeader}>
+                                    <button
+                                        className={styles.backBtn}
+                                        onClick={handleBackToConversations}
+                                    >
+                                        <BackIcon />
+                                    </button>
+                                    <div
+                                        className={styles.headerUserInfo}
+                                        onClick={() =>
+                                            router.push(
+                                                `/view_profile/${activeChat.username}`
+                                            )
+                                        }
+                                    >
+                                        <div className={styles.headerAvatar}>
+                                            <img
+                                                src={activeChat.profilePicture}
+                                                alt=""
+                                            />
+                                            {onlineStatuses &&
+                                                onlineStatuses[activeChat._id]
+                                                    ?.isOnline && (
+                                                    <span
+                                                        className={
+                                                            styles.onlineDotSmall
+                                                        }
+                                                    ></span>
+                                                )}
+                                        </div>
+                                        <div className={styles.headerText}>
+                                            <h3>{activeChat.name}</h3>
+                                            <span>@{activeChat.username}</span>
+                                        </div>
+                                    </div>
+                                    <div className={styles.headerActions}>
+                                        {isConnected && (
+                                            <button
+                                                className={styles.actionBtn}
+                                                onClick={handleStartVideoCall}
+                                                title="Video Call"
+                                            >
+                                                <VideoIcon />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className={styles.messagesContainer}>
+                                    {messages.map((msg, index) => {
+                                        const isMe =
+                                            msg.sender ===
+                                            auth.user?.userId?._id;
+                                        return (
                                             <div
-                                                className={`${styles.bubble} ${
+                                                key={index}
+                                                className={`${
+                                                    styles.messageRow
+                                                } ${
                                                     isMe
-                                                        ? styles.bubbleMe
-                                                        : styles.bubbleOther
+                                                        ? styles.rowRight
+                                                        : styles.rowLeft
                                                 }`}
                                             >
-                                                {msg.message}
-                                                <span className={styles.time}>
-                                                    {getTimeAgo(msg.createdAt)}
-                                                </span>
+                                                <div
+                                                    className={`${
+                                                        styles.bubble
+                                                    } ${
+                                                        isMe
+                                                            ? styles.bubbleMe
+                                                            : styles.bubbleOther
+                                                    }`}
+                                                >
+                                                    {msg.message}
+                                                    <span
+                                                        className={styles.time}
+                                                    >
+                                                        {getTimeAgo(
+                                                            msg.createdAt
+                                                        )}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                                <div ref={messagesEndRef} />
-                            </div>
-
-                            <div className={styles.inputArea}>
-                                <div className={styles.inputWrapper}>
-                                    <textarea
-                                        value={inputText}
-                                        onChange={(e) =>
-                                            setInputText(e.target.value)
-                                        }
-                                        placeholder="Transmit message..."
-                                        onKeyDown={(e) =>
-                                            e.key === "Enter" &&
-                                            !e.shiftKey &&
-                                            handleSendMessage()
-                                        }
-                                    />
-                                    <button
-                                        onClick={handleSendMessage}
-                                        disabled={!inputText.trim()}
-                                        className={styles.sendBtn}
-                                    >
-                                        <SendIcon />
-                                    </button>
+                                        );
+                                    })}
+                                    <div ref={messagesEndRef} />
                                 </div>
+
+                                <div className={styles.inputArea}>
+                                    <div className={styles.inputWrapper}>
+                                        <textarea
+                                            value={inputText}
+                                            onChange={(e) =>
+                                                setInputText(e.target.value)
+                                            }
+                                            placeholder="Transmit message..."
+                                            onKeyDown={(e) =>
+                                                e.key === "Enter" &&
+                                                !e.shiftKey &&
+                                                handleSendMessage()
+                                            }
+                                        />
+                                        <button
+                                            onClick={handleSendMessage}
+                                            disabled={!inputText.trim()}
+                                            className={styles.sendBtn}
+                                        >
+                                            <SendIcon />
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className={styles.emptyState}>
+                                <div className={styles.emptyIconWrapper}>
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth={1}
+                                        width="64"
+                                        height="64"
+                                    >
+                                        <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                    </svg>
+                                </div>
+                                <h3>Secure Channel Ready</h3>
+                                <p>
+                                    Select a node from the list to initialize
+                                    encrypted communication.
+                                </p>
                             </div>
-                        </>
-                    ) : (
-                        <div className={styles.emptyState}>
-                            <div className={styles.emptyIconWrapper}>
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={1}
-                                    width="64"
-                                    height="64"
-                                >
-                                    <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                                </svg>
-                            </div>
-                            <h3>Secure Channel Ready</h3>
-                            <p>
-                                Select a node from the list to initialize
-                                encrypted communication.
-                            </p>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                // Render a placeholder to match server structure OR simple null (safe inside client-only hook)
+                // A minimal loader here prevents the flash of unstyled/empty content
+                <div className={styles.emptyState}>
+                    <p style={{ color: "var(--neon-teal)" }}>Connecting...</p>
+                </div>
+            )}
         </div>
     );
 }

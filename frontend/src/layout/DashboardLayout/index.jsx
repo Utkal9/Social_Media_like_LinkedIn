@@ -8,6 +8,8 @@ import {
     getAboutUser,
     getAllUsers,
     sendConnectionRequest,
+    getConnectionsRequest,
+    getMyConnectionRequests,
 } from "@/config/redux/action/authAction";
 import { useSocket } from "@/context/SocketContext";
 
@@ -22,14 +24,48 @@ export default function DashboardLayout({ children }) {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        if (!token) {
+        const tokenTimestamp = localStorage.getItem("tokenTimestamp");
+
+        // 12 Hours in milliseconds (12 * 60 * 60 * 1000)
+        const TWELVE_HOURS = 43200000;
+
+        const now = Date.now();
+        const isExpired =
+            !tokenTimestamp || now - parseInt(tokenTimestamp) > TWELVE_HOURS;
+
+        if (!token || isExpired) {
+            // --- FIX: Clean up and redirect if expired or no token ---
+            localStorage.removeItem("token");
+            localStorage.removeItem("tokenTimestamp");
             router.push("/login");
         } else {
             dispatch(setTokenIsThere());
-            if (!authState.profileFetched) dispatch(getAboutUser({ token }));
+
+            // Fetch Profile Data with ERROR HANDLING
+            if (!authState.profileFetched) {
+                dispatch(getAboutUser({ token }))
+                    .unwrap()
+                    .catch((err) => {
+                        // --- FIX: If token is invalid on server, clear and logout to prevent "Initializing" stuck state ---
+                        console.error("Session invalid:", err);
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("tokenTimestamp");
+                        router.push("/login");
+                    });
+            }
+
             if (!authState.all_profiles_fetched) dispatch(getAllUsers());
+
+            // Fetch Connections
+            dispatch(getConnectionsRequest({ token }));
+            dispatch(getMyConnectionRequests({ token }));
         }
-    }, [dispatch, authState.profileFetched, authState.all_profiles_fetched]);
+    }, [
+        dispatch,
+        authState.profileFetched,
+        authState.all_profiles_fetched,
+        router,
+    ]);
 
     const user = authState.user?.userId;
     const userFallback = user?.name ? user.name.charAt(0).toUpperCase() : "?";
@@ -147,7 +183,7 @@ export default function DashboardLayout({ children }) {
                                         </p>
                                     )}
 
-                                    {/* Stats Container - "Rank" Removed */}
+                                    {/* Stats Container */}
                                     <div className={styles.statsContainer}>
                                         <div className={styles.statBox}>
                                             <span className={styles.statNum}>
