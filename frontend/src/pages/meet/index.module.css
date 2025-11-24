@@ -1,14 +1,15 @@
 /* frontend/src/pages/meet/index.module.css */
 
 .meetContainer {
-    min-height: 80vh;
+    min-height: 80dvh; /* Use dynamic viewport height */
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 40px 20px;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden; /* FIX: Allow vertical scroll, prevent horizontal */
+    /* Remove overflow: hidden to let content grow */
 }
 
 /* Background Effect */
@@ -253,9 +254,9 @@
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 768px) {
     .meetContainer {
-        /* FIX: Extra padding at bottom to clear Fixed Bottom Nav */
-        padding-bottom: 100px;
-        justify-content: flex-start; /* Align to top on mobile */
+        /* Extra padding at bottom to clear Fixed Bottom Nav */
+        padding-bottom: 120px; /* Increased from 100px to be safe */
+        justify-content: flex-start;
     }
 
     .title {
@@ -264,7 +265,7 @@
 
     .actionGrid {
         flex-direction: column; /* Stack cards */
-        gap: 20px;
+        gap: 24px;
     }
 
     .glassCard {
@@ -273,7 +274,6 @@
         min-width: auto;
     }
 
-    /* Hide Divider or adjust it */
     .divider {
         display: none;
     }
