@@ -19,6 +19,8 @@ import styles from "./index.module.css";
 import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
 
+const MAX_CHAR_COUNT = 3000;
+
 // --- Helpers ---
 function getTimeAgo(dateString) {
     if (!dateString) return "";
@@ -176,6 +178,25 @@ const CloseIcon = () => (
         />
     </svg>
 );
+// --- Status Icons ---
+const CheckCircleIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const ErrorIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
 
 export default function Dashboard() {
     const router = useRouter();
@@ -205,6 +226,10 @@ export default function Dashboard() {
     const [currentReactionList, setCurrentReactionList] = useState([]);
     const [activeReactionId, setActiveReactionId] = useState(null); // Track open reaction dock
 
+    // Notification & Confirmation
+    const [notification, setNotification] = useState(null);
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
+
     // Timer ref for hover delay
     const reactionTimeoutRef = useRef(null);
 
@@ -225,6 +250,12 @@ export default function Dashboard() {
         document.addEventListener("click", closeMenu);
         return () => document.removeEventListener("click", closeMenu);
     }, [authState.isTokenThere, dispatch]);
+
+    // --- NOTIFICATION HELPER ---
+    const showToast = (msg, type = "success") => {
+        setNotification({ message: msg, type });
+        setTimeout(() => setNotification(null), 3000);
+    };
 
     // --- REACTION LOGIC START ---
 
@@ -286,12 +317,38 @@ export default function Dashboard() {
         }
     };
 
-    const handleUpload = async () => {
-        await dispatch(createPost({ file: fileContent, body: postContent }));
-        setPostContent("");
+    const clearMedia = () => {
         setFileContent(null);
         setFilePreview(null);
+        const fileInput = document.getElementById("fileUpload");
+        if (fileInput) fileInput.value = "";
         setPostError("");
+    };
+
+    const handleUpload = async () => {
+        if (!postContent.trim()) {
+            setPostError(
+                "Please write something. Media-only posts are not allowed."
+            );
+            return;
+        }
+        if (postContent.length > MAX_CHAR_COUNT) {
+            setPostError(
+                `Character limit exceeded. Max ${MAX_CHAR_COUNT} characters.`
+            );
+            return;
+        }
+        try {
+            await dispatch(
+                createPost({ file: fileContent, body: postContent })
+            );
+            setPostContent("");
+            clearMedia();
+            setPostError("");
+            showToast("Transmission Sent Successfully", "success");
+        } catch (error) {
+            showToast("Transmission Failed", "error");
+        }
     };
 
     const handleEditFileChange = (e) => {
@@ -309,23 +366,39 @@ export default function Dashboard() {
 
     const handleUpdateSubmit = async () => {
         if (!editingPost) return;
-        await dispatch(
-            updatePost({
-                post_id: editingPost._id,
-                body: editBody,
-                file: editFile,
-            })
-        );
-        setEditingPost(null);
-        setEditBody("");
-        setEditFile(null);
-        setEditFilePreview(null);
+        try {
+            await dispatch(
+                updatePost({
+                    post_id: editingPost._id,
+                    body: editBody,
+                    file: editFile,
+                })
+            );
+            setEditingPost(null);
+            setEditBody("");
+            setEditFile(null);
+            setEditFilePreview(null);
+            showToast("Transmission Updated", "success");
+        } catch (error) {
+            showToast("Update Failed", "error");
+        }
     };
 
-    const handleDelete = async (postId) => {
-        if (confirm("Delete this post?")) {
-            await dispatch(deletePost({ post_id: postId }));
-            dispatch(getAllPosts());
+    // --- NEW: Delete Confirmation Flow ---
+    const handleDeleteClick = (postId) => {
+        setDeleteTargetId(postId);
+    };
+
+    const confirmDelete = async () => {
+        if (deleteTargetId) {
+            try {
+                await dispatch(deletePost({ post_id: deleteTargetId }));
+                dispatch(getAllPosts());
+                showToast("Transmission Deleted", "success");
+            } catch (error) {
+                showToast("Delete Failed", "error");
+            }
+            setDeleteTargetId(null);
         }
     };
 
@@ -396,6 +469,57 @@ export default function Dashboard() {
 
     return (
         <div className={styles.feedContainer}>
+            {/* --- TOAST NOTIFICATION --- */}
+            {notification && (
+                <div
+                    className={`${styles.notificationToast} ${
+                        styles[notification.type]
+                    }`}
+                >
+                    {notification.type === "success" ? (
+                        <CheckCircleIcon />
+                    ) : (
+                        <ErrorIcon />
+                    )}
+                    <span>{notification.message}</span>
+                </div>
+            )}
+
+            {/* --- DELETE CONFIRMATION MODAL --- */}
+            {deleteTargetId && (
+                <div
+                    className={styles.commentModalBackdrop}
+                    onClick={() => setDeleteTargetId(null)}
+                >
+                    <div
+                        className={styles.confirmModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className={styles.confirmTitle}>
+                            Confirm Deletion
+                        </h3>
+                        <p className={styles.confirmText}>
+                            Are you sure you want to delete this transmission?
+                            This action cannot be undone.
+                        </p>
+                        <div className={styles.confirmButtons}>
+                            <button
+                                className={styles.cancelButton}
+                                onClick={() => setDeleteTargetId(null)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.deleteConfirmBtn}
+                                onClick={confirmDelete}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {filterUsername ? (
                 <div className={styles.filterBanner}>
                     <p>
@@ -421,11 +545,26 @@ export default function Dashboard() {
                             <textarea
                                 id="postContent"
                                 name="postContent"
-                                onChange={(e) => setPostContent(e.target.value)}
+                                onChange={(e) => {
+                                    setPostContent(e.target.value);
+                                    if (e.target.value.trim()) setPostError("");
+                                }}
                                 value={postContent}
                                 className={styles.textAreaOfContent}
                                 placeholder="Initialize new transmission..."
+                                maxLength={MAX_CHAR_COUNT}
                             />
+                            <div
+                                className={styles.charCounter}
+                                style={{
+                                    color:
+                                        postContent.length >= MAX_CHAR_COUNT
+                                            ? "#ff4d7d"
+                                            : "#94a3b8",
+                                }}
+                            >
+                                {postContent.length} / {MAX_CHAR_COUNT}
+                            </div>
                         </div>
                     </div>
                     {postError && (
@@ -433,7 +572,16 @@ export default function Dashboard() {
                     )}
                     {filePreview && (
                         <div className={styles.previewBox}>
-                            <img src={filePreview} alt="Preview" />
+                            <div className={styles.previewWrapper}>
+                                <img src={filePreview} alt="Preview" />
+                                <button
+                                    onClick={clearMedia}
+                                    className={styles.clearPreviewBtn}
+                                    title="Remove media"
+                                >
+                                    <CloseIcon />
+                                </button>
+                            </div>
                         </div>
                     )}
                     <div className={styles.createPostBottom}>
@@ -545,7 +693,9 @@ export default function Dashboard() {
                                                 <button
                                                     className={`${styles.optionItem} ${styles.delete}`}
                                                     onClick={() =>
-                                                        handleDelete(post._id)
+                                                        handleDeleteClick(
+                                                            post._id
+                                                        )
                                                     }
                                                 >
                                                     <DeleteIcon /> Delete
@@ -556,6 +706,7 @@ export default function Dashboard() {
                                 )}
                             </div>
 
+                            {/* ... (Rest of the post card content) ... */}
                             <div className={styles.postCardBody}>
                                 <p>{post.body}</p>
                                 {post.media && (
@@ -961,7 +1112,7 @@ export default function Dashboard() {
                                 }}
                             >
                                 <button
-                                    className={styles.actionButton}
+                                    className={styles.cancelButton}
                                     onClick={() => setEditingPost(null)}
                                 >
                                     Cancel
@@ -978,7 +1129,7 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {/* --- Reaction List Modal (FIXED STYLE) --- */}
+            {/* --- Reaction List Modal --- */}
             {showReactionListModal && (
                 <div
                     className={styles.commentModalBackdrop}
