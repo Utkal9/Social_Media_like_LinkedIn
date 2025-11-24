@@ -81,6 +81,36 @@ const CloseIcon = () => (
         />
     </svg>
 );
+// --- New Icons for Notification ---
+const CheckCircleIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const ErrorIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+
+// --- Video Helper ---
+const isVideo = (fileType, mediaUrl) => {
+    if (fileType && fileType.startsWith("video/")) return true;
+    if (mediaUrl) {
+        const cleanStr = mediaUrl.split("?")[0].split("#")[0];
+        const ext = cleanStr.split(".").pop().toLowerCase();
+        return ["mp4", "webm", "ogg", "mov", "avi", "mkv"].includes(ext);
+    }
+    return false;
+};
 
 const TruncatedText = ({ content, postId }) => {
     const router = useRouter();
@@ -103,7 +133,7 @@ const TruncatedText = ({ content, postId }) => {
     );
 };
 
-// --- RESTORED & UPGRADED LOGIC ---
+// --- Profile Completion Logic ---
 const calculateProfileCompletion = (profile) => {
     if (!profile || !profile.userId) return { percentage: 0, missing: [] };
 
@@ -135,21 +165,18 @@ const calculateProfileCompletion = (profile) => {
     if (profile.skillSoft) score++;
     else missing.push("Skills: Soft Skills");
 
-    // 3. Projects (Minimum 2) (10 points total) - Adjusted weight slightly for balance
+    // 3. Projects (Minimum 2) (10 points total)
     const projects = profile.projects || [];
 
-    // Base point for having at least 2 projects
     if (projects.length >= 2) {
-        score += 2; // Weighted heavier
+        score += 2;
     } else {
         missing.push(`Add ${2 - projects.length} more Project(s)`);
     }
 
-    // Details check for the first 2 projects
     for (let i = 0; i < 2; i++) {
         const proj = projects[i];
         if (proj) {
-            // Description length check (approx 3 lines ~ 80 chars for validation)
             if (proj.description && proj.description.length >= 80) {
                 score += 2;
             } else {
@@ -157,27 +184,21 @@ const calculateProfileCompletion = (profile) => {
                     `Project ${i + 1}: Description too short (min 80 chars)`
                 );
             }
-
-            // Link check
             if (proj.link) {
                 score += 1;
             } else {
                 missing.push(`Project ${i + 1}: Missing GitHub/Live Link`);
             }
-
-            // Timeline check
             if (proj.duration) {
                 score += 1;
             } else {
                 missing.push(`Project ${i + 1}: Missing Duration`);
             }
-        } else {
-            // Project missing entirely
         }
     }
 
     const percentage = Math.round((score / totalPoints) * 100);
-    return { percentage: Math.min(percentage, 100), missing }; // Cap at 100
+    return { percentage: Math.min(percentage, 100), missing };
 };
 
 export default function Profilepage() {
@@ -196,9 +217,14 @@ export default function Profilepage() {
     const [showConnectionsModal, setShowConnectionsModal] = useState(false);
     const [userPosts, setUserPosts] = useState([]);
 
+    // Modal State
     const [modalMode, setModalMode] = useState(null);
     const [selectedItem, setSelectedItem] = useState(null);
     const [modalInput, setModalInput] = useState({});
+
+    // --- NEW: Notification & Confirmation State ---
+    const [notification, setNotification] = useState(null); // { message, type: 'success' | 'error' }
+    const [deleteTarget, setDeleteTarget] = useState(null); // { type, index }
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -238,6 +264,12 @@ export default function Profilepage() {
         return [...sentAccepted, ...receivedAccepted].filter((u) => u);
     }, [authState.connections, authState.connectionRequest]);
 
+    // --- NEW: Helper to Show Notification ---
+    const showToast = (msg, type = "success") => {
+        setNotification({ message: msg, type });
+        setTimeout(() => setNotification(null), 3000);
+    };
+
     const syncProfileToBackend = async (updatedProfile) => {
         try {
             setCompletionStats(calculateProfileCompletion(updatedProfile));
@@ -252,8 +284,9 @@ export default function Profilepage() {
                 ...updatedProfile,
             });
             dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+            showToast("Profile updated successfully", "success");
         } catch (err) {
-            alert("Failed to save changes.");
+            showToast("Failed to save changes", "error");
         }
     };
 
@@ -295,8 +328,9 @@ export default function Profilepage() {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             dispatch(getAboutUser({ token: localStorage.getItem("token") }));
+            showToast("Image uploaded successfully", "success");
         } catch (error) {
-            alert("Upload failed.");
+            showToast("Upload failed", "error");
         }
     };
 
@@ -322,10 +356,8 @@ export default function Profilepage() {
         if (!isEditing) syncProfileToBackend(updatedProfile);
     };
 
-    // --- UPDATED DOWNLOAD HANDLER ---
     const handleDownloadResume = async () => {
         if (completionStats.percentage < 90) {
-            // Visual feedback is already in the tooltip, but keep safe guard
             return;
         }
         if (!userProfile?.userId?._id) return;
@@ -344,8 +376,9 @@ export default function Profilepage() {
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
+            showToast("Resume generated successfully", "success");
         } catch (error) {
-            alert("Generation failed.");
+            showToast("Generation failed", "error");
         }
     };
 
@@ -382,36 +415,88 @@ export default function Profilepage() {
         closeModal();
     };
 
-    const handleItemDelete = (type, index) => {
-        if (window.confirm("Delete this item?")) {
-            let updated = { ...userProfile };
-            const map = {
-                work: "pastWork",
-                edu: "education",
-                projects: "projects",
-                cert: "certificates",
-                achieve: "achievements",
-            };
-            const key = map[type];
-            updated[key] = updated[key].filter((_, i) => i !== index);
-            setUserProfile(updated);
-            syncProfileToBackend(updated);
-        }
+    // --- NEW: Confirm Delete Logic ---
+    const initiateDelete = (type, index) => {
+        setDeleteTarget({ type, index });
+    };
+
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        const { type, index } = deleteTarget;
+        let updated = { ...userProfile };
+        const map = {
+            work: "pastWork",
+            edu: "education",
+            projects: "projects",
+            cert: "certificates",
+            achieve: "achievements",
+        };
+        const key = map[type];
+        updated[key] = updated[key].filter((_, i) => i !== index);
+        setUserProfile(updated);
+        syncProfileToBackend(updated);
+        showToast("Successfully deleted", "success");
+        setDeleteTarget(null);
     };
 
     if (!userProfile)
         return <div className={styles.loading}>Loading Identity...</div>;
 
-    // Color Logic for Ring
     const strokeColor =
         completionStats.percentage >= 90
-            ? "var(--neon-teal)" // Ready
-            : "var(--neon-pink)"; // Incomplete
+            ? "var(--neon-teal)"
+            : "var(--neon-pink)";
 
     return (
         <div className={styles.profilePage}>
+            {/* --- Notifications (Toast) --- */}
+            {notification && (
+                <div
+                    className={`${styles.notificationToast} ${
+                        styles[notification.type]
+                    }`}
+                >
+                    {notification.type === "success" ? (
+                        <CheckCircleIcon />
+                    ) : (
+                        <ErrorIcon />
+                    )}
+                    <span>{notification.message}</span>
+                </div>
+            )}
+
+            {/* --- Confirmation Modal --- */}
+            {deleteTarget && (
+                <div className={styles.modalOverlay}>
+                    <div className={styles.confirmModalContent}>
+                        <h3 className={styles.confirmTitle}>
+                            Confirm Deletion
+                        </h3>
+                        <p className={styles.confirmText}>
+                            Are you sure you want to delete this item? This
+                            action cannot be undone.
+                        </p>
+                        <div className={styles.confirmButtons}>
+                            <button
+                                className={styles.cancelBtn}
+                                onClick={() => setDeleteTarget(null)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.deleteConfirmBtn}
+                                onClick={confirmDelete}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* --- Header Card --- */}
             <div className={styles.headerCard}>
+                {/* ... (Header content remains the same as previous, just logic changed) ... */}
                 <div
                     className={styles.coverImage}
                     style={{
@@ -420,9 +505,7 @@ export default function Profilepage() {
                         }")`,
                     }}
                 >
-                    {/* --- UPDATED: Resume Ring & Tooltip --- */}
                     <div className={styles.resumeActionWrapper}>
-                        {/* The Ring SVG */}
                         <svg viewBox="0 0 36 36" className={styles.progressSvg}>
                             <path
                                 className={styles.circleBg}
@@ -435,8 +518,6 @@ export default function Profilepage() {
                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                             />
                         </svg>
-
-                        {/* Download Button */}
                         <button
                             onClick={handleDownloadResume}
                             className={styles.downloadResumeBtn}
@@ -444,8 +525,6 @@ export default function Profilepage() {
                         >
                             <DownloadIcon />
                         </button>
-
-                        {/* Hover Tooltip with Missing Items */}
                         <div className={styles.completionTooltip}>
                             <h5>
                                 {completionStats.percentage}% Ready
@@ -484,8 +563,6 @@ export default function Profilepage() {
                             )}
                         </div>
                     </div>
-
-                    {/* Image Upload Buttons */}
                     {isEditing && (
                         <>
                             <label
@@ -695,7 +772,6 @@ export default function Profilepage() {
             </div>
 
             <div className={styles.gridLayout}>
-                {/* --- LEFT COLUMN: Main Content --- */}
                 <div className={styles.mainColumn}>
                     {/* Experience */}
                     <div className={styles.dataCard}>
@@ -735,9 +811,10 @@ export default function Profilepage() {
                                             >
                                                 <EditIcon />
                                             </button>
+                                            {/* --- FIX: Use initiateDelete instead of handleItemDelete (which used window.confirm) --- */}
                                             <button
                                                 onClick={() =>
-                                                    handleItemDelete("work", i)
+                                                    initiateDelete("work", i)
                                                 }
                                                 className={`${styles.actionIconBtn} ${styles.delBtn}`}
                                             >
@@ -797,7 +874,7 @@ export default function Profilepage() {
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    handleItemDelete(
+                                                    initiateDelete(
                                                         "projects",
                                                         i
                                                     )
@@ -852,7 +929,7 @@ export default function Profilepage() {
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    handleItemDelete("edu", i)
+                                                    initiateDelete("edu", i)
                                                 }
                                                 className={`${styles.actionIconBtn} ${styles.delBtn}`}
                                             >
@@ -911,7 +988,7 @@ export default function Profilepage() {
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    handleItemDelete("cert", i)
+                                                    initiateDelete("cert", i)
                                                 }
                                                 className={`${styles.actionIconBtn} ${styles.delBtn}`}
                                             >
@@ -961,10 +1038,7 @@ export default function Profilepage() {
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    handleItemDelete(
-                                                        "achieve",
-                                                        i
-                                                    )
+                                                    initiateDelete("achieve", i)
                                                 }
                                                 className={`${styles.actionIconBtn} ${styles.delBtn}`}
                                             >
@@ -1087,13 +1161,26 @@ export default function Profilepage() {
                                                         styles.mediaPreview
                                                     }
                                                 >
-                                                    <img
-                                                        src={post.media}
-                                                        alt="Post"
-                                                        className={
-                                                            styles.mediaImg
-                                                        }
-                                                    />
+                                                    {isVideo(
+                                                        post.fileType,
+                                                        post.media
+                                                    ) ? (
+                                                        <video
+                                                            src={post.media}
+                                                            className={
+                                                                styles.mediaImg
+                                                            }
+                                                            muted
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={post.media}
+                                                            alt="Post"
+                                                            className={
+                                                                styles.mediaImg
+                                                            }
+                                                        />
+                                                    )}
                                                 </div>
                                             ) : null}
                                             <div className={styles.textPreview}>

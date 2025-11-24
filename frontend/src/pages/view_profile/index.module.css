@@ -71,7 +71,13 @@
     height: 140px;
     position: relative;
     margin-bottom: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
+.avatarContainer:hover {
+    transform: scale(1.05);
+}
+
 .avatarImg {
     width: 100%;
     height: 100%;
@@ -110,7 +116,7 @@
     min-width: 200px;
 }
 
-.viewName {
+.userName {
     font-family: "Orbitron", sans-serif;
     font-size: 1.8rem;
     font-weight: 700;
@@ -118,21 +124,29 @@
     color: #fff;
     line-height: 1.2;
 }
-.viewHeadline {
+
+.userHeadline {
     font-size: 1rem;
     color: var(--text-secondary);
     margin-top: 4px;
 }
 
-/* Action Buttons (Message / Connect) */
+/* --- NEW: Consolidated Action Buttons --- */
 .headerActions {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
 }
-.msgBtn {
-    width: 40px;
-    height: 40px;
+
+.iconGroup {
+    display: flex;
+    gap: 8px;
+}
+
+.iconBtn {
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -143,15 +157,17 @@
     cursor: pointer;
     transition: all 0.2s;
 }
-.msgBtn:hover {
+.iconBtn:hover {
     background: var(--neon-violet);
     border-color: var(--neon-violet);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
 }
 
-.connectBtn {
-    padding: 0 20px;
-    height: 40px;
-    border-radius: 20px;
+.primaryBtn {
+    padding: 0 24px;
+    height: 42px;
+    border-radius: 24px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -159,7 +175,10 @@
     gap: 8px;
     transition: all 0.2s;
     font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+
+/* Button Status Colors */
 .connect {
     background: var(--neon-teal);
     color: #000;
@@ -169,20 +188,29 @@
     background: #0fd1a3;
     box-shadow: 0 0 15px rgba(15, 255, 198, 0.4);
 }
+
 .pending {
     background: rgba(255, 255, 255, 0.05);
     color: #ccc;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
 }
+
 .connected {
     background: rgba(15, 255, 198, 0.1);
     color: var(--neon-teal);
     border: 1px solid var(--neon-teal);
+    cursor: default;
 }
+
 .accept {
     background: var(--neon-blue);
     color: #fff;
     border: none;
+}
+.accept:hover {
+    background: #2563eb;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
 }
 
 /* Meta Data */
@@ -245,7 +273,7 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* --- GRID LAYOUT (Exact Match) --- */
+/* --- GRID LAYOUT --- */
 .gridLayout {
     display: grid;
     grid-template-columns: 2.5fr 1fr; /* Main Left, Sidebar Right */
@@ -618,14 +646,64 @@
     font-style: italic;
 }
 
+/* --- Image Modal --- */
+.imageModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+.imageModalContent {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.imageModalContent img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 12px;
+    border: 2px solid var(--neon-teal);
+    box-shadow: 0 0 30px rgba(15, 255, 198, 0.3);
+}
+.closeImageBtn {
+    position: absolute;
+    top: -45px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.closeImageBtn:hover {
+    background: var(--neon-pink);
+}
+
 /* --- Mobile Responsive --- */
 @media (max-width: 900px) {
     .gridLayout {
         grid-template-columns: 1fr;
     }
 
-    /* Mobile Order: Main Content (1) -> Sidebar (2) */
-    /* This forces Skills & Recent Activity to bottom on mobile */
     .mainColumn {
         order: 1;
     }
@@ -643,8 +721,14 @@
     .contactPill {
         justify-content: center;
     }
+    /* Mobile: Stack Header Actions */
     .headerActions {
+        width: 100%;
         justify-content: flex-start;
-        margin-top: 10px;
+        margin-top: 12px;
+    }
+    .primaryBtn {
+        flex-grow: 1; /* Full width on very small screens? Or fill remaining space */
+        justify-content: center;
     }
 }

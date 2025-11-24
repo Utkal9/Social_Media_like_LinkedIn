@@ -4,6 +4,7 @@ import {
     sendConnectionRequest,
     getConnectionsRequest,
     getMyConnectionRequests,
+    AcceptConnection, // <--- IMPORT THIS
 } from "@/config/redux/action/authAction";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
@@ -103,25 +104,50 @@ export default function DiscoverPage() {
     useEffect(() => {
         setIsMounted(true);
         const token = localStorage.getItem("token");
-        // Ensure we fetch users if not already fetched
         if (!authState.all_profiles_fetched) {
             dispatch(getAllUsers());
         }
         if (token) {
-            // Refresh connections to ensure buttons show correct status
             dispatch(getConnectionsRequest({ token }));
             dispatch(getMyConnectionRequests({ token }));
         }
     }, [dispatch, authState.all_profiles_fetched]);
 
-    const handleConnect = (e, targetUserId) => {
+    // --- UPDATED: Handle both Connect and Accept ---
+    const handleConnectionAction = (e, targetUserId, status) => {
         e.stopPropagation();
-        dispatch(
-            sendConnectionRequest({
-                token: localStorage.getItem("token"),
-                user_id: targetUserId,
-            })
-        );
+        const token = localStorage.getItem("token");
+
+        if (status === "Connect") {
+            // Case 1: Send new request
+            dispatch(
+                sendConnectionRequest({
+                    token,
+                    user_id: targetUserId,
+                })
+            );
+        } else if (status === "Accept") {
+            // Case 2: Accept existing request
+            // We need to find the requestId first from authState.connectionRequest (received requests)
+            const requestObj = authState.connectionRequest.find(
+                (req) => req.userId._id === targetUserId
+            );
+
+            if (requestObj) {
+                dispatch(
+                    AcceptConnection({
+                        token,
+                        connectionId: requestObj._id, // Pass the Request Object ID, not User ID
+                        action: "accept",
+                    })
+                );
+            } else {
+                console.error(
+                    "Request object not found for user:",
+                    targetUserId
+                );
+            }
+        }
     };
 
     const getConnectStatus = (targetUserId) => {
@@ -168,30 +194,21 @@ export default function DiscoverPage() {
             : defaultStatus;
     };
 
-    // --- FILTER LOGIC ---
     const filteredUsers = useMemo(() => {
-        // If current user isn't loaded yet, return empty to prevent errors
         if (!authState.user || !authState.all_users) return [];
 
-        return (
-            authState.all_users
-                // 1. Safety: Ensure profile and userId exist
-                .filter((profile) => profile && profile.userId)
-                // 2. Exclude Self
-                .filter(
-                    (profile) =>
-                        profile.userId._id !== authState.user.userId._id
-                )
-                // 3. Search Filter
-                .filter((profile) => {
-                    const term = searchQuery.toLowerCase().trim();
-                    if (!term) return true;
-                    const name = profile.userId.name?.toLowerCase() || "";
-                    const username =
-                        profile.userId.username?.toLowerCase() || "";
-                    return name.includes(term) || username.includes(term);
-                })
-        );
+        return authState.all_users
+            .filter((profile) => profile && profile.userId)
+            .filter(
+                (profile) => profile.userId._id !== authState.user.userId._id
+            )
+            .filter((profile) => {
+                const term = searchQuery.toLowerCase().trim();
+                if (!term) return true;
+                const name = profile.userId.name?.toLowerCase() || "";
+                const username = profile.userId.username?.toLowerCase() || "";
+                return name.includes(term) || username.includes(term);
+            });
     }, [authState.all_users, authState.user, searchQuery]);
 
     const handleClearSearch = () => {
@@ -207,11 +224,6 @@ export default function DiscoverPage() {
         visible: { opacity: 1, y: 0 },
     };
 
-    // --- LOADING STATE ---
-    // Show loading if:
-    // 1. Component hasn't mounted yet (Next.js hydration)
-    // 2. Current User Profile is not yet loaded (needed for excluding self)
-    // 3. All Users list is not yet fetched
     const isLoading =
         !isMounted ||
         !authState.user ||
@@ -220,7 +232,6 @@ export default function DiscoverPage() {
 
     return (
         <div className={styles.discoverContainer}>
-            {/* Header Section */}
             <div className={styles.headerSection}>
                 <div>
                     <h2 className={styles.pageTitle}>Global Discovery</h2>
@@ -247,7 +258,6 @@ export default function DiscoverPage() {
                 </div>
             </div>
 
-            {/* --- LOAD CONTENT OR SPINNER --- */}
             {isLoading ? (
                 <div className={styles.loadingContainer}>
                     <div className={styles.loadingSpinner}></div>
@@ -340,9 +350,10 @@ export default function DiscoverPage() {
                                                 styles[status.toLowerCase()]
                                             }`}
                                             onClick={(e) =>
-                                                handleConnect(
+                                                handleConnectionAction(
                                                     e,
-                                                    user.userId._id
+                                                    user.userId._id,
+                                                    status
                                                 )
                                             }
                                             disabled={

@@ -1,3 +1,4 @@
+// frontend/src/pages/view_profile/[username].jsx
 import clientServer from "@/config";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
@@ -10,11 +11,14 @@ import {
     getConnectionsRequest,
     getMyConnectionRequests,
     sendConnectionRequest,
+    AcceptConnection, // Ensure this is imported if you plan to add accept logic here later
 } from "@/config/redux/action/authAction";
 import { useSocket } from "@/context/SocketContext";
 
 const DEFAULT_BG =
     "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80";
+const VIDEO_CALL_URL =
+    process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
 
 // --- Holo Icons ---
 const MessageIcon = () => (
@@ -24,6 +28,11 @@ const MessageIcon = () => (
             d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.915 6.109.203.163.3.413.216.66l-.774 2.234.574-.359Z"
             clipRule="evenodd"
         />
+    </svg>
+);
+const VideoIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="22">
+        <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V7.94l2.69-2.69c.944-.945 2.56-.276 2.56 1.06v11.38c0 1.336-1.616 2.005-2.56 1.06Z" />
     </svg>
 );
 const ConnectIcon = () => (
@@ -149,7 +158,7 @@ const isVideo = (fileType, mediaUrl) => {
 // --- Helper: Truncated Text ---
 const TruncatedText = ({ content, postId }) => {
     const router = useRouter();
-    const maxLength = 60; // Shorter length for sidebar
+    const maxLength = 60;
     if (content.length <= maxLength)
         return <p className={styles.postBody}>{content}</p>;
     return (
@@ -173,12 +182,13 @@ export default function ViewProfilePage({ userProfile }) {
     const dispatch = useDispatch();
     const postReducer = useSelector((state) => state.postReducer);
     const authState = useSelector((state) => state.auth);
-    const { onlineStatuses } = useSocket() || {};
+    const { socket, onlineStatuses } = useSocket() || {};
 
     const [localProfile, setLocalProfile] = useState(userProfile);
     const [userPosts, setUserPosts] = useState([]);
     const [connectStatus, setConnectStatus] = useState("Connect");
     const [showConnectionsModal, setShowConnectionsModal] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
 
     const isOwnProfile =
         authState.user && authState.user.userId._id === localProfile.userId._id;
@@ -273,6 +283,27 @@ export default function ViewProfilePage({ userProfile }) {
         router.push(`/messaging?chatWith=${localProfile.userId.username}`);
     };
 
+    const handleStartVideoCall = () => {
+        const currentUser = authState.user?.userId;
+        const targetUserId = localProfile.userId._id;
+
+        if (!currentUser || !targetUserId || !socket) return;
+
+        const roomId = [currentUser._id, targetUserId].sort().join("-");
+        const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
+        const returnUrl = `${window.location.origin}/view_profile/${localProfile.userId.username}`;
+        const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
+            returnUrl
+        )}`;
+
+        socket.emit("start-call", {
+            fromUser: currentUser,
+            toUserId: targetUserId,
+            roomUrl: roomUrlWithRedirect,
+        });
+        window.open(roomUrlWithRedirect, "_blank");
+    };
+
     const isOnline =
         onlineStatuses && onlineStatuses[localProfile.userId._id]
             ? onlineStatuses[localProfile.userId._id].isOnline
@@ -292,7 +323,12 @@ export default function ViewProfilePage({ userProfile }) {
                 ></div>
 
                 <div className={styles.headerContent}>
-                    <div className={styles.avatarContainer}>
+                    <div
+                        className={styles.avatarContainer}
+                        onClick={() => setShowImageModal(true)}
+                        style={{ cursor: "pointer" }}
+                        title="View Profile Picture"
+                    >
                         <img
                             src={localProfile.userId.profilePicture}
                             alt="Profile"
@@ -303,7 +339,7 @@ export default function ViewProfilePage({ userProfile }) {
 
                     <div className={styles.identitySection}>
                         <div className={styles.identityTop}>
-                            <div>
+                            <div className={styles.nameWrapper}>
                                 <h1 className={styles.userName}>
                                     {localProfile.userId.name}
                                 </h1>
@@ -311,18 +347,33 @@ export default function ViewProfilePage({ userProfile }) {
                                     {localProfile.currentPost || "No Headline"}
                                 </p>
                             </div>
+
                             {!isOwnProfile && (
-                                <div className={styles.actionButtons}>
-                                    <button
-                                        onClick={handleMessage}
-                                        className={styles.msgBtn}
-                                        title="Message"
-                                    >
-                                        <MessageIcon />
-                                    </button>
+                                <div className={styles.headerActions}>
+                                    {/* Icon Group (Message + Video) */}
+                                    <div className={styles.iconGroup}>
+                                        <button
+                                            onClick={handleMessage}
+                                            className={styles.iconBtn}
+                                            title="Message"
+                                        >
+                                            <MessageIcon />
+                                        </button>
+                                        {connectStatus === "Connected" && (
+                                            <button
+                                                onClick={handleStartVideoCall}
+                                                className={styles.iconBtn}
+                                                title="Video Call"
+                                            >
+                                                <VideoIcon />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Main Connection Button */}
                                     <button
                                         onClick={handleConnect}
-                                        className={`${styles.connectBtn} ${
+                                        className={`${styles.primaryBtn} ${
                                             styles[connectStatus.toLowerCase()]
                                         }`}
                                         disabled={
@@ -408,7 +459,7 @@ export default function ViewProfilePage({ userProfile }) {
             </div>
 
             <div className={styles.gridLayout}>
-                {/* --- Left Column: Main Info (Wide) --- */}
+                {/* --- Left Column: Main Info --- */}
                 <div className={styles.mainColumn}>
                     {/* Experience */}
                     <div className={styles.dataCard}>
@@ -731,6 +782,30 @@ export default function ViewProfilePage({ userProfile }) {
                                 </p>
                             )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- NEW: Image Modal (Lightbox) --- */}
+            {showImageModal && (
+                <div
+                    className={styles.imageModalOverlay}
+                    onClick={() => setShowImageModal(false)}
+                >
+                    <div
+                        className={styles.imageModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={localProfile.userId.profilePicture}
+                            alt="Profile Large"
+                        />
+                        <button
+                            className={styles.closeImageBtn}
+                            onClick={() => setShowImageModal(false)}
+                        >
+                            <CloseIcon />
+                        </button>
                     </div>
                 </div>
             )}

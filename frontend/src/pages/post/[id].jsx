@@ -1,5 +1,5 @@
 // frontend/src/pages/post/[id].jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import DashboardLayout from "@/layout/DashboardLayout";
 import UserLayout from "@/layout/UserLayout";
@@ -11,28 +11,61 @@ import {
     postComment,
     deletePost,
     updatePost,
+    toggleCommentLike,
 } from "@/config/redux/action/postAction";
-import { resetPostId } from "@/config/redux/reducer/postReducer";
 import { useSocket } from "@/context/SocketContext";
-import styles from "../dashboard/index.module.css"; // Reuse Dashboard Glass Styles
+import styles from "../dashboard/index.module.css"; // Reuse Dashboard Styles for consistency
+import Head from "next/head";
 
-// --- HELPER: Video Detection ---
+// --- HELPERS ---
+const getTimeAgo = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
+    if (diffInSeconds < 60) return "Just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d`;
+    return `${Math.floor(diffInDays / 7)}w`;
+};
+
 const isVideo = (fileType, mediaUrl) => {
     if (fileType && fileType.startsWith("video/")) return true;
     if (mediaUrl) {
         const ext = mediaUrl.split(".").pop().toLowerCase();
-        return ["mp4", "webm", "ogg", "mov"].includes(ext);
+        return ["mp4", "webm", "ogg", "mov", "avi", "mkv"].includes(ext);
     }
     return false;
 };
 
-// --- Holo Icons (Consistent with Dashboard) ---
+const getReactionIcon = (type) => {
+    const map = {
+        Like: "👍",
+        Love: "❤️",
+        Celebrate: "👏",
+        Insightful: "💡",
+        Funny: "😂",
+    };
+    return map[type] || "👍";
+};
+
+const getReactionColor = (type) => {
+    const map = {
+        Love: "#E74C3C",
+        Celebrate: "#27AE60",
+        Insightful: "#F1C40F",
+        Funny: "#E67E22",
+    };
+    return map[type] || "#0fffc6";
+};
+
+// --- ICONS ---
 const MoreHorizIcon = () => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ width: "24px", height: "24px" }}
-    >
+    <svg viewBox="0 0 24 24" fill="currentColor" width="24">
         <path
             fillRule="evenodd"
             d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
@@ -40,32 +73,21 @@ const MoreHorizIcon = () => (
         />
     </svg>
 );
-const ImageIcon = () => (
+const LikeIconOutline = () => (
     <svg
         viewBox="0 0 24 24"
-        fill="currentColor"
-        style={{ color: "#378fe9", width: "24px", height: "24px" }}
-    >
-        <path d="M19 4H5C3.9 4 3 4.9 3 6v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H5V6h14v12zm-5-7c0-1.66-1.34-3-3-3s-3 1.34-3 3 1.34 3 3 3 3-1.34 3-3z" />
-    </svg>
-);
-const LikeIcon = ({ isLiked }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill={isLiked ? "currentColor" : "none"}
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
+        strokeWidth={1.5}
+        width="20"
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m10.598-9.75H14.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 0 1-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 0 0-1.302 4.665c0 1.194.232 2.333.654 3.375Z"
+            d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z"
         />
     </svg>
 );
-// FIXED COMMENT ICON PATH
 const CommentIcon = () => (
     <svg
         viewBox="0 0 24 24"
@@ -77,55 +99,22 @@ const CommentIcon = () => (
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
+            d="M12 20.25c4.97 0 9-3.633 9-8.437 0-4.805-4.03-8.437-9-8.437-4.97 0-9 3.632-9 8.437 0 2.093.79 4.02 2.128 5.516.29.325.395.774.27 1.193l-.847 2.935c-.168.583.486 1.07.988.782l3.348-1.91c.355-.203.772-.24 1.158-.102.642.228 1.32.352 2.02.352Z"
         />
     </svg>
 );
 const ShareIcon = () => (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
-        strokeWidth={1.5}
+        fill="none"
         stroke="currentColor"
-        style={{ width: "20px", height: "20px" }}
+        strokeWidth={1.5}
+        width="20"
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
             d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
-        />
-    </svg>
-);
-const EditIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        style={{ width: "18px", height: "18px" }}
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-        />
-    </svg>
-);
-const DeleteIcon = () => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        style={{ width: "18px", height: "18px" }}
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
         />
     </svg>
 );
@@ -145,127 +134,167 @@ const BackIcon = () => (
         />
     </svg>
 );
+const DeleteIcon = () => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        style={{ width: "18px", height: "18px" }}
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+        />
+    </svg>
+);
 
 export default function PostPage({ postData }) {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
-    const postState = useSelector((state) => state.postReducer);
     const { onlineStatuses } = useSocket() || {};
 
+    // Local state to manage optimistic updates independently from Redux list
     const [localPost, setLocalPost] = useState(postData);
+    const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState("");
 
-    // --- Editing & Menu State ---
-    const [openMenuId, setOpenMenuId] = useState(null);
-    const [editingPost, setEditingPost] = useState(null);
-    const [editBody, setEditBody] = useState("");
-    const [editFile, setEditFile] = useState(null);
-    const [editFilePreview, setEditFilePreview] = useState(null);
+    // Reaction State
+    const [activeReactionId, setActiveReactionId] = useState(null);
+    const reactionTimeoutRef = useRef(null);
 
+    // Fetch latest comments on mount
     useEffect(() => {
-        setLocalPost(postData);
-    }, [postData]);
+        if (localPost?._id) {
+            const fetchComments = async () => {
+                try {
+                    const res = await clientServer.get("/get_comments", {
+                        params: { post_id: localPost._id },
+                    });
+                    setComments(res.data.reverse());
+                } catch (err) {
+                    console.error("Failed to fetch comments", err);
+                }
+            };
+            fetchComments();
+        }
+    }, [localPost?._id]);
 
-    useEffect(() => {
-        const closeMenu = () => setOpenMenuId(null);
-        document.addEventListener("click", closeMenu);
-        return () => document.removeEventListener("click", closeMenu);
-    }, []);
-
-    const isUserOnline = (uid, defaultStatus) => {
-        return onlineStatuses && onlineStatuses[uid]
-            ? onlineStatuses[uid].isOnline
-            : defaultStatus;
+    const isUserOnline = (uid) => {
+        return onlineStatuses && onlineStatuses[uid]?.isOnline;
     };
 
-    // --- Share Handler (Restored) ---
-    const handleShare = (postBody) => {
-        const text = encodeURIComponent(postBody);
-        const url = encodeURIComponent(window.location.href);
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
-        window.open(twitterUrl, "_blank");
-    };
-
-    const handleLike = async () => {
+    // --- Reaction Logic ---
+    const handleReaction = async (type) => {
         const token = localStorage.getItem("token");
         const response = await dispatch(
-            toggleLike({ post_id: localPost._id, token })
+            toggleLike({ post_id: localPost._id, token, reactionType: type })
         );
-        if (response.payload && response.payload.likes) {
+        if (response.payload && response.payload.reactions) {
             setLocalPost((prev) => ({
                 ...prev,
-                likes: response.payload.likes,
+                reactions: response.payload.reactions,
             }));
+        }
+        setActiveReactionId(null);
+    };
+
+    const handleMouseEnter = () => {
+        if (window.matchMedia("(hover: hover)").matches) {
+            if (reactionTimeoutRef.current)
+                clearTimeout(reactionTimeoutRef.current);
+            setActiveReactionId(localPost._id);
         }
     };
 
+    const handleMouseLeave = () => {
+        if (window.matchMedia("(hover: hover)").matches) {
+            reactionTimeoutRef.current = setTimeout(() => {
+                setActiveReactionId(null);
+            }, 500);
+        }
+    };
+
+    const handleReactionToggle = (e) => {
+        e.stopPropagation();
+        setActiveReactionId(activeReactionId ? null : localPost._id);
+    };
+
+    const getUserReaction = (post, userId) => {
+        return post.reactions?.find(
+            (r) => r.userId?._id === userId || r.userId === userId
+        );
+    };
+
+    // --- Comment Logic ---
+    const handlePostComment = async () => {
+        if (!commentText.trim()) return;
+        const token = localStorage.getItem("token");
+        const response = await dispatch(
+            postComment({ post_id: localPost._id, body: commentText })
+        );
+        if (response.meta.requestStatus === "fulfilled") {
+            // Refresh comments
+            const res = await clientServer.get("/get_comments", {
+                params: { post_id: localPost._id },
+            });
+            setComments(res.data.reverse());
+            setCommentText("");
+        }
+    };
+
+    const handleLikeComment = async (commentId) => {
+        const token = localStorage.getItem("token");
+        await dispatch(
+            toggleCommentLike({
+                comment_id: commentId,
+                token,
+                post_id: localPost._id,
+            })
+        );
+        // Refresh comments to show updated like
+        const res = await clientServer.get("/get_comments", {
+            params: { post_id: localPost._id },
+        });
+        setComments(res.data.reverse());
+    };
+
     const handleDelete = async () => {
-        if (confirm("Are you sure you want to delete this post?")) {
+        if (confirm("Delete this post?")) {
             await dispatch(deletePost({ post_id: localPost._id }));
             router.push("/dashboard");
         }
     };
 
-    const handleEditFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file && file.size > 10 * 1024 * 1024) {
-            alert("File is too large. Max 10MB.");
-            setEditFile(null);
-            setEditFilePreview(null);
-            e.target.value = null;
-        } else if (file) {
-            setEditFile(file);
-            setEditFilePreview(URL.createObjectURL(file));
-        }
-    };
-
-    const handleEditClick = () => {
-        setEditingPost(localPost);
-        setEditBody(localPost.body);
-        setEditFile(null);
-        setEditFilePreview(null);
-        setOpenMenuId(null);
-    };
-
-    const handleUpdateSubmit = async () => {
-        if (!editingPost) return;
-        await dispatch(
-            updatePost({
-                post_id: editingPost._id,
-                body: editBody,
-                file: editFile,
-            })
+    const handleShare = () => {
+        const text = encodeURIComponent(localPost.body);
+        const url = encodeURIComponent(window.location.href);
+        window.open(
+            `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+            "_blank"
         );
-        setEditingPost(null);
-        setEditBody("");
-        setEditFile(null);
-        setEditFilePreview(null);
-        router.replace(router.asPath);
-    };
-
-    const handleOpenComments = () => {
-        dispatch(getAllComments({ post_id: localPost._id }));
-    };
-
-    const handlePostComment = async () => {
-        if (!commentText.trim()) return;
-        await dispatch(
-            postComment({ post_id: localPost._id, body: commentText })
-        );
-        await dispatch(getAllComments({ post_id: localPost._id }));
-        setCommentText("");
     };
 
     if (!localPost)
-        return <div className={styles.loading}>Loading post...</div>;
+        return <div className={styles.loading}>Loading transmission...</div>;
 
     return (
-        <div className={styles.feedContainer}>
+        <div
+            className={styles.feedContainer}
+            style={{ maxWidth: "800px", margin: "0 auto" }}
+        >
+            <Head>
+                <title>{`${localPost.userId.name}'s Post | LinkUps`}</title>
+            </Head>
+
+            {/* Back Button */}
             <button
                 onClick={() => router.back()}
                 style={{
-                    marginBottom: "1rem",
+                    marginBottom: "1.5rem",
                     cursor: "pointer",
                     border: "1px solid var(--neon-teal)",
                     background: "rgba(15, 255, 198, 0.1)",
@@ -274,23 +303,16 @@ export default function PostPage({ postData }) {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "8px",
-                    padding: "8px 16px",
-                    borderRadius: "20px",
+                    padding: "8px 20px",
+                    borderRadius: "30px",
                     fontSize: "0.9rem",
                     transition: "all 0.2s",
                 }}
-                onMouseEnter={(e) =>
-                    (e.currentTarget.style.background =
-                        "rgba(15, 255, 198, 0.2)")
-                }
-                onMouseLeave={(e) =>
-                    (e.currentTarget.style.background =
-                        "rgba(15, 255, 198, 0.1)")
-                }
             >
-                <BackIcon /> Return to Stream
+                <BackIcon /> Return
             </button>
 
+            {/* --- Main Post Card --- */}
             <div className={styles.postCard}>
                 <div className={styles.postCardHeader}>
                     <div
@@ -305,12 +327,11 @@ export default function PostPage({ postData }) {
                         <img
                             className={styles.userProfilePic}
                             src={localPost.userId.profilePicture}
-                            alt={`${localPost.userId.name}'s profile`}
+                            alt={localPost.userId.name}
                         />
-                        {isUserOnline(
-                            localPost.userId._id,
-                            localPost.userId.isOnline
-                        ) && <span className={styles.onlineDot}></span>}
+                        {isUserOnline(localPost.userId._id) && (
+                            <span className={styles.onlineDot}></span>
+                        )}
                     </div>
                     <div className={styles.postCardHeaderInfo}>
                         <p
@@ -324,54 +345,20 @@ export default function PostPage({ postData }) {
                             {localPost.userId.name}
                         </p>
                         <p className={styles.postCardUsername}>
-                            @{localPost.userId.username}
+                            @{localPost.userId.username} •{" "}
+                            {getTimeAgo(localPost.createdAt)}
                         </p>
                     </div>
 
                     {authState.user &&
                         localPost.userId._id === authState.user.userId._id && (
-                            <div
-                                className={styles.moreOptionsWrapper}
-                                onClick={(e) => e.stopPropagation()}
+                            <button
+                                onClick={handleDelete}
+                                className={styles.iconBtn}
+                                title="Delete Post"
                             >
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenMenuId(
-                                            openMenuId
-                                                ? null
-                                                : "single-post-menu"
-                                        );
-                                    }}
-                                    className={styles.iconBtn}
-                                    title="More options"
-                                >
-                                    <MoreHorizIcon />
-                                </button>
-                                {openMenuId === "single-post-menu" && (
-                                    <div className={styles.optionsDropdown}>
-                                        <div
-                                            className={styles.optionItem}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEditClick();
-                                            }}
-                                        >
-                                            <EditIcon /> <span>Edit Post</span>
-                                        </div>
-                                        <div
-                                            className={`${styles.optionItem} ${styles.delete}`}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDelete();
-                                            }}
-                                        >
-                                            <DeleteIcon />{" "}
-                                            <span>Delete Post</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                <DeleteIcon />
+                            </button>
                         )}
                 </div>
 
@@ -383,10 +370,7 @@ export default function PostPage({ postData }) {
                                 <video
                                     src={localPost.media}
                                     controls
-                                    style={{
-                                        width: "100%",
-                                        maxHeight: "600px",
-                                    }}
+                                    style={{ width: "100%" }}
                                 />
                             ) : (
                                 <img src={localPost.media} alt="Post media" />
@@ -396,216 +380,210 @@ export default function PostPage({ postData }) {
                 </div>
 
                 <div className={styles.postCardStats}>
-                    <span>
-                        {localPost.likes ? localPost.likes.length : 0} Likes
+                    <span
+                        style={{
+                            color: "var(--text-secondary)",
+                            fontSize: "0.9rem",
+                        }}
+                    >
+                        {localPost.reactions ? localPost.reactions.length : 0}{" "}
+                        Reactions • {comments.length} Comments
                     </span>
                 </div>
 
                 <div className={styles.postCardActions}>
-                    <button
-                        onClick={handleLike}
-                        className={`${styles.actionButton} ${
-                            authState.user &&
-                            Array.isArray(localPost.likes) &&
-                            localPost.likes.includes(authState.user.userId._id)
-                                ? styles.activeAction
-                                : ""
-                        }`}
+                    {/* Reaction Dock */}
+                    <div
+                        className={styles.reactionWrapper}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
                     >
-                        <LikeIcon
-                            isLiked={
-                                authState.user &&
-                                Array.isArray(localPost.likes) &&
-                                localPost.likes.includes(
-                                    authState.user.userId._id
-                                )
-                            }
-                        />
-                        <span>Like</span>
+                        {activeReactionId === localPost._id && (
+                            <div className={styles.reactionPopup}>
+                                {[
+                                    "Like",
+                                    "Love",
+                                    "Celebrate",
+                                    "Insightful",
+                                    "Funny",
+                                ].map((type) => (
+                                    <button
+                                        key={type}
+                                        className={styles.reactionBtn}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReaction(type);
+                                        }}
+                                    >
+                                        {getReactionIcon(type)}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <button
+                            className={styles.actionButton}
+                            onClick={handleReactionToggle}
+                        >
+                            {(() => {
+                                const myReaction = getUserReaction(
+                                    localPost,
+                                    authState.user?.userId?._id
+                                );
+                                if (myReaction) {
+                                    return (
+                                        <>
+                                            <span
+                                                style={{
+                                                    fontSize: "1.2rem",
+                                                    marginRight: 6,
+                                                }}
+                                            >
+                                                {getReactionIcon(
+                                                    myReaction.type
+                                                )}
+                                            </span>
+                                            <span
+                                                style={{
+                                                    color: getReactionColor(
+                                                        myReaction.type
+                                                    ),
+                                                    fontWeight: 600,
+                                                }}
+                                            >
+                                                {myReaction.type}
+                                            </span>
+                                        </>
+                                    );
+                                }
+                                return (
+                                    <>
+                                        <LikeIconOutline /> <span>Like</span>
+                                    </>
+                                );
+                            })()}
+                        </button>
+                    </div>
+
+                    <button
+                        className={styles.actionButton}
+                        onClick={() =>
+                            document.getElementById("commentInput")?.focus()
+                        }
+                    >
+                        <CommentIcon /> <span>Comment</span>
                     </button>
                     <button
-                        onClick={handleOpenComments}
+                        onClick={handleShare}
                         className={styles.actionButton}
                     >
-                        <CommentIcon />
-                        <span>Comment</span>
-                    </button>
-                    <button
-                        onClick={() => handleShare(localPost.body)}
-                        className={styles.actionButton}
-                    >
-                        <ShareIcon />
-                        <span>Share</span>
+                        <ShareIcon /> <span>Share</span>
                     </button>
                 </div>
             </div>
 
-            {/* --- EDIT POST MODAL (Reusing styles) --- */}
-            {editingPost && (
-                <div
-                    className={styles.commentModalBackdrop}
-                    onClick={() => setEditingPost(null)}
+            {/* --- Comments Section (Inline) --- */}
+            <div
+                style={{
+                    marginTop: "20px",
+                    background: "rgba(11, 15, 42, 0.4)",
+                    borderRadius: "16px",
+                    padding: "20px",
+                    border: "1px solid var(--holo-border)",
+                }}
+            >
+                <h3
+                    style={{
+                        color: "#fff",
+                        fontFamily: "Orbitron",
+                        fontSize: "1.1rem",
+                        marginBottom: "15px",
+                    }}
                 >
-                    <div
-                        className={styles.commentModalContent}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            height: "auto",
-                            maxHeight: "85vh",
-                            maxWidth: "600px",
-                        }}
-                    >
-                        <div className={styles.commentModalHeader}>
-                            <h3>Edit Post</h3>
-                            <button
-                                onClick={() => setEditingPost(null)}
-                                className={styles.closeModalButton}
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <div className={styles.editModalBody}>
-                            <textarea
-                                className={styles.textAreaOfContent}
-                                style={{ height: "100px" }}
-                                value={editBody}
-                                onChange={(e) => setEditBody(e.target.value)}
-                                placeholder="Update your transmission..."
-                            />
-                            <div className={styles.previewContainer}>
-                                {editFilePreview ? (
-                                    <img
-                                        src={editFilePreview}
-                                        alt="Preview"
-                                        style={{
-                                            maxHeight: "250px",
-                                            maxWidth: "100%",
-                                            objectFit: "contain",
-                                        }}
-                                    />
-                                ) : editingPost.media ? (
-                                    <img
-                                        src={editingPost.media}
-                                        alt="Current"
-                                        style={{
-                                            maxHeight: "250px",
-                                            maxWidth: "100%",
-                                            objectFit: "contain",
-                                        }}
-                                    />
-                                ) : (
-                                    <p style={{ color: "#888" }}>No media</p>
-                                )}
-                            </div>
-                            <div className={styles.createPostBottom}>
-                                <label
-                                    htmlFor="editFileUpload"
-                                    className={styles.mediaButton}
-                                >
-                                    <ImageIcon /> <span>Change Media</span>
-                                </label>
-                                <input
-                                    id="editFileUpload"
-                                    type="file"
-                                    hidden
-                                    accept="image/*,video/*"
-                                    onChange={handleEditFileChange}
-                                />
-                            </div>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                    gap: "1rem",
-                                    marginTop: "1rem",
-                                }}
-                            >
-                                <button
-                                    onClick={() => setEditingPost(null)}
-                                    className={styles.cancelButton}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleUpdateSubmit}
-                                    className={styles.uploadButton}
-                                >
-                                    Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    Signal Log ({comments.length})
+                </h3>
 
-            {/* Comments Section */}
-            {postState.postId === localPost._id && (
+                {/* Comment Input */}
                 <div
-                    className={styles.commentModalBackdrop}
-                    onClick={() => dispatch(resetPostId())}
+                    className={styles.commentInputWrapper}
+                    style={{ marginBottom: "20px" }}
                 >
-                    <div
-                        className={styles.commentModalContent}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className={styles.commentModalHeader}>
-                            <h3>Comments</h3>
-                            <button
-                                onClick={() => dispatch(resetPostId())}
-                                className={styles.closeModalButton}
+                    <input
+                        id="commentInput"
+                        type="text"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Add data packet..."
+                        onKeyDown={(e) =>
+                            e.key === "Enter" && handlePostComment()
+                        }
+                    />
+                    <button onClick={handlePostComment}>Transmit</button>
+                </div>
+
+                {/* Comments List */}
+                <div
+                    className={styles.allCommentsContainer}
+                    style={{ maxHeight: "none", overflow: "visible" }}
+                >
+                    {comments.map((c) => (
+                        <div key={c._id} className={styles.singleComment}>
+                            <div
+                                className={styles.commentAvatarContainer}
+                                onClick={() =>
+                                    router.push(
+                                        `/view_profile/${c.userId.username}`
+                                    )
+                                }
                             >
-                                &times;
-                            </button>
-                        </div>
-                        <div className={styles.allCommentsContainer}>
-                            {postState.comments.map((postComment) => (
-                                <div
-                                    className={styles.singleComment}
-                                    key={postComment._id}
-                                >
-                                    <div className={styles.avatarContainer}>
-                                        <img
-                                            src={
-                                                postComment.userId
-                                                    .profilePicture
-                                            }
-                                            alt={postComment.userId.name}
-                                            className={styles.userProfilePic}
-                                            style={{ width: 32, height: 32 }}
-                                        />
-                                    </div>
-                                    <div className={styles.singleCommentBody}>
-                                        <p className={styles.commentUser}>
-                                            {postComment.userId.name}
-                                        </p>
-                                        <p className={styles.commentText}>
-                                            {postComment.body}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className={styles.postCommentContainer}>
-                            <div className={styles.commentInputWrapper}>
-                                <input
-                                    type="text"
-                                    value={commentText}
-                                    onChange={(e) =>
-                                        setCommentText(e.target.value)
-                                    }
-                                    placeholder="Add a comment..."
-                                    onKeyDown={(e) =>
-                                        e.key === "Enter" && handlePostComment()
-                                    }
+                                <img
+                                    src={c.userId.profilePicture}
+                                    alt={c.userId.name}
+                                    className={styles.userProfilePic}
                                 />
-                                <button onClick={handlePostComment}>
-                                    Post
-                                </button>
+                            </div>
+                            <div className={styles.singleCommentBody}>
+                                <div className={styles.commentHeader}>
+                                    <span className={styles.commentUser}>
+                                        {c.userId.name}
+                                    </span>
+                                    <span className={styles.commentTime}>
+                                        {getTimeAgo(c.createdAt)}
+                                    </span>
+                                </div>
+                                <p className={styles.commentText}>{c.body}</p>
+                                <div className={styles.commentActions}>
+                                    <span
+                                        onClick={() => handleLikeComment(c._id)}
+                                        style={{
+                                            color: c.likes?.includes(
+                                                authState.user?.userId?._id
+                                            )
+                                                ? "var(--neon-teal)"
+                                                : "#888",
+                                        }}
+                                    >
+                                        Like{" "}
+                                        {c.likes?.length > 0 &&
+                                            `(${c.likes.length})`}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ))}
+                    {comments.length === 0 && (
+                        <p
+                            style={{
+                                color: "#666",
+                                fontStyle: "italic",
+                                textAlign: "center",
+                            }}
+                        >
+                            No signals detected yet.
+                        </p>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }

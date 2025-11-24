@@ -23,6 +23,7 @@
     align-items: flex-start;
 }
 
+/* FIXED: Container size matches the image size now (48px) */
 .avatarContainer {
     position: relative;
     width: 48px;
@@ -30,6 +31,7 @@
     flex-shrink: 0;
 }
 
+/* FIXED: Image fills the container completely */
 .userProfilePic {
     width: 100%;
     height: 100%;
@@ -102,7 +104,14 @@
     cursor: default;
     box-shadow: none;
 }
-
+.charCounter {
+    text-align: right;
+    font-size: 0.75rem;
+    margin-top: 4px;
+    margin-right: 4px;
+    font-family: monospace;
+}
+/* --- PREVIEW BOX WITH CLEAR BUTTON --- */
 .previewBox {
     margin-top: 12px;
     max-height: 250px;
@@ -110,11 +119,41 @@
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.previewBox img {
+
+.previewWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.previewWrapper img {
     width: 100%;
     height: 100%;
     object-fit: contain;
 }
+
+.clearPreviewBtn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.clearPreviewBtn:hover {
+    background: var(--neon-pink);
+    border-color: var(--neon-pink);
+}
+
 .previewContainer {
     width: 100%;
     background: #000;
@@ -662,6 +701,129 @@
     font-size: 0.85rem;
     text-align: center;
     margin: 5px 0;
+}
+/* --- TOAST NOTIFICATION --- */
+.notificationToast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(11, 15, 42, 0.95);
+    border: 1px solid var(--holo-border);
+    padding: 16px 24px;
+    border-radius: 12px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    backdrop-filter: blur(10px);
+}
+
+.notificationToast.success {
+    border-color: var(--neon-teal);
+    box-shadow: 0 0 20px rgba(15, 255, 198, 0.2);
+    color: var(--neon-teal);
+}
+
+.notificationToast.error {
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+    color: var(--neon-pink);
+}
+
+.notificationToast span {
+    color: #eee;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- CONFIRMATION MODAL --- */
+.confirmModalContent {
+    width: 90%;
+    max-width: 400px;
+    background: #0b0f2a;
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+    text-align: center;
+}
+
+.confirmTitle {
+    font-family: "Orbitron", sans-serif;
+    color: #fff;
+    margin: 0 0 12px 0;
+    font-size: 1.2rem;
+}
+
+.confirmText {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.confirmButtons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.cancelButton {
+    /* Fixed class name to match usage in JSX */
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ccc;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.cancelButton:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.deleteConfirmBtn {
+    background: var(--neon-pink);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+    transition: all 0.2s;
+}
+.deleteConfirmBtn:hover {
+    background: #db2777;
+    transform: translateY(-1px);
+}
+
+/* ... existing styles ... */
+
+@media (max-width: 768px) {
+    .notificationToast {
+        bottom: 80px;
+        right: 50%;
+        transform: translateX(50%);
+        width: 90%;
+        justify-content: center;
+    }
 }
 
 /* --- Mobile Media Query for Modal Tweak --- */
