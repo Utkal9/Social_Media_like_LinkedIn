@@ -100,7 +100,7 @@ export default function NavbarComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
-    const { socket, onlineStatuses } = useSocket() || {};
+    const { socket, onlineStatuses, unreadCount } = useSocket() || {};
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
@@ -192,6 +192,7 @@ export default function NavbarComponent() {
             icon: MessagingIcon,
             label: "Chat",
             protected: true,
+            hasBadge: true,
         },
     ];
 
@@ -215,6 +216,12 @@ export default function NavbarComponent() {
                                 isActive={router.pathname === item.path}
                             />
                         </div>
+                        {/* --- NEW: Badge Logic --- */}
+                        {item.hasBadge && unreadCount > 0 && (
+                            <span className={styles.badge}>
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                        )}
                         <span className={styles.navLabel}>{item.label}</span>
                         {router.pathname === item.path && (
                             <div className={styles.activeBar} />
@@ -374,6 +381,12 @@ export default function NavbarComponent() {
                             <item.icon
                                 isActive={router.pathname === item.path}
                             />
+                            {/* --- NEW: Mobile Badge --- */}
+                            {item.hasBadge && unreadCount > 0 && (
+                                <span className={styles.badge}>
+                                    {unreadCount > 99 ? "99+" : unreadCount}
+                                </span>
+                            )}
                             <span className={styles.bottomNavLabel}>
                                 {item.label}
                             </span>

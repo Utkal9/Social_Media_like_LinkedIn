@@ -63,43 +63,43 @@ export default function Home() {
 
     const features = [
         {
-            title: "Secure Access",
-            desc: "Encrypted entry nodes with JWT authentication.",
+            title: "Secure Login",
+            desc: "Safe and encrypted access to your account.",
             icon: <AuthIcon />,
         },
         {
-            title: "Pro Profile",
-            desc: "Manage your professional identity, skills, and career timeline.",
+            title: "Professional Profile",
+            desc: "Showcase your skills, experience, and achievements.",
             icon: <ProfileIcon />,
         },
         {
-            title: "Smart Resume",
-            desc: "Auto-compile your data into a professional .docx resume.",
+            title: "Resume Builder",
+            desc: "Download your profile as a formatted resume automatically.",
             icon: <ResumeIcon />,
         },
         {
-            title: "LinkUps Feed",
-            desc: "Share updates, media, and thoughts with the network.",
+            title: "News Feed",
+            desc: "Share updates and stay informed with your network.",
             icon: <FeedIcon />,
         },
         {
-            title: "Network Sync",
-            desc: "Send requests and build your web of professional nodes.",
+            title: "Grow Network",
+            desc: "Connect with other professionals and expand your reach.",
             icon: <NetworkIcon />,
         },
         {
-            title: "Instant Chat",
-            desc: "Real-time encrypted messaging with your connections.",
+            title: "Messaging",
+            desc: "Chat instantly with your connections.",
             icon: <ChatIcon />,
         },
         {
-            title: "Live Meet",
-            desc: "High-fidelity video conferencing for meetings.",
+            title: "Video Calls",
+            desc: "Face-to-face meetings with high-quality video.",
             icon: <VideoCallIcon />,
         },
         {
-            title: "Global Discovery",
-            desc: "Scan the grid to find new professionals and opportunities.",
+            title: "Discover People",
+            desc: "Find new professionals to connect with.",
             icon: <SearchIcon />,
         },
     ];
@@ -135,22 +135,22 @@ export default function Home() {
                             className={`d-inline-flex align-items-center mx-auto mx-lg-0 ${styles.betaBadge}`}
                         >
                             <span className={styles.statusDot}></span>
-                            <span className="ms-2">LinkUps UI v2.0</span>
+                            <span className="ms-2">LinkUps v2.0</span>
                         </div>
 
                         <h1
                             className={`display-3 fw-bold mt-4 mb-3 ${styles.heroTitle}`}
                         >
-                            Connect in the <br />
+                            Connect with <br />
                             <span className={styles.neonText}>
-                                Professional Network.
+                                Professionals.
                             </span>
                         </h1>
 
                         <p className={`lead mb-5 ${styles.heroSubtitle}`}>
-                            A next-gen ecosystem for professionals. Experience
-                            networking, dynamic profiles, and seamless
-                            collaboration in a secure environment.
+                            The best place to build your professional network.
+                            Create your profile, connect with others, and find
+                            new opportunities.
                         </p>
 
                         <div className="d-flex gap-3 justify-content-center justify-content-lg-start flex-wrap">
@@ -158,13 +158,13 @@ export default function Home() {
                                 onClick={() => router.push("/login")}
                                 className={styles.btnHoloPrimary}
                             >
-                                Initialize
+                                Get Started
                             </button>
                             <button
                                 onClick={() => router.push("/discover")}
                                 className={styles.btnHoloOutline}
                             >
-                                Explore Nodes
+                                Explore
                             </button>
                         </div>
 
@@ -172,15 +172,15 @@ export default function Home() {
                         <div className="row mt-5 pt-4 border-top border-light border-opacity-10 g-4">
                             <div className="col-6 col-sm-4">
                                 <h3 className={styles.statNumber}>150k+</h3>
-                                <p className={styles.statLabel}>Active Users</p>
+                                <p className={styles.statLabel}>Users</p>
                             </div>
                             <div className="col-6 col-sm-4">
                                 <h3 className={styles.statNumber}>99.9%</h3>
-                                <p className={styles.statLabel}>Uptime</p>
+                                <p className={styles.statLabel}>Reliability</p>
                             </div>
                             <div className="col-12 col-sm-4 pt-3 pt-sm-0">
                                 <div className={styles.trustBadge}>
-                                    <span>🛡️ Verified Secure</span>
+                                    <span>🛡️ Secure Platform</span>
                                 </div>
                             </div>
                         </div>
@@ -194,7 +194,7 @@ export default function Home() {
                                 <div className={styles.scanline}></div>
                                 <img
                                     src="/images/homemain_connection.jpg"
-                                    alt="Future Connection"
+                                    alt="Connecting People"
                                     className={styles.heroImg}
                                 />
                             </div>
@@ -206,9 +206,9 @@ export default function Home() {
                                 <div className={styles.cardIcon}>🚀</div>
                                 <div>
                                     <small className="text-muted d-block">
-                                        Status
+                                        Updates
                                     </small>
-                                    <strong>Network Sync</strong>
+                                    <strong>Network Growth</strong>
                                 </div>
                             </div>
 
@@ -234,9 +234,9 @@ export default function Home() {
 
                 {/* --- FEATURES SECTION --- */}
                 <section className={styles.featuresSection}>
-                    <h2 className={styles.sectionTitle}>System Capabilities</h2>
+                    <h2 className={styles.sectionTitle}>What You Can Do</h2>
                     <p className={styles.sectionSubtitle}>
-                        Core modules loaded and operational.
+                        Everything you need to advance your career.
                     </p>
 
                     <div className={styles.featuresGrid}>
@@ -263,7 +263,7 @@ export default function Home() {
                             Meet the Developer
                         </h2>
                         <p className={styles.sectionSubtitle}>
-                            The architect behind the LinkUps grid.
+                            The engineer behind LinkUps.
                         </p>
 
                         <div className={styles.devCard}>
@@ -281,9 +281,9 @@ export default function Home() {
                                     Full Stack Engineer & Architect
                                 </p>
                                 <p className={styles.devBio}>
-                                    Building next-gen social architectures with
-                                    modern web technologies. Connecting nodes,
-                                    one block at a time.
+                                    Passionate about building scalable web
+                                    applications and connecting people through
+                                    technology.
                                 </p>
 
                                 <div className={styles.socialRow}>

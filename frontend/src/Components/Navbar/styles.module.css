@@ -38,7 +38,33 @@
     color: var(--neon-teal);
     text-shadow: 0 0 10px rgba(15, 255, 198, 0.4);
 }
-
+.badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff4d7d; /* Neon Red/Pink */
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    height: 18px;
+    min-width: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 0 10px rgba(255, 77, 125, 0.6);
+    z-index: 10;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
 /* Desktop Nav Links */
 .navCenter {
     display: flex;
@@ -54,7 +80,7 @@
     padding: 0 15px;
     color: var(--text-secondary);
     cursor: pointer;
-    position: relative;
+    position: relative; /* Essential for badge positioning */
     transition: color 0.3s ease;
     height: 100%;
 }
@@ -252,6 +278,7 @@
         height: 100%;
         cursor: pointer;
         transition: color 0.2s ease;
+        position: relative; /* For badge */
     }
 
     .bottomNavItem svg {
@@ -271,5 +298,10 @@
 
     .bottomNavActive svg {
         filter: drop-shadow(0 0 5px var(--neon-teal));
+    }
+
+    .bottomNavItem .badge {
+        top: 4px;
+        right: 25%; /* Adjust based on icon centering */
     }
 }

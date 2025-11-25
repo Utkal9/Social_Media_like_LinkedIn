@@ -44,8 +44,8 @@ export default function LoginComponent() {
     });
     const [forgotEmail, setForgotEmail] = useState("");
     const [forgotMessage, setForgotMessage] = useState("");
+    const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-    // --- MODIFIED: Redirect to Home (/) instead of Dashboard ---
     useEffect(() => {
         if (authState.loggedIn || localStorage.getItem("token")) {
             router.push("/");
@@ -55,6 +55,10 @@ export default function LoginComponent() {
     useEffect(() => {
         dispatch(emptyMessage());
         setForgotMessage("");
+        // If moving away from login, reset the success message
+        if (viewState !== "login") {
+            setRegistrationSuccess(false);
+        }
     }, [viewState, dispatch]);
 
     const handleSignInChange = (e) =>
@@ -67,9 +71,14 @@ export default function LoginComponent() {
         dispatch(loginUser(signInData));
     };
 
-    const handleSignUpSubmit = (e) => {
+    const handleSignUpSubmit = async (e) => {
         e.preventDefault();
-        dispatch(registerUser(signUpData));
+        const result = await dispatch(registerUser(signUpData));
+        // --- NEW: Auto-switch to Login on Success ---
+        if (result.meta.requestStatus === "fulfilled") {
+            setRegistrationSuccess(true);
+            setViewState("login");
+        }
     };
 
     const handleForgotSubmit = async (e) => {
@@ -80,9 +89,7 @@ export default function LoginComponent() {
             });
             setForgotMessage(response.data.message);
         } catch (error) {
-            setForgotMessage(
-                error.response?.data?.message || "Transmission failed"
-            );
+            setForgotMessage(error.response?.data?.message || "Request failed");
         }
     };
 
@@ -90,6 +97,7 @@ export default function LoginComponent() {
         viewState === "forgot"
             ? forgotMessage
             : authState.message?.message || authState.message;
+
     const isError =
         authState.isError ||
         (authMessage &&
@@ -107,7 +115,7 @@ export default function LoginComponent() {
 
             <div className="container h-100 d-flex align-items-center justify-content-center">
                 <div className={`row w-100 ${styles.authCardContainer}`}>
-                    {/* LEFT SIDE: Visual */}
+                    {/* LEFT SIDE: Visual (Updated Text) */}
                     <div
                         className={`col-lg-6 d-none d-lg-flex flex-column justify-content-center align-items-center ${styles.visualPanel}`}
                     >
@@ -121,11 +129,11 @@ export default function LoginComponent() {
                         </div>
                         <div className="mt-4 text-center">
                             <h2 className={styles.visualTitle}>
-                                Secure Access Node
+                                Welcome to LinkUps
                             </h2>
                             <p className={styles.visualText}>
-                                Enter the LinkUps network. Connect, collaborate,
-                                and create in high fidelity.
+                                Connect, collaborate, and grow your professional
+                                network in a secure environment.
                             </p>
                         </div>
                     </div>
@@ -139,16 +147,17 @@ export default function LoginComponent() {
                                 </div>
                                 <h1 className={styles.formTitle}>
                                     {viewState === "login" && "Welcome Back"}
-                                    {viewState === "register" && "Create ID"}
-                                    {viewState === "forgot" && "Recover"}
+                                    {viewState === "register" &&
+                                        "Create Account"}
+                                    {viewState === "forgot" && "Reset Password"}
                                 </h1>
                                 <p className={styles.formSubtitle}>
                                     {viewState === "login" &&
-                                        "Authenticate to continue"}
+                                        "Please login to continue"}
                                     {viewState === "register" &&
-                                        "Join the professional grid"}
+                                        "Join our professional community"}
                                     {viewState === "forgot" &&
-                                        "Restore your neural link"}
+                                        "Enter email to reset password"}
                                 </p>
                             </div>
 
@@ -158,9 +167,11 @@ export default function LoginComponent() {
                                     <button
                                         type="button"
                                         className={styles.socialBtn}
-                                        onClick={() => alert("Module Offline")}
+                                        onClick={() =>
+                                            alert("Feature Coming Soon")
+                                        }
                                     >
-                                        <GoogleIcon /> Access with Google
+                                        <GoogleIcon /> Continue with Google
                                     </button>
                                     <div className={styles.divider}>
                                         <span>OR</span>
@@ -173,25 +184,34 @@ export default function LoginComponent() {
                                             className={styles.holoInput}
                                             name="email"
                                             type="email"
-                                            placeholder="user@linkups.net"
+                                            placeholder="name@example.com"
                                             onChange={handleSignInChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
                                         <label className={styles.holoLabel}>
-                                            Passkey
+                                            Password
                                         </label>
                                         <input
                                             className={styles.holoInput}
                                             name="password"
                                             type="password"
-                                            placeholder="••••••••"
+                                            placeholder="Enter your password"
                                             onChange={handleSignInChange}
                                             required
                                         />
                                     </div>
-                                    {authMessage && (
+
+                                    {/* Success Message from Auto-Switch */}
+                                    {registrationSuccess && (
+                                        <div className={styles.msgSuccess}>
+                                            Registration Successful! Please
+                                            login.
+                                        </div>
+                                    )}
+
+                                    {authMessage && !registrationSuccess && (
                                         <div
                                             className={
                                                 isError
@@ -202,6 +222,7 @@ export default function LoginComponent() {
                                             {authMessage}
                                         </div>
                                     )}
+
                                     <div className="d-flex justify-content-end mb-4">
                                         <span
                                             className={styles.linkAction}
@@ -209,7 +230,7 @@ export default function LoginComponent() {
                                                 setViewState("forgot")
                                             }
                                         >
-                                            Lost Passkey?
+                                            Forgot Password?
                                         </span>
                                     </div>
                                     <button
@@ -218,8 +239,8 @@ export default function LoginComponent() {
                                         disabled={authState.isLoading}
                                     >
                                         {authState.isLoading
-                                            ? "Authenticating..."
-                                            : "Establish Connection"}
+                                            ? "Logging in..."
+                                            : "Login"}
                                     </button>
                                 </form>
                             )}
@@ -229,26 +250,26 @@ export default function LoginComponent() {
                                 <form onSubmit={handleSignUpSubmit}>
                                     <div className="mb-3">
                                         <label className={styles.holoLabel}>
-                                            Display Name
+                                            Full Name
                                         </label>
                                         <input
                                             className={styles.holoInput}
                                             name="name"
                                             type="text"
-                                            placeholder="Enter Name"
+                                            placeholder="John Doe"
                                             onChange={handleSignUpChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
                                         <label className={styles.holoLabel}>
-                                            Username ID
+                                            Username
                                         </label>
                                         <input
                                             className={styles.holoInput}
                                             name="username"
                                             type="text"
-                                            placeholder="Unique Handle"
+                                            placeholder="johndoe123"
                                             onChange={handleSignUpChange}
                                             required
                                         />
@@ -261,20 +282,20 @@ export default function LoginComponent() {
                                             className={styles.holoInput}
                                             name="email"
                                             type="email"
-                                            placeholder="user@linkups.net"
+                                            placeholder="name@example.com"
                                             onChange={handleSignUpChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-4">
                                         <label className={styles.holoLabel}>
-                                            Passkey
+                                            Password
                                         </label>
                                         <input
                                             className={styles.holoInput}
                                             name="password"
                                             type="password"
-                                            placeholder="••••••••"
+                                            placeholder="Create a password"
                                             onChange={handleSignUpChange}
                                             required
                                         />
@@ -296,8 +317,8 @@ export default function LoginComponent() {
                                         disabled={authState.isLoading}
                                     >
                                         {authState.isLoading
-                                            ? "Registering..."
-                                            : "Generate Identity"}
+                                            ? "Creating Account..."
+                                            : "Sign Up"}
                                     </button>
                                 </form>
                             )}
@@ -316,7 +337,7 @@ export default function LoginComponent() {
                                                 setForgotEmail(e.target.value)
                                             }
                                             type="email"
-                                            placeholder="user@linkups.net"
+                                            placeholder="name@example.com"
                                             required
                                         />
                                     </div>
@@ -335,7 +356,7 @@ export default function LoginComponent() {
                                         type="submit"
                                         className={styles.btnNeon}
                                     >
-                                        Send Signal
+                                        Send Reset Link
                                     </button>
                                     <div className="text-center mt-3">
                                         <span
@@ -353,27 +374,27 @@ export default function LoginComponent() {
                             <div className={styles.formFooter}>
                                 {viewState === "login" && (
                                     <p>
-                                        New node?{" "}
+                                        Don't have an account?{" "}
                                         <span
                                             className={styles.linkHighlight}
                                             onClick={() =>
                                                 setViewState("register")
                                             }
                                         >
-                                            Initialize
+                                            Sign Up
                                         </span>
                                     </p>
                                 )}
                                 {viewState === "register" && (
                                     <p>
-                                        Already a node?{" "}
+                                        Already have an account?{" "}
                                         <span
                                             className={styles.linkHighlight}
                                             onClick={() =>
                                                 setViewState("login")
                                             }
                                         >
-                                            Authenticate
+                                            Login
                                         </span>
                                     </p>
                                 )}

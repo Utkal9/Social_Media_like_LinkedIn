@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
+import clientServer from "@/config"; // Import API client
 
 const SocketContext = createContext(null);
 
@@ -15,17 +16,15 @@ export const useSocket = () => {
     return useContext(SocketContext);
 };
 
-// --- Incoming Call Modal ---
+// --- Incoming Call Modal (Kept as is) ---
 const IncomingCallHandler = ({ socket }) => {
     const [call, setCall] = useState(null);
 
     useEffect(() => {
         if (!socket) return;
-
         socket.on("incoming-call", ({ fromUser, roomUrl }) => {
             setCall({ fromUser, roomUrl });
         });
-
         return () => {
             socket.off("incoming-call");
         };
@@ -72,8 +71,24 @@ const IncomingCallHandler = ({ socket }) => {
 export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [onlineStatuses, setOnlineStatuses] = useState({});
+    const [unreadCount, setUnreadCount] = useState(0); // --- NEW STATE ---
     const auth = useSelector((state) => state.auth);
     const socketInstance = useRef(null);
+
+    // --- NEW: Function to fetch initial count ---
+    const fetchUnreadCount = async () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const res = await clientServer.get("/messages/unread_count", {
+                    params: { token },
+                });
+                setUnreadCount(res.data.count);
+            } catch (err) {
+                console.error("Failed to fetch unread count", err);
+            }
+        }
+    };
 
     useEffect(() => {
         if (socketInstance.current) return;
@@ -88,7 +103,6 @@ export const SocketProvider = ({ children }) => {
 
         socketInstance.current = newSocket;
         setSocket(newSocket);
-
         newSocket.connect();
 
         newSocket.on("connect", () => {
@@ -96,11 +110,20 @@ export const SocketProvider = ({ children }) => {
                 newSocket.emit("register-user", auth.user.userId._id);
             }
         });
+
         newSocket.on("user-status-change", ({ userId, isOnline, lastSeen }) => {
             setOnlineStatuses((prev) => ({
                 ...prev,
                 [userId]: { isOnline, lastSeen },
             }));
+        });
+
+        // --- NEW: Listen for messages to increment count ---
+        newSocket.on("receive-chat-message", () => {
+            // We verify if the user is NOT on the specific chat page in the page component
+            // But globally, we can just increment.
+            // The Messaging page will correct it if it's open.
+            setUnreadCount((prev) => prev + 1);
         });
 
         return () => {
@@ -115,12 +138,20 @@ export const SocketProvider = ({ children }) => {
                 socket.connect();
             }
             socket.emit("register-user", auth.user.userId._id);
+            fetchUnreadCount(); // Fetch count on auth load
         }
     }, [socket, auth.user]);
 
     return (
         <SocketContext.Provider
-            value={{ socket, onlineStatuses, setOnlineStatuses }}
+            value={{
+                socket,
+                onlineStatuses,
+                setOnlineStatuses,
+                unreadCount, // Export
+                setUnreadCount, // Export
+                fetchUnreadCount, // Export
+            }}
         >
             <IncomingCallHandler socket={socket} />
             {children}
@@ -128,7 +159,6 @@ export const SocketProvider = ({ children }) => {
     );
 };
 
-// --- Holo Styles ---
 const styles = {
     modalOverlay: {
         position: "fixed",
@@ -231,7 +261,6 @@ const styles = {
     },
 };
 
-// Add keyframes dynamically
 if (typeof document !== "undefined") {
     const styleSheet = document.createElement("style");
     styleSheet.textContent = `

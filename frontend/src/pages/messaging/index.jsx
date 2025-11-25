@@ -11,7 +11,7 @@ import Head from "next/head";
 const VIDEO_CALL_URL =
     process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
 
-// --- Holo Icons ---
+// Icons
 const SearchIcon = () => (
     <svg
         viewBox="0 0 24 24"
@@ -58,19 +58,131 @@ const EditIcon = () => (
         <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
     </svg>
 );
+const MoreVerticalIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="18">
+        <path d="M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+    </svg>
+);
+const CheckIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+        />
+    </svg>
+);
+const XIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+        />
+    </svg>
+);
+const InfoIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+        />
+    </svg>
+);
+const TrashIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="16"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+        />
+    </svg>
+);
+const SingleTick = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="14"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+        />
+    </svg>
+);
+const DoubleTickIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={3}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.5 12.75l6 6 9-13.5"
+        />
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10 12.75l2.25 2.25 7.5-8.25"
+        />
+    </svg>
+);
+const CheckCircleIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
 
+// Helpers
 const getTimeAgo = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
-
+const formatDateFull = (dateStr) => {
+    if (!dateStr) return "---";
+    return new Date(dateStr).toLocaleString();
+};
 const formatLastSeen = (dateString) => {
     if (!dateString) return "Offline";
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.max(0, Math.floor((now - date) / 1000));
-
     if (diffInSeconds < 60) return "Active just now";
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) return `Active ${diffInMinutes}m ago`;
@@ -84,7 +196,8 @@ const formatLastSeen = (dateString) => {
 export default function MessagingPage() {
     const router = useRouter();
     const auth = useSelector((state) => state.auth);
-    const { socket, onlineStatuses, setOnlineStatuses } = useSocket() || {};
+    const { socket, onlineStatuses, setOnlineStatuses, fetchUnreadCount } =
+        useSocket() || {};
 
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
@@ -93,9 +206,16 @@ export default function MessagingPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [showMobileChat, setShowMobileChat] = useState(false);
     const messagesEndRef = useRef(null);
-
-    // --- FIX: Hydration Error & Loading State ---
     const [isMounted, setIsMounted] = useState(false);
+
+    // UI States
+    const [activeMessageId, setActiveMessageId] = useState(null);
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const [editInput, setEditInput] = useState("");
+    const [infoMessage, setInfoMessage] = useState(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+    const [notification, setNotification] = useState(null);
+    const [showHeaderMenu, setShowHeaderMenu] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -106,19 +226,32 @@ export default function MessagingPage() {
         }
     }, [router]);
 
+    useEffect(() => {
+        const closeMenu = () => setActiveMessageId(null);
+        if (activeMessageId) document.addEventListener("click", closeMenu);
+        return () => document.removeEventListener("click", closeMenu);
+    }, [activeMessageId]);
+
     const isConnected = useMemo(() => {
         if (!activeChat || !auth.connections || !auth.connectionRequest)
             return false;
         const targetId = activeChat._id;
-        const isSentAccepted = auth.connections.some(
-            (c) =>
-                c.connectionId?._id === targetId && c.status_accepted === true
+        return (
+            auth.connections.some(
+                (c) =>
+                    c.connectionId?._id === targetId &&
+                    c.status_accepted === true
+            ) ||
+            auth.connectionRequest.some(
+                (c) => c.userId?._id === targetId && c.status_accepted === true
+            )
         );
-        const isReceivedAccepted = auth.connectionRequest.some(
-            (c) => c.userId?._id === targetId && c.status_accepted === true
-        );
-        return isSentAccepted || isReceivedAccepted;
     }, [activeChat, auth.connections, auth.connectionRequest]);
+
+    const showToast = (msg) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(null), 3000);
+    };
 
     const fetchConversations = async () => {
         if (localStorage.getItem("token")) {
@@ -127,13 +260,14 @@ export default function MessagingPage() {
                     params: { token: localStorage.getItem("token") },
                 });
                 setConversations(res.data);
-
                 const initialStatuses = {};
-                res.data.forEach((user) => {
-                    initialStatuses[user._id] = {
-                        isOnline: user.isOnline,
-                        lastSeen: user.lastSeen,
-                    };
+                res.data.forEach((item) => {
+                    if (item.user) {
+                        initialStatuses[item.user._id] = {
+                            isOnline: item.user.isOnline,
+                            lastSeen: item.user.lastSeen,
+                        };
+                    }
                 });
                 if (setOnlineStatuses) {
                     setOnlineStatuses((prev) => ({
@@ -147,37 +281,30 @@ export default function MessagingPage() {
         }
     };
 
-    useEffect(() => {
-        if (!router.isReady || !localStorage.getItem("token")) return;
-        const { chatWith } = router.query;
-        if (chatWith) {
-            const existingChat = conversations.find(
-                (c) => c.username === chatWith
-            );
-            if (existingChat) {
-                handleSelectChat(existingChat);
-            } else {
-                const fetchTargetUser = async () => {
-                    try {
-                        const res = await clientServer.get(
-                            "/user/get_profile_based_on_username",
-                            { params: { username: chatWith } }
-                        );
-                        const targetUser = res.data.profile.userId;
-                        setConversations((prev) => {
-                            if (prev.find((c) => c._id === targetUser._id))
-                                return prev;
-                            return [targetUser, ...prev];
-                        });
-                        handleSelectChat(targetUser);
-                    } catch (err) {
-                        console.error(err);
-                    }
-                };
-                fetchTargetUser();
+    const markAsRead = async (senderId) => {
+        try {
+            await clientServer.post("/messages/mark_read", {
+                token: localStorage.getItem("token"),
+                senderId: senderId,
+            });
+            if (fetchUnreadCount) fetchUnreadCount();
+            if (socket) {
+                socket.emit("mark-as-read", {
+                    senderId: senderId,
+                    receiverId: auth.user?.userId?._id,
+                });
             }
+            setConversations((prev) =>
+                prev.map((c) => {
+                    if (c.user._id === senderId)
+                        return { ...c, unreadCount: 0 };
+                    return c;
+                })
+            );
+        } catch (err) {
+            console.error("Failed to mark read", err);
         }
-    }, [router.isReady, router.query, conversations.length]);
+    };
 
     useEffect(() => {
         if (!activeChat) return;
@@ -191,6 +318,7 @@ export default function MessagingPage() {
                 });
                 setMessages(res.data);
                 scrollToBottom();
+                markAsRead(activeChat._id);
             } catch (err) {
                 console.error(err);
             }
@@ -198,19 +326,57 @@ export default function MessagingPage() {
         fetchMessages();
     }, [activeChat]);
 
+    // --- Socket Listeners ---
     useEffect(() => {
         if (!socket) return;
         const handleReceiveMessage = (data) => {
             if (activeChat && data.sender === activeChat._id) {
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
+                markAsRead(activeChat._id);
             } else {
                 fetchConversations();
             }
         };
+        const handleStatusUpdate = ({ messageId, status }) => {
+            setMessages((prev) =>
+                prev.map((m) => (m._id === messageId ? { ...m, status } : m))
+            );
+        };
+        const handleReadUpdate = ({ receiverId }) => {
+            if (activeChat && activeChat._id === receiverId) {
+                setMessages((prev) =>
+                    prev.map((m) => ({ ...m, status: "read", isRead: true }))
+                );
+            }
+        };
+        const handleMessageUpdate = ({ messageId, newMessage, isEdited }) => {
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg._id === messageId
+                        ? { ...msg, message: newMessage, isEdited }
+                        : msg
+                )
+            );
+        };
+        const handleMessageDelete = ({ messageId, isDeleted, message }) => {
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg._id === messageId ? { ...msg, isDeleted, message } : msg
+                )
+            );
+        };
         socket.on("receive-chat-message", handleReceiveMessage);
+        socket.on("message-status-update", handleStatusUpdate);
+        socket.on("messages-read-update", handleReadUpdate);
+        socket.on("message-updated", handleMessageUpdate);
+        socket.on("message-deleted", handleMessageDelete);
         return () => {
             socket.off("receive-chat-message", handleReceiveMessage);
+            socket.off("message-status-update", handleStatusUpdate);
+            socket.off("messages-read-update", handleReadUpdate);
+            socket.off("message-updated", handleMessageUpdate);
+            socket.off("message-deleted", handleMessageDelete);
         };
     }, [socket, activeChat]);
 
@@ -223,38 +389,34 @@ export default function MessagingPage() {
     const handleSelectChat = (user) => {
         setActiveChat(user);
         setShowMobileChat(true);
-        if (router.query.chatWith) {
+        if (router.query.chatWith)
             router.replace("/messaging", undefined, { shallow: true });
-        }
-    };
-
-    const handleBackToConversations = () => {
-        setShowMobileChat(false);
-        setActiveChat(null);
     };
 
     const handleSendMessage = async () => {
         if (!inputText.trim() || !activeChat) return;
         const myId = auth.user?.userId?._id;
-        if (!myId) return;
-
+        const tempId = Date.now().toString();
         const newMsg = {
+            _id: tempId,
             sender: myId,
             receiver: activeChat._id,
             message: inputText,
             createdAt: new Date().toISOString(),
+            status: "sent",
         };
-
         setMessages((prev) => [...prev, newMsg]);
         setInputText("");
         scrollToBottom();
-
         try {
-            await clientServer.post("/messages/send", {
+            const res = await clientServer.post("/messages/send", {
                 token: localStorage.getItem("token"),
                 toUserId: activeChat._id,
                 message: newMsg.message,
             });
+            setMessages((prev) =>
+                prev.map((m) => (m._id === tempId ? res.data : m))
+            );
             if (socket) {
                 socket.emit("send-chat-message", {
                     senderId: myId,
@@ -262,9 +424,103 @@ export default function MessagingPage() {
                     message: newMsg.message,
                 });
             }
+            fetchConversations();
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const handleDeleteClick = (msgId) => {
+        setDeleteConfirmId(msgId);
+        setActiveMessageId(null);
+    };
+
+    const confirmDeleteMessage = async () => {
+        if (!deleteConfirmId) return;
+        setMessages((prev) =>
+            prev.map((msg) =>
+                msg._id === deleteConfirmId
+                    ? {
+                          ...msg,
+                          isDeleted: true,
+                          message: "This message was deleted",
+                      }
+                    : msg
+            )
+        );
+        try {
+            await clientServer.post("/messages/delete", {
+                token: localStorage.getItem("token"),
+                messageId: deleteConfirmId,
+            });
+            socket.emit("delete-message", {
+                messageId: deleteConfirmId,
+                receiverId: activeChat._id,
+            });
+            showToast("Message deleted");
+        } catch (err) {
+            console.error(err);
+        }
+        setDeleteConfirmId(null);
+    };
+
+    const handleClearMessage = (msgId) => {
+        setMessages((prev) => prev.filter((m) => m._id !== msgId));
+        setActiveMessageId(null);
+        showToast("Message cleared");
+    };
+
+    const handleClearChatHistory = async () => {
+        if (!confirm("Clear chat history?")) return;
+        try {
+            await clientServer.post("/messages/clear", {
+                token: localStorage.getItem("token"),
+                otherUserId: activeChat._id,
+            });
+            setMessages([]);
+            setShowHeaderMenu(false);
+            showToast("History cleared");
+            fetchConversations();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const startEditing = (msg) => {
+        setEditingMessageId(msg._id);
+        setEditInput(msg.message);
+        setActiveMessageId(null);
+    };
+
+    const submitEdit = async () => {
+        if (!editInput.trim() || !editingMessageId) return;
+        setMessages((prev) =>
+            prev.map((msg) =>
+                msg._id === editingMessageId
+                    ? { ...msg, message: editInput, isEdited: true }
+                    : msg
+            )
+        );
+        setEditingMessageId(null);
+        try {
+            await clientServer.post("/messages/edit", {
+                token: localStorage.getItem("token"),
+                messageId: editingMessageId,
+                newMessage: editInput,
+            });
+            socket.emit("edit-message", {
+                messageId: editingMessageId,
+                newMessage: editInput,
+                receiverId: activeChat._id,
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleInfoClick = (msg) => {
+        setInfoMessage(msg);
+        setActiveMessageId(null);
     };
 
     const handleStartVideoCall = () => {
@@ -275,7 +531,6 @@ export default function MessagingPage() {
         const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
             returnUrl
         )}`;
-
         socket.emit("start-call", {
             fromUser: auth.user.userId,
             toUserId: activeChat._id,
@@ -284,14 +539,13 @@ export default function MessagingPage() {
         window.open(roomUrlWithRedirect, "_blank");
     };
 
-    const filteredConversations = conversations.filter(
-        (user) =>
-            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.username.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    // --- FIX: Removed the problematic condition ---
-    // Replaced with standard loading logic inside the return statement.
+    const filteredConversations = conversations.filter((c) => {
+        if (!c.user) return false;
+        return (
+            c.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            c.user.username.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    });
 
     return (
         <div className={styles.pageWrapper}>
@@ -300,10 +554,93 @@ export default function MessagingPage() {
             </Head>
             <div className={styles.bgGlow}></div>
 
-            {/* Render content ONLY after mount to prevent hydration mismatch */}
+            {notification && (
+                <div className={styles.notificationToast}>
+                    <CheckCircleIcon /> <span>{notification}</span>
+                </div>
+            )}
+
+            {infoMessage && (
+                <div
+                    className={styles.modalOverlay}
+                    onClick={() => setInfoMessage(null)}
+                >
+                    <div
+                        className={styles.infoCard}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3>Message Info</h3>
+                        <div className={styles.infoRow}>
+                            <label>Sent:</label>
+                            <span>{formatDateFull(infoMessage.createdAt)}</span>
+                        </div>
+                        <div className={styles.infoRow}>
+                            <label>Delivered:</label>
+                            <span>
+                                {infoMessage.deliveredAt
+                                    ? formatDateFull(infoMessage.deliveredAt)
+                                    : "---"}
+                            </span>
+                        </div>
+                        <div className={styles.infoRow}>
+                            <label>Read:</label>
+                            <span>
+                                {infoMessage.readAt || infoMessage.isRead
+                                    ? formatDateFull(
+                                          infoMessage.readAt ||
+                                              infoMessage.createdAt
+                                      )
+                                    : "---"}
+                            </span>
+                        </div>
+                        <button onClick={() => setInfoMessage(null)}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {deleteConfirmId && (
+                <div
+                    className={styles.modalOverlay}
+                    onClick={() => setDeleteConfirmId(null)}
+                >
+                    <div
+                        className={styles.infoCard}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ textAlign: "center" }}
+                    >
+                        <h3
+                            style={{
+                                color: "var(--neon-pink)",
+                                borderBottom: "none",
+                            }}
+                        >
+                            Confirm Deletion
+                        </h3>
+                        <p style={{ color: "#ccc", marginBottom: "20px" }}>
+                            Delete permanently?
+                        </p>
+                        <div style={{ display: "flex", gap: "10px" }}>
+                            <button
+                                onClick={() => setDeleteConfirmId(null)}
+                                style={{ background: "rgba(255,255,255,0.1)" }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteMessage}
+                                style={{ background: "var(--neon-pink)" }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {isMounted ? (
                 <div className={styles.messagingContainer}>
-                    {/* --- Sidebar (Conversation List) --- */}
                     <div
                         className={`${styles.sidebar} ${
                             showMobileChat ? styles.hiddenOnMobile : ""
@@ -319,7 +656,6 @@ export default function MessagingPage() {
                                 <EditIcon />
                             </button>
                         </div>
-
                         <div className={styles.searchBar}>
                             <SearchIcon />
                             <input
@@ -329,9 +665,9 @@ export default function MessagingPage() {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-
                         <div className={styles.conversationList}>
-                            {filteredConversations.map((user) => {
+                            {filteredConversations.map((convo) => {
+                                const user = convo.user;
                                 const isOnline =
                                     onlineStatuses &&
                                     onlineStatuses[user._id]?.isOnline;
@@ -339,7 +675,8 @@ export default function MessagingPage() {
                                     (onlineStatuses &&
                                         onlineStatuses[user._id]?.lastSeen) ||
                                     user.lastSeen;
-
+                                const unreadCount = convo.unreadCount || 0;
+                                const lastMsg = convo.lastMessage;
                                 return (
                                     <div
                                         key={user._id}
@@ -362,21 +699,52 @@ export default function MessagingPage() {
                                                     className={styles.onlineDot}
                                                 ></span>
                                             )}
+                                            {unreadCount > 0 && (
+                                                <span
+                                                    className={
+                                                        styles.avatarBadge
+                                                    }
+                                                >
+                                                    {unreadCount}
+                                                </span>
+                                            )}
                                         </div>
                                         <div className={styles.info}>
-                                            <h4>{user.name}</h4>
+                                            <div className={styles.infoTop}>
+                                                <h4>{user.name}</h4>
+                                                <span
+                                                    className={
+                                                        isOnline
+                                                            ? styles.statusOnline
+                                                            : styles.statusOffline
+                                                    }
+                                                >
+                                                    {isOnline
+                                                        ? "Online"
+                                                        : formatLastSeen(
+                                                              lastSeenDate
+                                                          )}
+                                                </span>
+                                            </div>
                                             <p
-                                                style={{
-                                                    color: isOnline
-                                                        ? "var(--neon-teal)"
-                                                        : "var(--text-secondary)",
-                                                }}
+                                                className={
+                                                    unreadCount > 0
+                                                        ? styles.previewBold
+                                                        : styles.preview
+                                                }
                                             >
-                                                {isOnline
-                                                    ? "Online"
-                                                    : formatLastSeen(
-                                                          lastSeenDate
-                                                      )}
+                                                {lastMsg
+                                                    ? lastMsg.sender ===
+                                                      user._id
+                                                        ? lastMsg.message.substring(
+                                                              0,
+                                                              25
+                                                          ) + "..."
+                                                        : `You: ${lastMsg.message.substring(
+                                                              0,
+                                                              20
+                                                          )}...`
+                                                    : "Start a conversation"}
                                             </p>
                                         </div>
                                     </div>
@@ -384,8 +752,6 @@ export default function MessagingPage() {
                             })}
                         </div>
                     </div>
-
-                    {/* --- Chat Window --- */}
                     <div
                         className={`${styles.chatWindow} ${
                             !showMobileChat ? styles.hiddenOnMobile : ""
@@ -396,7 +762,7 @@ export default function MessagingPage() {
                                 <div className={styles.chatHeader}>
                                     <button
                                         className={styles.backBtn}
-                                        onClick={handleBackToConversations}
+                                        onClick={() => setShowMobileChat(false)}
                                     >
                                         <BackIcon />
                                     </button>
@@ -438,14 +804,54 @@ export default function MessagingPage() {
                                                 <VideoIcon />
                                             </button>
                                         )}
+                                        <div style={{ position: "relative" }}>
+                                            <button
+                                                className={styles.actionBtn}
+                                                onClick={() =>
+                                                    setShowHeaderMenu(
+                                                        !showHeaderMenu
+                                                    )
+                                                }
+                                                title="Options"
+                                            >
+                                                <MoreVerticalIcon />
+                                            </button>
+                                            {showHeaderMenu && (
+                                                <div
+                                                    className={
+                                                        styles.headerMenuDropdown
+                                                    }
+                                                >
+                                                    <button
+                                                        onClick={
+                                                            handleClearChatHistory
+                                                        }
+                                                        className={
+                                                            styles.clearChatBtn
+                                                        }
+                                                    >
+                                                        <TrashIcon /> Clear Chat
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-
                                 <div className={styles.messagesContainer}>
                                     {messages.map((msg, index) => {
                                         const isMe =
                                             msg.sender ===
                                             auth.user?.userId?._id;
+                                        const isDeleted = msg.isDeleted;
+                                        const canEdit =
+                                            isMe &&
+                                            !isDeleted &&
+                                            new Date() -
+                                                new Date(msg.createdAt) <
+                                                2 * 60 * 1000;
+                                        const displayStatus = msg.isRead
+                                            ? "read"
+                                            : msg.status;
                                         return (
                                             <div
                                                 key={index}
@@ -459,28 +865,225 @@ export default function MessagingPage() {
                                             >
                                                 <div
                                                     className={`${
-                                                        styles.bubble
+                                                        styles.bubbleWrapper
                                                     } ${
                                                         isMe
-                                                            ? styles.bubbleMe
-                                                            : styles.bubbleOther
+                                                            ? styles.wrapperRight
+                                                            : ""
                                                     }`}
                                                 >
-                                                    {msg.message}
-                                                    <span
-                                                        className={styles.time}
+                                                    <div
+                                                        className={`${
+                                                            styles.bubble
+                                                        } ${
+                                                            isMe
+                                                                ? styles.bubbleMe
+                                                                : styles.bubbleOther
+                                                        } ${
+                                                            isDeleted
+                                                                ? styles.deletedBubble
+                                                                : ""
+                                                        }`}
                                                     >
-                                                        {getTimeAgo(
-                                                            msg.createdAt
+                                                        {editingMessageId ===
+                                                        msg._id ? (
+                                                            <div
+                                                                className={
+                                                                    styles.editInputGroup
+                                                                }
+                                                            >
+                                                                <input
+                                                                    value={
+                                                                        editInput
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        setEditInput(
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    autoFocus
+                                                                />
+                                                                <button
+                                                                    onClick={
+                                                                        submitEdit
+                                                                    }
+                                                                    className={
+                                                                        styles.saveEditBtn
+                                                                    }
+                                                                >
+                                                                    <CheckIcon />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setEditingMessageId(
+                                                                            null
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        styles.cancelEditBtn
+                                                                    }
+                                                                >
+                                                                    <XIcon />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                {msg.message}
+                                                                {msg.isEdited &&
+                                                                    !isDeleted && (
+                                                                        <span
+                                                                            className={
+                                                                                styles.editedTag
+                                                                            }
+                                                                        >
+                                                                            (edited)
+                                                                        </span>
+                                                                    )}
+                                                            </>
                                                         )}
-                                                    </span>
+                                                        <div
+                                                            className={
+                                                                styles.metaRow
+                                                            }
+                                                        >
+                                                            <span
+                                                                className={
+                                                                    styles.time
+                                                                }
+                                                            >
+                                                                {getTimeAgo(
+                                                                    msg.createdAt
+                                                                )}
+                                                            </span>
+                                                            {isMe &&
+                                                                !isDeleted && (
+                                                                    <span
+                                                                        className={`${
+                                                                            styles.tick
+                                                                        } ${
+                                                                            displayStatus ===
+                                                                            "read"
+                                                                                ? styles.tickBlue
+                                                                                : styles.tickGrey
+                                                                        }`}
+                                                                    >
+                                                                        {displayStatus ===
+                                                                        "sent" ? (
+                                                                            <SingleTick />
+                                                                        ) : (
+                                                                            <DoubleTickIcon />
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                        </div>
+                                                    </div>
+                                                    {isMe && (
+                                                        <div
+                                                            className={
+                                                                styles.menuContainer
+                                                            }
+                                                        >
+                                                            <button
+                                                                className={
+                                                                    styles.menuTrigger
+                                                                }
+                                                                onClick={(
+                                                                    e
+                                                                ) => {
+                                                                    e.stopPropagation();
+                                                                    setActiveMessageId(
+                                                                        activeMessageId ===
+                                                                            msg._id
+                                                                            ? null
+                                                                            : msg._id
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <MoreVerticalIcon />
+                                                            </button>
+                                                            {activeMessageId ===
+                                                                msg._id && (
+                                                                <div
+                                                                    className={
+                                                                        styles.messageMenu
+                                                                    }
+                                                                >
+                                                                    {!isDeleted && (
+                                                                        <button
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                handleInfoClick(
+                                                                                    msg
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <InfoIcon />{" "}
+                                                                            Info
+                                                                        </button>
+                                                                    )}
+                                                                    {canEdit && (
+                                                                        <button
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                startEditing(
+                                                                                    msg
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <EditIcon />{" "}
+                                                                            Edit
+                                                                        </button>
+                                                                    )}
+                                                                    {!isDeleted ? (
+                                                                        <button
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                handleDeleteClick(
+                                                                                    msg._id
+                                                                                );
+                                                                            }}
+                                                                            className={
+                                                                                styles.deleteOption
+                                                                            }
+                                                                        >
+                                                                            <TrashIcon />{" "}
+                                                                            Delete
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button
+                                                                            onClick={(
+                                                                                e
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                handleClearMessage(
+                                                                                    msg._id
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <XIcon />{" "}
+                                                                            Clear
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
                                     })}
                                     <div ref={messagesEndRef} />
                                 </div>
-
                                 <div className={styles.inputArea}>
                                     <div className={styles.inputWrapper}>
                                         <textarea
@@ -529,8 +1132,6 @@ export default function MessagingPage() {
                     </div>
                 </div>
             ) : (
-                // Render a placeholder to match server structure OR simple null (safe inside client-only hook)
-                // A minimal loader here prevents the flash of unstyled/empty content
                 <div className={styles.emptyState}>
                     <p style={{ color: "var(--neon-teal)" }}>Connecting...</p>
                 </div>

@@ -19,10 +19,32 @@ const MessageSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    isRead: {
+    status: {
+        type: String,
+        enum: ["sent", "delivered", "read"],
+        default: "sent",
+    },
+    deliveredAt: {
+        type: Date,
+    },
+    readAt: {
+        type: Date,
+    },
+    isDeleted: {
         type: Boolean,
         default: false,
     },
+    isEdited: {
+        type: Boolean,
+        default: false,
+    },
+    // --- NEW: Hide message for specific users (Clear Chat) ---
+    hiddenFor: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+    ],
 });
 
 const Message = mongoose.model("Message", MessageSchema);
