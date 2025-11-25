@@ -11,7 +11,7 @@ import Head from "next/head";
 const VIDEO_CALL_URL =
     process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
 
-// Icons
+// --- ICONS ---
 const SearchIcon = () => (
     <svg
         viewBox="0 0 24 24"
@@ -123,13 +123,15 @@ const TrashIcon = () => (
         />
     </svg>
 );
+
 const SingleTick = () => (
     <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth={3}
-        width="14"
+        width="16"
+        height="16"
     >
         <path
             strokeLinecap="round"
@@ -145,16 +147,17 @@ const DoubleTickIcon = () => (
         stroke="currentColor"
         strokeWidth={3}
         width="18"
+        height="18"
     >
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M4.5 12.75l6 6 9-13.5"
+            d="M2 12.5l4.5 4.5 9-9"
         />
         <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M10 12.75l2.25 2.25 7.5-8.25"
+            d="M11 12.5l2.5 2.5 7.5-8.5"
         />
     </svg>
 );
@@ -167,17 +170,23 @@ const CheckCircleIcon = () => (
         />
     </svg>
 );
+const MessageNotifIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20">
+        <path
+            fillRule="evenodd"
+            d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.678 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
 
-// Helpers
+// --- HELPERS ---
 const getTimeAgo = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
-const formatDateFull = (dateStr) => {
-    if (!dateStr) return "---";
-    return new Date(dateStr).toLocaleString();
-};
+
 const formatLastSeen = (dateString) => {
     if (!dateString) return "Offline";
     const date = new Date(dateString);
@@ -191,6 +200,11 @@ const formatLastSeen = (dateString) => {
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `Active ${diffInDays}d ago`;
     return `Active ${Math.floor(diffInDays / 7)}w ago`;
+};
+
+const formatDateFull = (dateStr) => {
+    if (!dateStr) return "---";
+    return new Date(dateStr).toLocaleString();
 };
 
 export default function MessagingPage() {
@@ -217,6 +231,12 @@ export default function MessagingPage() {
     const [notification, setNotification] = useState(null);
     const [showHeaderMenu, setShowHeaderMenu] = useState(false);
 
+    // Keep a ref for socket listeners to access latest state
+    const conversationsRef = useRef(conversations);
+    useEffect(() => {
+        conversationsRef.current = conversations;
+    }, [conversations]);
+
     useEffect(() => {
         setIsMounted(true);
         if (!localStorage.getItem("token")) {
@@ -226,11 +246,16 @@ export default function MessagingPage() {
         }
     }, [router]);
 
+    // Close menus on outside click
     useEffect(() => {
-        const closeMenu = () => setActiveMessageId(null);
-        if (activeMessageId) document.addEventListener("click", closeMenu);
+        const closeMenu = () => {
+            setActiveMessageId(null);
+            setShowHeaderMenu(false);
+        };
+        if (activeMessageId || showHeaderMenu)
+            document.addEventListener("click", closeMenu);
         return () => document.removeEventListener("click", closeMenu);
-    }, [activeMessageId]);
+    }, [activeMessageId, showHeaderMenu]);
 
     const isConnected = useMemo(() => {
         if (!activeChat || !auth.connections || !auth.connectionRequest)
@@ -248,8 +273,8 @@ export default function MessagingPage() {
         );
     }, [activeChat, auth.connections, auth.connectionRequest]);
 
-    const showToast = (msg) => {
-        setNotification(msg);
+    const showToast = (msg, type = "info") => {
+        setNotification({ msg, type });
         setTimeout(() => setNotification(null), 3000);
     };
 
@@ -281,6 +306,53 @@ export default function MessagingPage() {
         }
     };
 
+    // --- FIX: Handle 'chatWith' query param correctly ---
+    useEffect(() => {
+        if (!router.isReady || !localStorage.getItem("token")) return;
+        const { chatWith } = router.query;
+
+        if (chatWith) {
+            const existingChat = conversations.find(
+                (c) => c.user && c.user.username === chatWith
+            );
+
+            if (existingChat) {
+                handleSelectChat(existingChat.user);
+            } else {
+                // Fetch and Add User to List if not present
+                const fetchTargetUser = async () => {
+                    try {
+                        const res = await clientServer.get(
+                            "/user/get_profile_based_on_username",
+                            { params: { username: chatWith } }
+                        );
+                        const targetUser = res.data.profile.userId;
+
+                        // Prevent duplicates
+                        setConversations((prev) => {
+                            if (prev.find((c) => c.user._id === targetUser._id))
+                                return prev;
+                            // Create dummy conversation structure
+                            return [
+                                {
+                                    user: targetUser,
+                                    lastMessage: null,
+                                    unreadCount: 0,
+                                },
+                                ...prev,
+                            ];
+                        });
+
+                        handleSelectChat(targetUser);
+                    } catch (err) {
+                        console.error("User not found", err);
+                    }
+                };
+                fetchTargetUser();
+            }
+        }
+    }, [router.isReady, router.query, conversations.length]); // Added length to trigger re-check
+
     const markAsRead = async (senderId) => {
         try {
             await clientServer.post("/messages/mark_read", {
@@ -294,6 +366,7 @@ export default function MessagingPage() {
                     receiverId: auth.user?.userId?._id,
                 });
             }
+            // Clear local unread count
             setConversations((prev) =>
                 prev.map((c) => {
                     if (c.user._id === senderId)
@@ -306,6 +379,7 @@ export default function MessagingPage() {
         }
     };
 
+    // Fetch messages when chat opens
     useEffect(() => {
         if (!activeChat) return;
         const fetchMessages = async () => {
@@ -326,23 +400,37 @@ export default function MessagingPage() {
         fetchMessages();
     }, [activeChat]);
 
-    // --- Socket Listeners ---
+    // --- SOCKET LISTENERS ---
     useEffect(() => {
         if (!socket) return;
+
         const handleReceiveMessage = (data) => {
             if (activeChat && data.sender === activeChat._id) {
+                // If chat open with sender, append and mark read
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
                 markAsRead(activeChat._id);
             } else {
+                // If chat NOT open, refresh list and show TOAST
                 fetchConversations();
+
+                // --- SHOW NOTIFICATION POPUP ---
+                const senderEntry = conversationsRef.current.find(
+                    (c) => c.user._id === data.sender
+                );
+                const senderName = senderEntry
+                    ? senderEntry.user.name
+                    : "New Connection";
+                showToast(`New message from ${senderName}`, "message");
             }
         };
+
         const handleStatusUpdate = ({ messageId, status }) => {
             setMessages((prev) =>
                 prev.map((m) => (m._id === messageId ? { ...m, status } : m))
             );
         };
+
         const handleReadUpdate = ({ receiverId }) => {
             if (activeChat && activeChat._id === receiverId) {
                 setMessages((prev) =>
@@ -350,6 +438,7 @@ export default function MessagingPage() {
                 );
             }
         };
+
         const handleMessageUpdate = ({ messageId, newMessage, isEdited }) => {
             setMessages((prev) =>
                 prev.map((msg) =>
@@ -359,6 +448,7 @@ export default function MessagingPage() {
                 )
             );
         };
+
         const handleMessageDelete = ({ messageId, isDeleted, message }) => {
             setMessages((prev) =>
                 prev.map((msg) =>
@@ -366,11 +456,13 @@ export default function MessagingPage() {
                 )
             );
         };
+
         socket.on("receive-chat-message", handleReceiveMessage);
         socket.on("message-status-update", handleStatusUpdate);
         socket.on("messages-read-update", handleReadUpdate);
         socket.on("message-updated", handleMessageUpdate);
         socket.on("message-deleted", handleMessageDelete);
+
         return () => {
             socket.off("receive-chat-message", handleReceiveMessage);
             socket.off("message-status-update", handleStatusUpdate);
@@ -389,13 +481,22 @@ export default function MessagingPage() {
     const handleSelectChat = (user) => {
         setActiveChat(user);
         setShowMobileChat(true);
-        if (router.query.chatWith)
+        if (router.query.chatWith) {
+            // Clear query param to avoid re-triggering logic
             router.replace("/messaging", undefined, { shallow: true });
+        }
+    };
+
+    const handleBackToConversations = () => {
+        setShowMobileChat(false);
+        setActiveChat(null);
+        fetchConversations();
     };
 
     const handleSendMessage = async () => {
         if (!inputText.trim() || !activeChat) return;
         const myId = auth.user?.userId?._id;
+
         const tempId = Date.now().toString();
         const newMsg = {
             _id: tempId,
@@ -405,18 +506,22 @@ export default function MessagingPage() {
             createdAt: new Date().toISOString(),
             status: "sent",
         };
+
         setMessages((prev) => [...prev, newMsg]);
         setInputText("");
         scrollToBottom();
+
         try {
             const res = await clientServer.post("/messages/send", {
                 token: localStorage.getItem("token"),
                 toUserId: activeChat._id,
                 message: newMsg.message,
             });
+            // Replace temp message with real one
             setMessages((prev) =>
                 prev.map((m) => (m._id === tempId ? res.data : m))
             );
+
             if (socket) {
                 socket.emit("send-chat-message", {
                     senderId: myId,
@@ -471,7 +576,8 @@ export default function MessagingPage() {
     };
 
     const handleClearChatHistory = async () => {
-        if (!confirm("Clear chat history?")) return;
+        if (!confirm("Are you sure you want to clear the chat history?"))
+            return;
         try {
             await clientServer.post("/messages/clear", {
                 token: localStorage.getItem("token"),
@@ -479,7 +585,7 @@ export default function MessagingPage() {
             });
             setMessages([]);
             setShowHeaderMenu(false);
-            showToast("History cleared");
+            showToast("Chat history cleared");
             fetchConversations();
         } catch (err) {
             console.error(err);
@@ -556,7 +662,12 @@ export default function MessagingPage() {
 
             {notification && (
                 <div className={styles.notificationToast}>
-                    <CheckCircleIcon /> <span>{notification}</span>
+                    {notification.type === "message" ? (
+                        <MessageNotifIcon />
+                    ) : (
+                        <CheckCircleIcon />
+                    )}
+                    <span>{notification.msg}</span>
                 </div>
             )}
 
@@ -619,7 +730,7 @@ export default function MessagingPage() {
                             Confirm Deletion
                         </h3>
                         <p style={{ color: "#ccc", marginBottom: "20px" }}>
-                            Delete permanently?
+                            Delete this message permanently?
                         </p>
                         <div style={{ display: "flex", gap: "10px" }}>
                             <button
@@ -641,6 +752,7 @@ export default function MessagingPage() {
 
             {isMounted ? (
                 <div className={styles.messagingContainer}>
+                    {/* SIDEBAR */}
                     <div
                         className={`${styles.sidebar} ${
                             showMobileChat ? styles.hiddenOnMobile : ""
@@ -656,6 +768,7 @@ export default function MessagingPage() {
                                 <EditIcon />
                             </button>
                         </div>
+
                         <div className={styles.searchBar}>
                             <SearchIcon />
                             <input
@@ -665,6 +778,7 @@ export default function MessagingPage() {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
+
                         <div className={styles.conversationList}>
                             {filteredConversations.map((convo) => {
                                 const user = convo.user;
@@ -677,6 +791,7 @@ export default function MessagingPage() {
                                     user.lastSeen;
                                 const unreadCount = convo.unreadCount || 0;
                                 const lastMsg = convo.lastMessage;
+
                                 return (
                                     <div
                                         key={user._id}
@@ -734,16 +849,16 @@ export default function MessagingPage() {
                                                 }
                                             >
                                                 {lastMsg
-                                                    ? lastMsg.sender ===
+                                                    ? (lastMsg.sender ===
                                                       user._id
-                                                        ? lastMsg.message.substring(
-                                                              0,
-                                                              25
-                                                          ) + "..."
-                                                        : `You: ${lastMsg.message.substring(
-                                                              0,
-                                                              20
-                                                          )}...`
+                                                          ? `You: ${lastMsg.message.substring(
+                                                                0,
+                                                                20
+                                                            )}`
+                                                          : lastMsg.message.substring(
+                                                                0,
+                                                                25
+                                                            )) + "..."
                                                     : "Start a conversation"}
                                             </p>
                                         </div>
@@ -752,6 +867,8 @@ export default function MessagingPage() {
                             })}
                         </div>
                     </div>
+
+                    {/* CHAT WINDOW */}
                     <div
                         className={`${styles.chatWindow} ${
                             !showMobileChat ? styles.hiddenOnMobile : ""
@@ -762,7 +879,7 @@ export default function MessagingPage() {
                                 <div className={styles.chatHeader}>
                                     <button
                                         className={styles.backBtn}
-                                        onClick={() => setShowMobileChat(false)}
+                                        onClick={handleBackToConversations}
                                     >
                                         <BackIcon />
                                     </button>
@@ -807,11 +924,12 @@ export default function MessagingPage() {
                                         <div style={{ position: "relative" }}>
                                             <button
                                                 className={styles.actionBtn}
-                                                onClick={() =>
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     setShowHeaderMenu(
                                                         !showHeaderMenu
-                                                    )
-                                                }
+                                                    );
+                                                }}
                                                 title="Options"
                                             >
                                                 <MoreVerticalIcon />
@@ -837,6 +955,7 @@ export default function MessagingPage() {
                                         </div>
                                     </div>
                                 </div>
+
                                 <div className={styles.messagesContainer}>
                                     {messages.map((msg, index) => {
                                         const isMe =
@@ -852,6 +971,7 @@ export default function MessagingPage() {
                                         const displayStatus = msg.isRead
                                             ? "read"
                                             : msg.status;
+
                                         return (
                                             <div
                                                 key={index}
@@ -959,6 +1079,7 @@ export default function MessagingPage() {
                                                                     msg.createdAt
                                                                 )}
                                                             </span>
+                                                            {/* TICKS */}
                                                             {isMe &&
                                                                 !isDeleted && (
                                                                     <span
@@ -981,6 +1102,8 @@ export default function MessagingPage() {
                                                                 )}
                                                         </div>
                                                     </div>
+
+                                                    {/* Menu */}
                                                     {isMe && (
                                                         <div
                                                             className={
@@ -1084,6 +1207,7 @@ export default function MessagingPage() {
                                     })}
                                     <div ref={messagesEndRef} />
                                 </div>
+
                                 <div className={styles.inputArea}>
                                     <div className={styles.inputWrapper}>
                                         <textarea
