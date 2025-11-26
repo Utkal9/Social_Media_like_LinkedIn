@@ -1,10 +1,11 @@
 /* frontend/src/pages/profile/index.module.css */
 
+/* --- Page Layout --- */
 .profilePage {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    padding-bottom: 50px;
+    padding-bottom: 80px; /* Increased for Mobile Nav Safety */
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -19,7 +20,14 @@
     }
 }
 
-/* --- NOTIFICATION TOAST --- */
+.loading {
+    text-align: center;
+    padding: 50px;
+    color: var(--text-secondary);
+    font-family: "Orbitron", sans-serif;
+}
+
+/* --- TOAST NOTIFICATION --- */
 .notificationToast {
     position: fixed;
     bottom: 30px;
@@ -128,13 +136,6 @@
 .deleteConfirmBtn:hover {
     background: #db2777;
     transform: translateY(-1px);
-}
-
-.loading {
-    text-align: center;
-    padding: 50px;
-    color: var(--text-secondary);
-    font-family: "Orbitron", sans-serif;
 }
 
 /* --- Header Card --- */
@@ -343,7 +344,7 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Important for mobile */
 }
 
 .nameWrapper {
@@ -358,6 +359,7 @@
     margin: 0;
     color: #fff;
     line-height: 1.2;
+    word-break: break-word; /* Prevent layout break on long names */
 }
 .editName {
     font-family: "Orbitron", sans-serif;
@@ -389,6 +391,7 @@
 .headerActions {
     display: flex;
     flex-shrink: 0;
+    margin-top: 5px;
 }
 
 .editModeBtn,
@@ -923,19 +926,30 @@
 }
 
 /* --- Mobile Responsive --- */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .gridLayout {
         grid-template-columns: 1fr;
     }
+
+    /* Reorder: Main Content (1) -> Sidebar (2) */
+    .mainColumn {
+        order: 1;
+    }
+    .sideColumn {
+        order: 2;
+    }
+
     .identityTop {
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
     }
+
     .headerActions {
         width: 100%;
         justify-content: flex-start;
         margin-top: 10px;
     }
+
     .itemActions {
         position: static; /* Un-float on mobile */
         margin-top: 12px;
@@ -945,15 +959,17 @@
         padding-right: 0;
     }
 
-    /* Force Main Content (Order 1) -> Side Content (Order 2) */
-    .mainColumn {
-        order: 1;
+    /* Ensure modals fit */
+    .modalContent {
+        max-height: 85dvh; /* Use dvh for mobile browsers */
     }
-    .sideColumn {
-        order: 2;
+
+    .contactGrid {
+        grid-template-columns: 1fr; /* Stack contact info */
     }
+
     .notificationToast {
-        bottom: 80px; /* Lift above mobile nav */
+        bottom: 80px; /* Above nav */
         right: 50%;
         transform: translateX(50%);
         width: 90%;
