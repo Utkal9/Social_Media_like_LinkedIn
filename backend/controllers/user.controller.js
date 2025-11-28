@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import ConnectionRequest from "../models/connections.model.js";
 import request from "request";
+import { v2 as cloudinary } from "cloudinary";
 import {
     Document,
     Packer,
@@ -81,7 +82,44 @@ const createSectionHeader = (title) => {
         ],
     });
 };
+// --- Updated Helper: Delete File from Cloudinary ---
+const deleteFromCloudinary = async (url) => {
+    if (!url) return;
 
+    // 1. Guard clause: Do not delete default assets
+    if (
+        url.includes("default_dlizpg") ||
+        url.includes("3d-rendering-hexagonal")
+    ) {
+        return;
+    }
+
+    try {
+        // 2. Regex to extract the Public ID
+        // It looks for the segment after '/upload/' (ignoring optional version 'v123/')
+        // and captures everything up to the file extension.
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
+        const match = url.match(regex);
+
+        if (match && match[1]) {
+            const publicId = match[1]; // e.g., "pro-connect-uploads/my_image"
+
+            // 3. Detect Resource Type
+            const resourceType = url.includes("/video/") ? "video" : "image";
+
+            // 4. Perform Deletion
+            const result = await cloudinary.uploader.destroy(publicId, {
+                resource_type: resourceType,
+            });
+
+            console.log(`🗑️ Cloudinary Delete: ${publicId} ->`, result);
+        } else {
+            console.warn(`⚠️ Could not extract Public ID from URL: ${url}`);
+        }
+    } catch (error) {
+        console.error("❌ Cloudinary Deletion Error:", error);
+    }
+};
 // ================= EXISTING LOGIC STARTS HERE ================= //
 
 export const register = async (req, res) => {
@@ -135,6 +173,9 @@ export const uploadProfilePicture = async (req, res) => {
             return res.status(404).json({ message: "User does not exist" });
         if (!req.file)
             return res.status(400).json({ message: "No file uploaded." });
+        if (user.profilePicture) {
+            await deleteFromCloudinary(user.profilePicture);
+        }
         user.profilePicture = req.file.path;
         await user.save();
         return res.json({
@@ -154,6 +195,9 @@ export const uploadBackgroundPicture = async (req, res) => {
             return res.status(404).json({ message: "User does not exist" });
         if (!req.file)
             return res.status(400).json({ message: "No file uploaded." });
+        if (user.backgroundPicture) {
+            await deleteFromCloudinary(user.backgroundPicture);
+        }
         user.backgroundPicture = req.file.path;
         await user.save();
         return res.json({ message: "Background updated", url: req.file.path });

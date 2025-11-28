@@ -1,7 +1,7 @@
 import Comment from "../models/comments.model.js";
 import Post from "../models/posts.model.js";
 import User from "../models/user.model.js";
-
+import { v2 as cloudinary } from "cloudinary";
 export const activeCheck = async (req, res) => {
     return res.status(200).json({ message: "RUNNING" });
 };
@@ -25,7 +25,44 @@ export const createPost = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+// --- Updated Helper: Delete File from Cloudinary ---
+const deleteFromCloudinary = async (url) => {
+    if (!url) return;
 
+    // 1. Guard clause: Do not delete default assets
+    if (
+        url.includes("default_dlizpg") ||
+        url.includes("3d-rendering-hexagonal")
+    ) {
+        return;
+    }
+
+    try {
+        // 2. Regex to extract the Public ID
+        // It looks for the segment after '/upload/' (ignoring optional version 'v123/')
+        // and captures everything up to the file extension.
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
+        const match = url.match(regex);
+
+        if (match && match[1]) {
+            const publicId = match[1]; // e.g., "pro-connect-uploads/my_image"
+
+            // 3. Detect Resource Type
+            const resourceType = url.includes("/video/") ? "video" : "image";
+
+            // 4. Perform Deletion
+            const result = await cloudinary.uploader.destroy(publicId, {
+                resource_type: resourceType,
+            });
+
+            console.log(`🗑️ Cloudinary Delete: ${publicId} ->`, result);
+        } else {
+            console.warn(`⚠️ Could not extract Public ID from URL: ${url}`);
+        }
+    } catch (error) {
+        console.error("❌ Cloudinary Deletion Error:", error);
+    }
+};
 export const getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find()
@@ -70,8 +107,12 @@ export const deletePost = async (req, res) => {
         if (post.userId.toString() !== user._id.toString()) {
             return res.status(404).json({ message: "Unauthorized" });
         }
+        if (post.media) {
+            await deleteFromCloudinary(post.media);
+        }
+        await Comment.deleteMany({ postId: post_id });
         await Post.deleteOne({ _id: post_id });
-        return res.json({ message: "Post Deleted" });
+        return res.json({ message: "Post and media deleted successfully" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -101,6 +142,11 @@ export const updatePost = async (req, res) => {
 
         // Update Media if provided
         if (req.file) {
+            // 1. Delete the OLD media if it exists
+            if (post.media) {
+                await deleteFromCloudinary(post.media);
+            }
+            // 2. Set the NEW media
             post.media = req.file.path;
             post.fileType = req.file.mimetype;
         }
