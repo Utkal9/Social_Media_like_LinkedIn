@@ -16,20 +16,20 @@ import {
     getUserProfileAndUserBasedOnUername,
     forgotPassword,
     resetPassword,
+    verifyEmail,
+    requestAccountDeletion,
+    confirmAccountDeletion,
 } from "../controllers/user.controller.js";
 
 import upload from "../config/cloudinary.config.js";
-import { MulterError } from "multer"; // Ensure you have multer installed
+import { MulterError } from "multer";
 
 const router = Router();
 
-// --- Middleware to handle Upload Errors gracefully ---
 const handleUpload = (fieldName) => (req, res, next) => {
     upload.single(fieldName)(req, res, (err) => {
         if (err) {
             console.error(`[Upload Error] ${fieldName}:`, err);
-
-            // Handle specific Multer errors (like file size)
             if (err instanceof MulterError) {
                 if (err.code === "LIMIT_FILE_SIZE") {
                     return res
@@ -38,8 +38,6 @@ const handleUpload = (fieldName) => (req, res, next) => {
                 }
                 return res.status(400).json({ message: err.message });
             }
-
-            // Handle other errors (Cloudinary, etc.)
             return res
                 .status(500)
                 .json({ message: err.message || "File upload failed." });
@@ -48,12 +46,10 @@ const handleUpload = (fieldName) => (req, res, next) => {
     });
 };
 
-// Use the wrapper for profile picture
 router
     .route("/update_profile_picture")
     .post(handleUpload("profile_picture"), uploadProfilePicture);
 
-// Use the wrapper for background picture
 router
     .route("/update_background_picture")
     .post(handleUpload("background_picture"), uploadBackgroundPicture);
@@ -61,7 +57,10 @@ router
 router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/forgot_password").post(forgotPassword);
-router.route("/reset_password/:token").put(resetPassword); // <--- New Route
+router.route("/reset_password/:token").put(resetPassword);
+
+// --- NEW VERIFICATION ROUTE ---
+router.route("/verify/:token").get(verifyEmail);
 
 router.route("/user_update").post(updateUserProfile);
 router.route("/get_user_and_profile").get(getUserAndProfile);
@@ -75,5 +74,8 @@ router.route("/user/accept_connection_request").post(acceptConnectionRequest);
 router
     .route("/user/get_profile_based_on_username")
     .get(getUserProfileAndUserBasedOnUername);
+
+router.route("/request_account_deletion").post(requestAccountDeletion);
+router.route("/confirm_delete_account/:token").delete(confirmAccountDeletion);
 
 export default router;
