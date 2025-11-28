@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
 const UserSchema = mongoose.Schema({
     name: {
@@ -21,19 +21,22 @@ const UserSchema = mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: false, // Changed to false for Social Login
     },
     profilePicture: {
         type: String,
         default:
             "https://res.cloudinary.com/dx28uxwrg/image/upload/v1762799986/default_dlizpg.jpg",
     },
-    // --- NEW: Background Cover Image ---
     backgroundPicture: {
         type: String,
         default:
             "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80",
     },
+    // --- NEW FIELDS ---
+    googleId: { type: String },
+    githubId: { type: String },
+
     isOnline: {
         type: Boolean,
         default: false,

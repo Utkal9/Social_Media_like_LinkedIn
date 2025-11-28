@@ -11,6 +11,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
+import session from "express-session";
+import passport from "./config/passport.js";
 
 dotenv.config();
 
@@ -21,6 +23,7 @@ const URL = process.env.MONGO_URL;
 const corsOptions = {
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST"],
+    credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -35,6 +38,48 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
+// --- 1. SESSION MIDDLEWARE (Must be before routes) ---
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET || "supersecretkey",
+        resave: false,
+        saveUninitialized: false,
+        cookie: { secure: false }, // Set to true if using https strictly
+    })
+);
+// --- 2. PASSPORT INITIALIZATION ---
+app.use(passport.initialize());
+app.use(passport.session());
+
+// --- 3. SOCIAL AUTH ROUTES ---
+const CLIENT_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
+// Google
+app.get(
+    "/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+);
+app.get(
+    "/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/login" }),
+    (req, res) => {
+        // Successful login -> Redirect to Frontend with Token
+        res.redirect(`${CLIENT_URL}/login?token=${req.user.token}`);
+    }
+);
+
+// GitHub
+app.get(
+    "/auth/github",
+    passport.authenticate("github", { scope: ["user:email"] })
+);
+app.get(
+    "/auth/github/callback",
+    passport.authenticate("github", { failureRedirect: "/login" }),
+    (req, res) => {
+        res.redirect(`${CLIENT_URL}/login?token=${req.user.token}`);
+    }
+);
 app.use(postRoutes);
 app.use(userRoutes);
 app.use(messagingRoutes);
