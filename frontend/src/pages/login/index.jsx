@@ -1,4 +1,3 @@
-// frontend/src/pages/login/index.jsx
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,6 +28,16 @@ const GoogleIcon = () => (
     </svg>
 );
 
+const GithubIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        style={{ width: "20px", height: "20px", marginRight: "10px" }}
+        fill="currentColor"
+    >
+        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+    </svg>
+);
+
 export default function LoginComponent() {
     const authState = useSelector((state) => state.auth);
     const router = useRouter();
@@ -46,8 +55,20 @@ export default function LoginComponent() {
     const [forgotMessage, setForgotMessage] = useState("");
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
+    // --- 1. HANDLE REDIRECT AFTER SOCIAL LOGIN ---
     useEffect(() => {
-        if (authState.loggedIn || localStorage.getItem("token")) {
+        if (router.query.token) {
+            localStorage.setItem("token", router.query.token);
+            localStorage.setItem("tokenTimestamp", Date.now().toString());
+            window.location.href = "/"; // Force reload to clear params
+        }
+    }, [router.query]);
+
+    useEffect(() => {
+        if (
+            authState.loggedIn ||
+            (typeof window !== "undefined" && localStorage.getItem("token"))
+        ) {
             router.push("/");
         }
     }, [authState.loggedIn, router]);
@@ -55,10 +76,7 @@ export default function LoginComponent() {
     useEffect(() => {
         dispatch(emptyMessage());
         setForgotMessage("");
-        // If moving away from login, reset the success message
-        if (viewState !== "login") {
-            setRegistrationSuccess(false);
-        }
+        if (viewState !== "login") setRegistrationSuccess(false);
     }, [viewState, dispatch]);
 
     const handleSignInChange = (e) =>
@@ -74,7 +92,6 @@ export default function LoginComponent() {
     const handleSignUpSubmit = async (e) => {
         e.preventDefault();
         const result = await dispatch(registerUser(signUpData));
-        // --- NEW: Auto-switch to Login on Success ---
         if (result.meta.requestStatus === "fulfilled") {
             setRegistrationSuccess(true);
             setViewState("login");
@@ -91,6 +108,25 @@ export default function LoginComponent() {
         } catch (error) {
             setForgotMessage(error.response?.data?.message || "Request failed");
         }
+    };
+
+    // --- 2. SOCIAL LOGIN HANDLERS ---
+    const handleGoogleLogin = () => {
+        window.open(
+            `${
+                process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090"
+            }/auth/google`,
+            "_self"
+        );
+    };
+
+    const handleGithubLogin = () => {
+        window.open(
+            `${
+                process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090"
+            }/auth/github`,
+            "_self"
+        );
     };
 
     const authMessage =
@@ -115,7 +151,7 @@ export default function LoginComponent() {
 
             <div className="container h-100 d-flex align-items-center justify-content-center">
                 <div className={`row w-100 ${styles.authCardContainer}`}>
-                    {/* LEFT SIDE: Visual (Updated Text) */}
+                    {/* LEFT SIDE */}
                     <div
                         className={`col-lg-6 d-none d-lg-flex flex-column justify-content-center align-items-center ${styles.visualPanel}`}
                     >
@@ -138,7 +174,7 @@ export default function LoginComponent() {
                         </div>
                     </div>
 
-                    {/* RIGHT SIDE: Form */}
+                    {/* RIGHT SIDE */}
                     <div className="col-lg-6 col-12 d-flex align-items-center justify-content-center position-relative">
                         <div className={styles.glassForm}>
                             <div className={styles.formHeader}>
@@ -161,21 +197,29 @@ export default function LoginComponent() {
                                 </p>
                             </div>
 
-                            {/* Login */}
+                            {/* --- LOGIN FORM --- */}
                             {viewState === "login" && (
                                 <form onSubmit={handleSignInSubmit}>
                                     <button
                                         type="button"
                                         className={styles.socialBtn}
-                                        onClick={() =>
-                                            alert("Feature Coming Soon")
-                                        }
+                                        onClick={handleGoogleLogin}
+                                        style={{ marginBottom: "10px" }}
                                     >
                                         <GoogleIcon /> Continue with Google
                                     </button>
+                                    <button
+                                        type="button"
+                                        className={styles.socialBtn}
+                                        onClick={handleGithubLogin}
+                                    >
+                                        <GithubIcon /> Continue with GitHub
+                                    </button>
+
                                     <div className={styles.divider}>
                                         <span>OR</span>
                                     </div>
+
                                     <div className="mb-3">
                                         <label className={styles.holoLabel}>
                                             Email Address
@@ -203,14 +247,12 @@ export default function LoginComponent() {
                                         />
                                     </div>
 
-                                    {/* Success Message from Auto-Switch */}
                                     {registrationSuccess && (
                                         <div className={styles.msgSuccess}>
                                             Registration Successful! Please
                                             login.
                                         </div>
                                     )}
-
                                     {authMessage && !registrationSuccess && (
                                         <div
                                             className={
@@ -245,7 +287,7 @@ export default function LoginComponent() {
                                 </form>
                             )}
 
-                            {/* Register */}
+                            {/* --- REGISTER FORM --- */}
                             {viewState === "register" && (
                                 <form onSubmit={handleSignUpSubmit}>
                                     <div className="mb-3">
@@ -323,7 +365,7 @@ export default function LoginComponent() {
                                 </form>
                             )}
 
-                            {/* Forgot */}
+                            {/* --- FORGOT FORM --- */}
                             {viewState === "forgot" && (
                                 <form onSubmit={handleForgotSubmit}>
                                     <div className="mb-4">
