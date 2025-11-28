@@ -24,44 +24,50 @@ import {
 } from "docx";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import axios from "axios";
 
 dotenv.config();
 
 // --- Helper: Send Email ---
 const sendEmail = async (options) => {
-    // Use explicit settings instead of 'service: gmail'
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true, // Use SSL
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-        // Add timeouts to fail faster if there's a network issue
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
-    });
+    const apiKey = process.env.BREVO_API_KEY;
+    // --- DEBUG LOG (Remove after fixing) ---
+    console.log("DEBUG: API Key Loaded?", apiKey ? "YES" : "NO");
+    if (apiKey)
+        console.log("DEBUG: Key starts with:", apiKey.substring(0, 10) + "...");
+    // --------------------------------------
+    const senderEmail = process.env.EMAIL_USER;
 
-    const mailOptions = {
-        from: `"LinkUps Support" <${process.env.EMAIL_USER}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-        html: options.html,
-    };
-
-    // Verify connection before sending (Optional debugging)
-    try {
-        await transporter.verify();
-        console.log("✅ SMTP Server Ready");
-    } catch (error) {
-        console.error("❌ SMTP Connection Error:", error);
-        throw error; // Stop here if connection fails
+    if (!apiKey || !senderEmail) {
+        console.error(
+            "❌ Missing Brevo API Key or Sender Email in Environment Variables"
+        );
+        throw new Error("Email service not configured.");
     }
 
-    await transporter.sendMail(mailOptions);
+    try {
+        const response = await axios.post(
+            "https://api.brevo.com/v3/smtp/email",
+            {
+                sender: { name: "LinkUps Security", email: senderEmail },
+                to: [{ email: options.email }],
+                subject: options.subject,
+                htmlContent: options.html,
+                textContent: options.message,
+            },
+            {
+                headers: {
+                    "api-key": apiKey,
+                    "Content-Type": "application/json",
+                    accept: "application/json",
+                },
+            }
+        );
+        console.log("✅ Email sent successfully via Brevo.");
+    } catch (error) {
+        console.error("❌ Email Error:", error.response?.data || error.message);
+        throw new Error("Failed to send email.");
+    }
 };
 
 // --- HELPER: Smart Bullet Points ---
@@ -965,7 +971,7 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
     }
 };
 
-// --- 1. FORGOT PASSWORD (Request Link) ---
+// --- 2. FORGOT PASSWORD (Request Link) ---
 export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -975,31 +981,31 @@ export const forgotPassword = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // 1. Generate Reset Token
+        // Generate Token
         const resetToken = crypto.randomBytes(20).toString("hex");
-
-        // 2. Hash token and save to DB (Security best practice)
         user.resetPasswordToken = crypto
             .createHash("sha256")
             .update(resetToken)
             .digest("hex");
-
-        // 3. Set Expiration (1 Hour)
-        user.resetPasswordExpires = Date.now() + 3600000;
-
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
         await user.save();
 
-        // 4. Create Reset URL (Points to Frontend Page)
+        // --- DYNAMIC URL GENERATION ---
+        // If running locally, this uses http://localhost:3000
+        // If running on Render, this uses https://your-app.onrender.com
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
         const resetUrl = `${frontendUrl}/reset_password/${resetToken}`;
 
-        const message = `You are receiving this email because you (or someone else) have requested the reset of a password for your account.\n\nPlease make a PUT request to: \n\n ${resetUrl}`;
-
+        const message = `You requested a password reset. Please go to this link: ${resetUrl}`;
         const htmlMessage = `
-            <h1>Password Reset Request</h1>
-            <p>Click the link below to reset your password:</p>
-            <a href="${resetUrl}" clicktracking=off>${resetUrl}</a>
-            <p>This link will expire in 1 hour.</p>
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                <h2 style="color: #2E74B5;">LinkUps Password Reset</h2>
+                <p>You are receiving this because you (or someone else) requested a password reset for your account.</p>
+                <p>Please click the button below to complete the process:</p>
+                <a href="${resetUrl}" style="background-color: #2E74B5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Reset Password</a>
+                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+                <p>This link expires in 1 hour.</p>
+            </div>
         `;
 
         try {
@@ -1012,27 +1018,25 @@ export const forgotPassword = async (req, res) => {
 
             res.status(200).json({ success: true, message: "Email sent" });
         } catch (error) {
-            console.error("❌ NODEMAILER ERROR:", error);
             user.resetPasswordToken = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
             return res.status(500).json({ message: "Email could not be sent" });
         }
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// --- 2. RESET PASSWORD (Set New Password) ---
+// --- 3. RESET PASSWORD (Set New Password) ---
 export const resetPassword = async (req, res) => {
     try {
-        // 1. Get token from URL params
         const resetPasswordToken = crypto
             .createHash("sha256")
             .update(req.params.token)
             .digest("hex");
 
-        // 2. Find user with valid token and non-expired time
         const user = await User.findOne({
             resetPasswordToken,
             resetPasswordExpires: { $gt: Date.now() },
@@ -1044,12 +1048,10 @@ export const resetPassword = async (req, res) => {
                 .json({ message: "Invalid or expired token" });
         }
 
-        // 3. Update Password
         if (req.body.password) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(req.body.password, salt);
 
-            // 4. Clear Reset Fields
             user.resetPasswordToken = undefined;
             user.resetPasswordExpires = undefined;
 
