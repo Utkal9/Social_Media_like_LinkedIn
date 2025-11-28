@@ -999,6 +999,7 @@ export const forgotPassword = async (req, res) => {
 
             res.status(200).json({ success: true, message: "Email sent" });
         } catch (error) {
+            console.error("❌ NODEMAILER ERROR:", error);
             user.resetPasswordToken = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
@@ -1041,12 +1042,10 @@ export const resetPassword = async (req, res) => {
 
             await user.save();
 
-            return res
-                .status(200)
-                .json({
-                    success: true,
-                    message: "Password updated successfully",
-                });
+            return res.status(200).json({
+                success: true,
+                message: "Password updated successfully",
+            });
         } else {
             return res.status(400).json({ message: "Password is required" });
         }
