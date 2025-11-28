@@ -29,16 +29,21 @@ dotenv.config();
 
 // --- Helper: Send Email ---
 const sendEmail = async (options) => {
-    // 1. Create Transporter (Using Gmail App Password)
+    // Use explicit settings instead of 'service: gmail'
     const transporter = nodemailer.createTransport({
-        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true, // Use SSL
         auth: {
-            user: process.env.EMAIL_USER, // Your Gmail address
-            pass: process.env.EMAIL_PASS, // Your Gmail App Password
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
+        // Add timeouts to fail faster if there's a network issue
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
     });
 
-    // 2. Define Email Options
     const mailOptions = {
         from: `"LinkUps Support" <${process.env.EMAIL_USER}>`,
         to: options.email,
@@ -47,7 +52,15 @@ const sendEmail = async (options) => {
         html: options.html,
     };
 
-    // 3. Send Email
+    // Verify connection before sending (Optional debugging)
+    try {
+        await transporter.verify();
+        console.log("✅ SMTP Server Ready");
+    } catch (error) {
+        console.error("❌ SMTP Connection Error:", error);
+        throw error; // Stop here if connection fails
+    }
+
     await transporter.sendMail(mailOptions);
 };
 
