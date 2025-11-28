@@ -22,6 +22,34 @@ import {
     TabStopType,
     ExternalHyperlink, // <--- ADDED THIS
 } from "docx";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// --- Helper: Send Email ---
+const sendEmail = async (options) => {
+    // 1. Create Transporter (Using Gmail App Password)
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: process.env.EMAIL_USER, // Your Gmail address
+            pass: process.env.EMAIL_PASS, // Your Gmail App Password
+        },
+    });
+
+    // 2. Define Email Options
+    const mailOptions = {
+        from: `"LinkUps Support" <${process.env.EMAIL_USER}>`,
+        to: options.email,
+        subject: options.subject,
+        text: options.message,
+        html: options.html,
+    };
+
+    // 3. Send Email
+    await transporter.sendMail(mailOptions);
+};
 
 // --- HELPER: Smart Bullet Points ---
 const createSmartBullets = (text) => {
@@ -924,18 +952,105 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
     }
 };
 
+// --- 1. FORGOT PASSWORD (Request Link) ---
 export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email)
-            return res.status(400).json({ message: "Email is required" });
         const user = await User.findOne({ email });
-        if (!user)
-            return res.status(200).json({
-                message: "If that email exists, a reset link has been sent.",
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // 1. Generate Reset Token
+        const resetToken = crypto.randomBytes(20).toString("hex");
+
+        // 2. Hash token and save to DB (Security best practice)
+        user.resetPasswordToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+
+        // 3. Set Expiration (1 Hour)
+        user.resetPasswordExpires = Date.now() + 3600000;
+
+        await user.save();
+
+        // 4. Create Reset URL (Points to Frontend Page)
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const resetUrl = `${frontendUrl}/reset_password/${resetToken}`;
+
+        const message = `You are receiving this email because you (or someone else) have requested the reset of a password for your account.\n\nPlease make a PUT request to: \n\n ${resetUrl}`;
+
+        const htmlMessage = `
+            <h1>Password Reset Request</h1>
+            <p>Click the link below to reset your password:</p>
+            <a href="${resetUrl}" clicktracking=off>${resetUrl}</a>
+            <p>This link will expire in 1 hour.</p>
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "LinkUps Password Reset Token",
+                message,
+                html: htmlMessage,
             });
-        return res.status(200).json({ message: "Reset link sent!" });
+
+            res.status(200).json({ success: true, message: "Email sent" });
+        } catch (error) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save();
+            return res.status(500).json({ message: "Email could not be sent" });
+        }
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// --- 2. RESET PASSWORD (Set New Password) ---
+export const resetPassword = async (req, res) => {
+    try {
+        // 1. Get token from URL params
+        const resetPasswordToken = crypto
+            .createHash("sha256")
+            .update(req.params.token)
+            .digest("hex");
+
+        // 2. Find user with valid token and non-expired time
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: "Invalid or expired token" });
+        }
+
+        // 3. Update Password
+        if (req.body.password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(req.body.password, salt);
+
+            // 4. Clear Reset Fields
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+
+            await user.save();
+
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: "Password updated successfully",
+                });
+        } else {
+            return res.status(400).json({ message: "Password is required" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

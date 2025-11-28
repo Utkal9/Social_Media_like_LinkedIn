@@ -12,8 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 
-const VIDEO_CALL_URL =
-    process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
+const VIDEO_CALL_URL = "http://localhost:3000";
 
 // --- Holo Icons ---
 const MessageIcon = () => (
@@ -94,18 +93,19 @@ export default function MyConnectionsPage() {
         if (!currentUser || !connectionUserId || !socket) return;
 
         const roomId = [currentUser._id, connectionUserId].sort().join("-");
-        const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
-        const returnUrl = `${window.location.origin}/dashboard`;
-        const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
-            returnUrl
-        )}`;
 
+        // --- FIX: Use router.push + Return URL ---
+        const currentPath = router.asPath;
+        router.push(
+            `/meet/${roomId}?returnTo=${encodeURIComponent(currentPath)}`
+        );
+
+        const roomUrl = `${window.location.origin}/meet/${roomId}`;
         socket.emit("start-call", {
             fromUser: currentUser,
             toUserId: connectionUserId,
-            roomUrl: roomUrlWithRedirect,
+            roomUrl: roomUrl,
         });
-        window.open(roomUrlWithRedirect, "_blank");
     };
 
     const handleMessageUser = (username) => {
