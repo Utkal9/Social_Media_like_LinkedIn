@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import Profile from "../models/profile.model.js";
 import Post from "../models/posts.model.js";
 import Comment from "../models/comments.model.js";
+import Message from "../models/message.model.js"; // Required for account deletion cleanup
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import ConnectionRequest from "../models/connections.model.js";
@@ -20,7 +21,7 @@ import {
     AlignmentType,
     HeadingLevel,
     TabStopType,
-    ExternalHyperlink, // <--- ADDED THIS
+    ExternalHyperlink,
 } from "docx";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
@@ -28,25 +29,21 @@ import axios from "axios";
 
 dotenv.config();
 
-// --- Helper: Send Email ---
+// ================= HELPER FUNCTIONS ================= //
+
+// --- 1. Send Email Helper (Brevo) ---
 const sendEmail = async (options) => {
     const apiKey = process.env.BREVO_API_KEY;
-    // --- DEBUG LOG (Remove after fixing) ---
-    console.log("DEBUG: API Key Loaded?", apiKey ? "YES" : "NO");
-    if (apiKey)
-        console.log("DEBUG: Key starts with:", apiKey.substring(0, 10) + "...");
-    // --------------------------------------
     const senderEmail = process.env.EMAIL_USER;
 
     if (!apiKey || !senderEmail) {
-        console.error(
-            "❌ Missing Brevo API Key or Sender Email in Environment Variables"
-        );
+        console.error("❌ Missing Brevo API Key or Sender Email");
         throw new Error("Email service not configured.");
     }
 
     try {
-        const response = await axios.post(
+        console.log(`📧 Sending email to: ${options.email}`);
+        await axios.post(
             "https://api.brevo.com/v3/smtp/email",
             {
                 sender: { name: "LinkUps Security", email: senderEmail },
@@ -63,17 +60,41 @@ const sendEmail = async (options) => {
                 },
             }
         );
-        console.log("✅ Email sent successfully via Brevo.");
+        console.log("✅ Email sent successfully.");
     } catch (error) {
         console.error("❌ Email Error:", error.response?.data || error.message);
         throw new Error("Failed to send email.");
     }
 };
 
-// --- HELPER: Smart Bullet Points ---
+// --- 2. Cloudinary Delete Helper ---
+const deleteFromCloudinary = async (url) => {
+    if (
+        !url ||
+        url.includes("default_dlizpg") ||
+        url.includes("3d-rendering-hexagonal")
+    ) {
+        return;
+    }
+    try {
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
+        const match = url.match(regex);
+        if (match && match[1]) {
+            const publicId = match[1];
+            const resourceType = url.includes("/video/") ? "video" : "image";
+            await cloudinary.uploader.destroy(publicId, {
+                resource_type: resourceType,
+            });
+            console.log(`🗑️ Cloudinary Deleted: ${publicId}`);
+        }
+    } catch (error) {
+        console.error("❌ Cloudinary Deletion Error:", error);
+    }
+};
+
+// --- 3. Resume Docx Helpers ---
 const createSmartBullets = (text) => {
     if (!text) return [];
-
     let points = [];
     if (text.includes("\n")) {
         points = text
@@ -86,7 +107,6 @@ const createSmartBullets = (text) => {
             .map((s) => s.trim())
             .filter((s) => s.length > 2);
     }
-
     return points.map(
         (point) =>
             new Paragraph({
@@ -98,112 +118,178 @@ const createSmartBullets = (text) => {
     );
 };
 
-// --- HELPER: Clean URL ---
 const cleanUrl = (url) => {
     if (!url) return "";
     return url.replace(/^(https?:\/\/)?(www\.)?/, "").replace(/\/$/, "");
 };
 
-// --- HELPER: Create Section Header (Left Aligned + Bottom Line) ---
 const createSectionHeader = (title) => {
     return new Paragraph({
         alignment: AlignmentType.LEFT,
         border: {
             bottom: {
-                color: "BFBFBF", // Subtle Grey Line
-                space: 1, // Space between text and line
+                color: "BFBFBF",
+                space: 1,
                 style: BorderStyle.SINGLE,
-                size: 6, // Thin line
+                size: 6,
             },
         },
-        spacing: { before: 200, after: 100 }, // Nice spacing around header
+        spacing: { before: 200, after: 100 },
         children: [
             new TextRun({
                 text: title,
                 font: "Arial",
-                size: 22, // 11pt
+                size: 22,
                 bold: true,
-                smallCaps: true, // Advanced Small Caps look
-                color: "2E74B5", // Dark Blue/Purple accent
+                smallCaps: true,
+                color: "2E74B5",
             }),
         ],
     });
 };
-// --- Updated Helper: Delete File from Cloudinary ---
-const deleteFromCloudinary = async (url) => {
-    if (!url) return;
 
-    // 1. Guard clause: Do not delete default assets
-    if (
-        url.includes("default_dlizpg") ||
-        url.includes("3d-rendering-hexagonal")
-    ) {
-        return;
-    }
+// ================= AUTH CONTROLLERS ================= //
 
-    try {
-        // 2. Regex to extract the Public ID
-        // It looks for the segment after '/upload/' (ignoring optional version 'v123/')
-        // and captures everything up to the file extension.
-        const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
-        const match = url.match(regex);
-
-        if (match && match[1]) {
-            const publicId = match[1]; // e.g., "pro-connect-uploads/my_image"
-
-            // 3. Detect Resource Type
-            const resourceType = url.includes("/video/") ? "video" : "image";
-
-            // 4. Perform Deletion
-            const result = await cloudinary.uploader.destroy(publicId, {
-                resource_type: resourceType,
-            });
-
-            console.log(`🗑️ Cloudinary Delete: ${publicId} ->`, result);
-        } else {
-            console.warn(`⚠️ Could not extract Public ID from URL: ${url}`);
-        }
-    } catch (error) {
-        console.error("❌ Cloudinary Deletion Error:", error);
-    }
-};
-// ================= EXISTING LOGIC STARTS HERE ================= //
-
+// --- Register ---
 export const register = async (req, res) => {
     try {
         const { name, email, password, username } = req.body;
         if (!name || !email || !password || !username)
             return res.status(400).json({ message: "All fields are required" });
+
         const user = await User.findOne({ email });
         if (user)
             return res.status(400).json({ message: "User already exists" });
+
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Generate Verification Token
+        const verificationToken = crypto.randomBytes(20).toString("hex");
+
         const newUser = new User({
             name,
             email,
             password: hashedPassword,
             username,
+            active: false, // Force false for new manual signups
+            verificationToken: verificationToken,
         });
+
         await newUser.save();
         const profile = new Profile({ userId: newUser._id });
         await profile.save();
-        return res.json({ message: "User Created" });
+
+        // Send Verification Email
+        const backendUrl = process.env.BACKEND_URL || "http://localhost:9090";
+        const verifyUrl = `${backendUrl}/verify/${verificationToken}`;
+
+        const htmlMessage = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+                    .header { background-color: #020410; padding: 30px; text-align: center; border-bottom: 3px solid #8b5cf6; }
+                    .logo { font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px; }
+                    .logo span { color: #0fffc6; }
+                    .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
+                    .btn-wrapper { text-align: center; margin: 30px 0; }
+                    .btn { background-color: #8b5cf6; color: #ffffff !important; padding: 14px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; }
+                    .footer { background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #999; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo"><span>Link</span>Ups</div>
+                    </div>
+                    <div class="content">
+                        <h3>Initialize Your Protocol</h3>
+                        <p>Hello <strong>${newUser.name}</strong>,</p>
+                        <p>Welcome to LinkUps. Please verify your identity to activate your node.</p>
+                        <div class="btn-wrapper">
+                            <a href="${verifyUrl}" class="btn">Verify Identity</a>
+                        </div>
+                        <p style="font-size: 12px; color: #888;">Or copy: ${verifyUrl}</p>
+                    </div>
+                    <div class="footer">&copy; ${new Date().getFullYear()} LinkUps Inc.</div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        try {
+            await sendEmail({
+                email: newUser.email,
+                subject: "Activate your LinkUps Node",
+                message: `Verify email: ${verifyUrl}`,
+                html: htmlMessage,
+            });
+            return res.json({
+                message: "Registration successful! Please check your email.",
+            });
+        } catch (emailError) {
+            // Rollback on email failure
+            await User.deleteOne({ _id: newUser._id });
+            await Profile.deleteOne({ userId: newUser._id });
+            return res
+                .status(500)
+                .json({ message: "Email service failed. Please try again." });
+        }
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
+// --- Verify Email ---
+export const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const user = await User.findOne({ verificationToken: token });
+
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: "Invalid or expired token." });
+        }
+
+        user.active = true;
+        user.verificationToken = undefined;
+        await user.save();
+
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        return res.redirect(`${frontendUrl}/login?verified=true`);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// --- Login ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password)
             return res.status(400).json({ message: "All fields are required" });
+
         const user = await User.findOne({ email });
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
+
+        // Check if verified
+        if (user.active === false) {
+            return res
+                .status(403)
+                .json({
+                    message:
+                        "Please verify your email address to access the network.",
+                });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch)
             return res.status(400).json({ message: "Invalid Credentials !" });
+
         const token = crypto.randomBytes(32).toString("hex");
         await User.updateOne({ _id: user._id }, { token });
         return res.json({ token: token });
@@ -211,6 +297,203 @@ export const login = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
+// ================= PASSWORD CONTROLLERS ================= //
+
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const resetToken = crypto.randomBytes(20).toString("hex");
+        user.resetPasswordToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hr
+        await user.save();
+
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const resetUrl = `${frontendUrl}/reset_password/${resetToken}`;
+
+        const htmlMessage = `
+            <div>
+                <h2>LinkUps Password Reset</h2>
+                <p>Click below to reset your password:</p>
+                <a href="${resetUrl}">Reset Password</a>
+            </div>
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "LinkUps Password Reset",
+                message: `Reset Link: ${resetUrl}`,
+                html: htmlMessage,
+            });
+            res.status(200).json({ success: true, message: "Email sent" });
+        } catch (error) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save();
+            return res.status(500).json({ message: "Email could not be sent" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    try {
+        const resetPasswordToken = crypto
+            .createHash("sha256")
+            .update(req.params.token)
+            .digest("hex");
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user)
+            return res
+                .status(400)
+                .json({ message: "Invalid or expired token" });
+
+        if (req.body.password) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(req.body.password, salt);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save();
+            return res
+                .status(200)
+                .json({
+                    success: true,
+                    message: "Password updated successfully",
+                });
+        } else {
+            return res.status(400).json({ message: "Password is required" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// ================= ACCOUNT DELETION CONTROLLERS ================= //
+
+// --- Request Deletion ---
+export const requestAccountDeletion = async (req, res) => {
+    try {
+        const { token } = req.body;
+        const user = await User.findOne({ token });
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const deleteToken = crypto.randomBytes(20).toString("hex");
+        user.deleteToken = crypto
+            .createHash("sha256")
+            .update(deleteToken)
+            .digest("hex");
+        user.deleteTokenExpires = Date.now() + 3600000;
+        await user.save();
+
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const deleteUrl = `${frontendUrl}/confirm_delete/${deleteToken}`;
+
+        // Console log for local dev in case email fails
+        console.log(`🚨 DELETE REQUEST: ${deleteUrl}`);
+
+        const htmlMessage = `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #ff4d7d;">⚠ Delete Account Request</h2>
+                <p>Hello <strong>${user.name}</strong>,</p>
+                <p>We received a request to permanently delete your LinkUps account.</p>
+                <a href="${deleteUrl}" style="background-color: #ff4d7d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Confirm Deletion</a>
+                <p style="margin-top: 20px; font-size: 12px; color: #999;">Or copy: ${deleteUrl}</p>
+            </div>
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "LinkUps - Confirm Account Deletion",
+                message: `Confirm deletion: ${deleteUrl}`,
+                html: htmlMessage,
+            });
+            return res.json({
+                message: "Verification email sent. Check your inbox.",
+            });
+        } catch (error) {
+            user.deleteToken = undefined;
+            user.deleteTokenExpires = undefined;
+            await user.save();
+            return res
+                .status(500)
+                .json({ message: "Email could not be sent." });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// --- Confirm Deletion ---
+export const confirmAccountDeletion = async (req, res) => {
+    try {
+        const token = req.params.token;
+        const hashedToken = crypto
+            .createHash("sha256")
+            .update(token)
+            .digest("hex");
+
+        const user = await User.findOne({
+            deleteToken: hashedToken,
+            deleteTokenExpires: { $gt: Date.now() },
+        });
+
+        if (!user)
+            return res
+                .status(400)
+                .json({ message: "Invalid or expired token" });
+
+        const userId = user._id;
+
+        // 1. Cloudinary Cleanup
+        if (user.profilePicture)
+            await deleteFromCloudinary(user.profilePicture);
+        if (user.backgroundPicture)
+            await deleteFromCloudinary(user.backgroundPicture);
+
+        const userPosts = await Post.find({ userId });
+        for (const post of userPosts) {
+            if (post.media) await deleteFromCloudinary(post.media);
+        }
+
+        // 2. Database Cleanup
+        await Post.deleteMany({ userId });
+        await Comment.deleteMany({ userId });
+        await ConnectionRequest.deleteMany({
+            $or: [{ userId: userId }, { connectionId: userId }],
+        });
+        await Message.deleteMany({
+            $or: [{ sender: userId }, { receiver: userId }],
+        });
+        await Profile.deleteOne({ userId });
+        await User.deleteOne({ _id: userId });
+
+        return res.json({
+            message: "Account and all associated data deleted successfully.",
+        });
+    } catch (error) {
+        console.error("Deletion Error:", error);
+        return res
+            .status(500)
+            .json({ message: "Server error during deletion." });
+    }
+};
+
+// ================= USER & PROFILE CONTROLLERS ================= //
 
 export const uploadProfilePicture = async (req, res) => {
     try {
@@ -220,9 +503,10 @@ export const uploadProfilePicture = async (req, res) => {
             return res.status(404).json({ message: "User does not exist" });
         if (!req.file)
             return res.status(400).json({ message: "No file uploaded." });
-        if (user.profilePicture) {
+
+        if (user.profilePicture)
             await deleteFromCloudinary(user.profilePicture);
-        }
+
         user.profilePicture = req.file.path;
         await user.save();
         return res.json({
@@ -242,9 +526,10 @@ export const uploadBackgroundPicture = async (req, res) => {
             return res.status(404).json({ message: "User does not exist" });
         if (!req.file)
             return res.status(400).json({ message: "No file uploaded." });
-        if (user.backgroundPicture) {
+
+        if (user.backgroundPicture)
             await deleteFromCloudinary(user.backgroundPicture);
-        }
+
         user.backgroundPicture = req.file.path;
         await user.save();
         return res.json({ message: "Background updated", url: req.file.path });
@@ -292,7 +577,6 @@ export const updateProfileData = async (req, res) => {
             { $set: newProfileData },
             { new: true }
         );
-
         return res.json({
             message: "Profile Updated",
             profile: updatedProfile,
@@ -302,35 +586,34 @@ export const updateProfileData = async (req, res) => {
     }
 };
 
-// ================= ENHANCED RESUME BUILDER (.docx) ================= //
+export const getAllUserProfile = async (req, res) => {
+    try {
+        const profiles = await Profile.find().populate(
+            "userId",
+            "name username email profilePicture backgroundPicture isOnline lastSeen"
+        );
+        return res.json({ profiles });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
 
 export const downloadProfile = async (req, res) => {
     try {
         const user_id = req.query.id;
-        if (!user_id)
-            return res.status(400).json({ message: "User ID required" });
-
         const userProfile = await Profile.findOne({ userId: user_id }).populate(
             "userId"
         );
         if (!userProfile)
             return res.status(404).json({ message: "Profile not found" });
-
         const user = userProfile.userId;
 
-        // --- DOCUMENT CONFIGURATION ---
         const doc = new Document({
             styles: {
                 default: {
                     document: {
-                        run: {
-                            font: "Arial",
-                            size: 20, // 10pt
-                            color: "000000",
-                        },
-                        paragraph: {
-                            spacing: { after: 40 },
-                        },
+                        run: { font: "Arial", size: 20, color: "000000" },
+                        paragraph: { spacing: { after: 40 } },
                     },
                 },
             },
@@ -347,7 +630,6 @@ export const downloadProfile = async (req, res) => {
                         },
                     },
                     children: [
-                        // --- 1. NAME ---
                         new Paragraph({
                             text: user.name,
                             heading: HeadingLevel.HEADING_1,
@@ -355,13 +637,11 @@ export const downloadProfile = async (req, res) => {
                             spacing: { after: 50 },
                             run: {
                                 font: "Arial",
-                                size: 36, // 18pt
+                                size: 36,
                                 bold: true,
-                                color: "2E74B5", // Dark Blue/Purple
+                                color: "2E74B5",
                             },
                         }),
-
-                        // --- 2. CONTACT INFO (Header Table) ---
                         new Table({
                             width: { size: 100, type: WidthType.PERCENTAGE },
                             borders: {
@@ -375,7 +655,6 @@ export const downloadProfile = async (req, res) => {
                             rows: [
                                 new TableRow({
                                     children: [
-                                        // Links
                                         new TableCell({
                                             width: {
                                                 size: 60,
@@ -405,7 +684,6 @@ export const downloadProfile = async (req, res) => {
                                                 }),
                                             ],
                                         }),
-                                        // Contact Details
                                         new TableCell({
                                             width: {
                                                 size: 40,
@@ -429,10 +707,7 @@ export const downloadProfile = async (req, res) => {
                                 }),
                             ],
                         }),
-
                         new Paragraph({ text: "" }),
-
-                        // --- 3. SKILLS SECTION ---
                         createSectionHeader("SKILLS"),
                         new Table({
                             width: { size: 100, type: WidthType.PERCENTAGE },
@@ -551,8 +826,6 @@ export const downloadProfile = async (req, res) => {
                                     }),
                             ].filter(Boolean),
                         }),
-
-                        // --- 4. EXPERIENCE SECTION (Moved Up) ---
                         ...(userProfile.pastWork.length > 0
                             ? [
                                   createSectionHeader("EXPERIENCE"),
@@ -585,8 +858,6 @@ export const downloadProfile = async (req, res) => {
                                   ]),
                               ]
                             : []),
-
-                        // --- 5. PROJECTS SECTION ---
                         ...(userProfile.projects.length > 0
                             ? [
                                   createSectionHeader("PROJECTS"),
@@ -598,12 +869,11 @@ export const downloadProfile = async (req, res) => {
                                                   bold: true,
                                                   size: 22,
                                               }),
-                                              // --- Hyperlink Logic: "Link" Word ---
                                               ...(proj.link
                                                   ? [
                                                         new TextRun({
                                                             text: "  :  ",
-                                                        }), // Separator
+                                                        }),
                                                         new ExternalHyperlink({
                                                             children: [
                                                                 new TextRun({
@@ -637,8 +907,6 @@ export const downloadProfile = async (req, res) => {
                                   ]),
                               ]
                             : []),
-
-                        // --- 6. CERTIFICATES SECTION ---
                         ...(userProfile.certificates.length > 0
                             ? [
                                   createSectionHeader("CERTIFICATES"),
@@ -691,8 +959,6 @@ export const downloadProfile = async (req, res) => {
                                   ),
                               ]
                             : []),
-
-                        // --- 7. ACHIEVEMENTS SECTION ---
                         ...(userProfile.achievements.length > 0
                             ? [
                                   createSectionHeader("ACHIEVEMENTS"),
@@ -719,8 +985,6 @@ export const downloadProfile = async (req, res) => {
                                   ]),
                               ]
                             : []),
-
-                        // --- 8. EDUCATION SECTION ---
                         ...(userProfile.education.length > 0
                             ? [
                                   createSectionHeader("EDUCATION"),
@@ -792,20 +1056,6 @@ export const downloadProfile = async (req, res) => {
     }
 };
 
-// ================= EXISTING LOGIC CONTINUES ================= //
-
-export const getAllUserProfile = async (req, res) => {
-    try {
-        const profiles = await Profile.find().populate(
-            "userId",
-            "name username email profilePicture backgroundPicture isOnline lastSeen"
-        );
-        return res.json({ profiles });
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
 export const sendConnectionRequest = async (req, res) => {
     const { token, connectionId } = req.body;
     try {
@@ -816,20 +1066,20 @@ export const sendConnectionRequest = async (req, res) => {
             return res
                 .status(404)
                 .json({ message: "Connection User not found" });
-        if (user._id.toString() === connectionUser._id.toString()) {
+        if (user._id.toString() === connectionUser._id.toString())
             return res
                 .status(400)
-                .json({ message: "You cannot connect with yourself." });
-        }
+                .json({ message: "Cannot connect with yourself." });
+
         const existingRequest = await ConnectionRequest.findOne({
             $or: [
                 { userId: user._id, connectionId: connectionUser._id },
                 { userId: connectionUser._id, connectionId: user._id },
             ],
         });
-        if (existingRequest) {
+        if (existingRequest)
             return res.status(400).json({ message: "Request already sent" });
-        }
+
         const request = new ConnectionRequest({
             userId: user._id,
             connectionId: connectionUser._id,
@@ -919,8 +1169,6 @@ export const commentPost = async (req, res) => {
     }
 };
 
-// backend/controllers/user.controller.js
-
 export const getUserProfileAndUserBasedOnUername = async (req, res) => {
     const { username } = req.query;
     try {
@@ -933,7 +1181,6 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
             "userId",
             "name email username profilePicture backgroundPicture isOnline lastSeen"
         );
-
         if (!userProfile)
             return res.status(404).json({ message: "Profile not found" });
 
@@ -944,21 +1191,14 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
             ],
         }).populate("userId connectionId", "name username profilePicture");
 
-        // --- FIX START: Handle deleted users safely ---
         const connectionList = connections
             .map((conn) => {
-                // If a user was deleted, populate returns null. We must check for this.
-                if (!conn.userId || !conn.connectionId) {
-                    return null;
-                }
-
-                if (conn.userId._id.toString() === user._id.toString()) {
+                if (!conn.userId || !conn.connectionId) return null;
+                if (conn.userId._id.toString() === user._id.toString())
                     return conn.connectionId;
-                }
                 return conn.userId;
             })
-            .filter((conn) => conn !== null); // Remove the null entries
-        // --- FIX END ---
+            .filter((conn) => conn !== null);
 
         const profileData = userProfile.toObject();
         profileData.connectionCount = connectionList.length;
@@ -966,105 +1206,7 @@ export const getUserProfileAndUserBasedOnUername = async (req, res) => {
 
         return res.json({ profile: profileData });
     } catch (error) {
-        console.error("Error fetching profile:", error); // Log error to server console
+        console.error("Error fetching profile:", error);
         return res.status(500).json({ message: error.message });
-    }
-};
-
-// --- 2. FORGOT PASSWORD (Request Link) ---
-export const forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Generate Token
-        const resetToken = crypto.randomBytes(20).toString("hex");
-        user.resetPasswordToken = crypto
-            .createHash("sha256")
-            .update(resetToken)
-            .digest("hex");
-        user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
-        await user.save();
-
-        // --- DYNAMIC URL GENERATION ---
-        // If running locally, this uses http://localhost:3000
-        // If running on Render, this uses https://your-app.onrender.com
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-        const resetUrl = `${frontendUrl}/reset_password/${resetToken}`;
-
-        const message = `You requested a password reset. Please go to this link: ${resetUrl}`;
-        const htmlMessage = `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2 style="color: #2E74B5;">LinkUps Password Reset</h2>
-                <p>You are receiving this because you (or someone else) requested a password reset for your account.</p>
-                <p>Please click the button below to complete the process:</p>
-                <a href="${resetUrl}" style="background-color: #2E74B5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Reset Password</a>
-                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-                <p>This link expires in 1 hour.</p>
-            </div>
-        `;
-
-        try {
-            await sendEmail({
-                email: user.email,
-                subject: "LinkUps Password Reset Token",
-                message,
-                html: htmlMessage,
-            });
-
-            res.status(200).json({ success: true, message: "Email sent" });
-        } catch (error) {
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpires = undefined;
-            await user.save();
-            return res.status(500).json({ message: "Email could not be sent" });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// --- 3. RESET PASSWORD (Set New Password) ---
-export const resetPassword = async (req, res) => {
-    try {
-        const resetPasswordToken = crypto
-            .createHash("sha256")
-            .update(req.params.token)
-            .digest("hex");
-
-        const user = await User.findOne({
-            resetPasswordToken,
-            resetPasswordExpires: { $gt: Date.now() },
-        });
-
-        if (!user) {
-            return res
-                .status(400)
-                .json({ message: "Invalid or expired token" });
-        }
-
-        if (req.body.password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(req.body.password, salt);
-
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpires = undefined;
-
-            await user.save();
-
-            return res.status(200).json({
-                success: true,
-                message: "Password updated successfully",
-            });
-        } else {
-            return res.status(400).json({ message: "Password is required" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
 };

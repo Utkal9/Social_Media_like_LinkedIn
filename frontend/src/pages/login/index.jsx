@@ -55,12 +55,26 @@ export default function LoginComponent() {
     const [forgotMessage, setForgotMessage] = useState("");
     const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-    // --- 1. HANDLE REDIRECT AFTER SOCIAL LOGIN ---
+    // --- NEW STATE FOR URL MESSAGES ---
+    const [urlMessage, setUrlMessage] = useState("");
+
+    // --- 1. HANDLE REDIRECT AFTER SOCIAL LOGIN & EMAIL VERIFICATION ---
     useEffect(() => {
         if (router.query.token) {
             localStorage.setItem("token", router.query.token);
             localStorage.setItem("tokenTimestamp", Date.now().toString());
-            window.location.href = "/"; // Force reload to clear params
+            window.location.href = "/";
+        }
+
+        // --- CHECK FOR VERIFIED QUERY PARAM ---
+        if (router.query.verified === "true") {
+            setUrlMessage("Email verified successfully! You can now login.");
+            // Remove the query param from URL without refreshing
+            router.replace("/login", undefined, { shallow: true });
+        }
+        if (router.query.message) {
+            setUrlMessage(router.query.message);
+            router.replace("/login", undefined, { shallow: true });
         }
     }, [router.query]);
 
@@ -76,7 +90,11 @@ export default function LoginComponent() {
     useEffect(() => {
         dispatch(emptyMessage());
         setForgotMessage("");
-        if (viewState !== "login") setRegistrationSuccess(false);
+        // Note: We don't clear urlMessage here so it persists until view change
+        if (viewState !== "login") {
+            setRegistrationSuccess(false);
+            setUrlMessage(""); // Clear it if user switches tabs
+        }
     }, [viewState, dispatch]);
 
     const handleSignInChange = (e) =>
@@ -93,6 +111,7 @@ export default function LoginComponent() {
         e.preventDefault();
         const result = await dispatch(registerUser(signUpData));
         if (result.meta.requestStatus === "fulfilled") {
+            // Note: Now registerUser returns success but NOT login token
             setRegistrationSuccess(true);
             setViewState("login");
         }
@@ -110,7 +129,6 @@ export default function LoginComponent() {
         }
     };
 
-    // --- 2. SOCIAL LOGIN HANDLERS ---
     const handleGoogleLogin = () => {
         window.open(
             `${
@@ -129,6 +147,7 @@ export default function LoginComponent() {
         );
     };
 
+    // Determine what message to show
     const authMessage =
         viewState === "forgot"
             ? forgotMessage
@@ -138,7 +157,8 @@ export default function LoginComponent() {
         authState.isError ||
         (authMessage &&
             !authMessage.toLowerCase().includes("success") &&
-            !authMessage.toLowerCase().includes("sent"));
+            !authMessage.toLowerCase().includes("sent") &&
+            !authMessage.toLowerCase().includes("verified"));
 
     return (
         <div className={styles.authPageWrapper}>
@@ -247,23 +267,34 @@ export default function LoginComponent() {
                                         />
                                     </div>
 
+                                    {/* --- SUCCESS MESSAGES (Registration / Verification) --- */}
                                     {registrationSuccess && (
                                         <div className={styles.msgSuccess}>
                                             Registration Successful! Please
-                                            login.
+                                            check your email to verify account.
                                         </div>
                                     )}
-                                    {authMessage && !registrationSuccess && (
-                                        <div
-                                            className={
-                                                isError
-                                                    ? styles.msgError
-                                                    : styles.msgSuccess
-                                            }
-                                        >
-                                            {authMessage}
+
+                                    {urlMessage && !registrationSuccess && (
+                                        <div className={styles.msgSuccess}>
+                                            {urlMessage}
                                         </div>
                                     )}
+
+                                    {/* --- AUTH ERROR/STATUS MESSAGES --- */}
+                                    {authMessage &&
+                                        !registrationSuccess &&
+                                        !urlMessage && (
+                                            <div
+                                                className={
+                                                    isError
+                                                        ? styles.msgError
+                                                        : styles.msgSuccess
+                                                }
+                                            >
+                                                {authMessage}
+                                            </div>
+                                        )}
 
                                     <div className="d-flex justify-content-end mb-4">
                                         <span

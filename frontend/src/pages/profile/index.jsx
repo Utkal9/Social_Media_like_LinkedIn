@@ -1,4 +1,3 @@
-// frontend/src/pages/profile/index.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import styles from "./index.module.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -81,7 +80,6 @@ const CloseIcon = () => (
         />
     </svg>
 );
-// --- New Icons for Notification ---
 const CheckCircleIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20">
         <path
@@ -95,7 +93,21 @@ const ErrorIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20">
         <path
             fillRule="evenodd"
-            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0-1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+            clipRule="evenodd"
+        />
+    </svg>
+);
+const WarningIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        width="40"
+        style={{ color: "#ff4d7d" }}
+    >
+        <path
+            fillRule="evenodd"
+            d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
             clipRule="evenodd"
         />
     </svg>
@@ -222,9 +234,12 @@ export default function Profilepage() {
     const [selectedItem, setSelectedItem] = useState(null);
     const [modalInput, setModalInput] = useState({});
 
-    // --- NEW: Notification & Confirmation State ---
+    // --- Notifications & Confirmation State ---
     const [notification, setNotification] = useState(null); // { message, type: 'success' | 'error' }
     const [deleteTarget, setDeleteTarget] = useState(null); // { type, index }
+
+    // --- NEW: Custom Account Deletion Modal State ---
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -264,7 +279,7 @@ export default function Profilepage() {
         return [...sentAccepted, ...receivedAccepted].filter((u) => u);
     }, [authState.connections, authState.connectionRequest]);
 
-    // --- NEW: Helper to Show Notification ---
+    // --- Helper to Show Notification ---
     const showToast = (msg, type = "success") => {
         setNotification({ message: msg, type });
         setTimeout(() => setNotification(null), 3000);
@@ -415,7 +430,7 @@ export default function Profilepage() {
         closeModal();
     };
 
-    // --- NEW: Confirm Delete Logic ---
+    // --- Item Deletion Logic ---
     const initiateDelete = (type, index) => {
         setDeleteTarget({ type, index });
     };
@@ -437,6 +452,27 @@ export default function Profilepage() {
         syncProfileToBackend(updated);
         showToast("Successfully deleted", "success");
         setDeleteTarget(null);
+    };
+
+    // --- NEW: Custom Account Deletion Logic ---
+    const triggerDeleteAccountModal = () => {
+        setShowDeleteModal(true);
+    };
+
+    const handleRequestAccountDelete = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            await clientServer.post("/request_account_deletion", { token });
+            setShowDeleteModal(false);
+            // Success notification
+            showToast("Verification email sent to your inbox", "success");
+        } catch (error) {
+            setShowDeleteModal(false);
+            showToast(
+                error.response?.data?.message || "Request failed",
+                "error"
+            );
+        }
     };
 
     if (!userProfile)
@@ -465,7 +501,7 @@ export default function Profilepage() {
                 </div>
             )}
 
-            {/* --- Confirmation Modal --- */}
+            {/* --- Item Deletion Confirmation Modal --- */}
             {deleteTarget && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.confirmModalContent}>
@@ -494,9 +530,67 @@ export default function Profilepage() {
                 </div>
             )}
 
+            {/* --- NEW: Account Deletion Modal (Custom) --- */}
+            {showDeleteModal && (
+                <div className={styles.modalOverlay} style={{ zIndex: 4000 }}>
+                    <div
+                        className={styles.confirmModalContent}
+                        style={{
+                            border: "1px solid var(--neon-pink)",
+                            boxShadow: "0 0 50px rgba(255, 77, 125, 0.2)",
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                marginBottom: "15px",
+                            }}
+                        >
+                            <WarningIcon />
+                        </div>
+                        <h3
+                            className={styles.confirmTitle}
+                            style={{ color: "var(--neon-pink)" }}
+                        >
+                            DANGER: Account Deletion
+                        </h3>
+                        <p className={styles.confirmText}>
+                            You are about to request permanent deletion of your
+                            account. All your data (posts, connections,
+                            messages) will be lost forever.
+                        </p>
+                        <p
+                            className={styles.confirmText}
+                            style={{ fontSize: "0.85rem", color: "#aaa" }}
+                        >
+                            A verification link will be sent to your email to
+                            confirm this action.
+                        </p>
+                        <div className={styles.confirmButtons}>
+                            <button
+                                className={styles.cancelBtn}
+                                onClick={() => setShowDeleteModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={styles.deleteConfirmBtn}
+                                onClick={handleRequestAccountDelete}
+                                style={{
+                                    background: "var(--neon-pink)",
+                                    color: "#fff",
+                                }}
+                            >
+                                Send Verification Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* --- Header Card --- */}
             <div className={styles.headerCard}>
-                {/* ... (Header content remains the same as previous, just logic changed) ... */}
                 <div
                     className={styles.coverImage}
                     style={{
@@ -811,7 +905,6 @@ export default function Profilepage() {
                                             >
                                                 <EditIcon />
                                             </button>
-                                            {/* --- FIX: Use initiateDelete instead of handleItemDelete (which used window.confirm) --- */}
                                             <button
                                                 onClick={() =>
                                                     initiateDelete("work", i)
@@ -1050,6 +1143,58 @@ export default function Profilepage() {
                             ))}
                         </div>
                     </div>
+                    {/* --- DANGER ZONE --- */}
+                    {isEditing && (
+                        <div
+                            className={styles.dataCard}
+                            style={{ borderColor: "var(--neon-pink)" }}
+                        >
+                            <div
+                                className={styles.cardHeaderRow}
+                                style={{
+                                    borderBottomColor:
+                                        "rgba(255, 77, 125, 0.3)",
+                                }}
+                            >
+                                <div
+                                    className={styles.cardTitle}
+                                    style={{ color: "var(--neon-pink)" }}
+                                >
+                                    Danger Zone
+                                </div>
+                            </div>
+                            <div style={{ padding: "10px 0" }}>
+                                <p
+                                    style={{
+                                        color: "#ccc",
+                                        fontSize: "0.9rem",
+                                        marginBottom: "15px",
+                                    }}
+                                >
+                                    Deleting your account removes all your data
+                                    from the network. This action is
+                                    irreversible.
+                                </p>
+                                {/* UPDATED: Opens Custom Modal */}
+                                <button
+                                    onClick={triggerDeleteAccountModal}
+                                    style={{
+                                        background: "rgba(255, 77, 125, 0.1)",
+                                        border: "1px solid var(--neon-pink)",
+                                        color: "var(--neon-pink)",
+                                        padding: "10px 20px",
+                                        borderRadius: "8px",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        width: "100%",
+                                        transition: "all 0.2s",
+                                    }}
+                                >
+                                    Request Account Deletion
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* --- RIGHT COLUMN: Skills + Activity --- */}
