@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import session from "express-session";
+import passport from "./config/passport.js";
 import postRoutes from "./routes/posts.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import messagingRoutes from "./routes/messaging.routes.js";
@@ -11,8 +13,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
-import session from "express-session";
-import passport from "./config/passport.js";
 
 dotenv.config();
 
@@ -22,39 +22,34 @@ const URL = process.env.MONGO_URL;
 
 const corsOptions = {
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 };
 
 app.use(cors(corsOptions));
 
 const httpServer = createServer(app);
-
-const io = new Server(httpServer, {
-    cors: corsOptions,
-});
+const io = new Server(httpServer, { cors: corsOptions });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
-// --- 1. SESSION MIDDLEWARE (Must be before routes) ---
+
 app.use(
     session({
         secret: process.env.SESSION_SECRET || "supersecretkey",
         resave: false,
         saveUninitialized: false,
-        cookie: { secure: false }, // Set to true if using https strictly
+        cookie: { secure: false },
     })
 );
-// --- 2. PASSPORT INITIALIZATION ---
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-// --- 3. SOCIAL AUTH ROUTES ---
+// Auth Routes
 const CLIENT_URL = process.env.FRONTEND_URL || "http://localhost:3000";
-
-// Google
 app.get(
     "/auth/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
@@ -63,12 +58,9 @@ app.get(
     "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/login" }),
     (req, res) => {
-        // Successful login -> Redirect to Frontend with Token
         res.redirect(`${CLIENT_URL}/login?token=${req.user.token}`);
     }
 );
-
-// GitHub
 app.get(
     "/auth/github",
     passport.authenticate("github", { scope: ["user:email"] })
@@ -80,14 +72,19 @@ app.get(
         res.redirect(`${CLIENT_URL}/login?token=${req.user.token}`);
     }
 );
+
 app.use(postRoutes);
 app.use(userRoutes);
 app.use(messagingRoutes);
 
+// --- SOCKET LOGIC ---
 const userSocketMap = new Map();
+let meetingMessages = {};
 
 io.on("connection", (socket) => {
-    // 1. Register User
+    console.log(`Socket Connected: ${socket.id}`);
+
+    // --- 1. GLOBAL APP LOGIC (Chat/Online) ---
     socket.on("register-user", async (userId) => {
         if (userId) {
             userSocketMap.set(userId, socket.id);
@@ -95,12 +92,11 @@ io.on("connection", (socket) => {
                 await User.findByIdAndUpdate(userId, { isOnline: true });
                 io.emit("user-status-change", { userId, isOnline: true });
 
-                // Mark pending messages as DELIVERED
+                // Deliver pending messages
                 const pendingMessages = await Message.find({
                     receiver: userId,
                     status: "sent",
                 });
-
                 if (pendingMessages.length > 0) {
                     await Message.updateMany(
                         { receiver: userId, status: "sent" },
@@ -111,8 +107,6 @@ io.on("connection", (socket) => {
                             },
                         }
                     );
-
-                    // Notify senders
                     pendingMessages.forEach((msg) => {
                         const senderSocketId = userSocketMap.get(
                             msg.sender.toString()
@@ -120,72 +114,58 @@ io.on("connection", (socket) => {
                         if (senderSocketId) {
                             io.to(senderSocketId).emit(
                                 "message-status-update",
-                                {
-                                    messageId: msg._id,
-                                    status: "delivered",
-                                }
+                                { messageId: msg._id, status: "delivered" }
                             );
                         }
                     });
                 }
-            } catch (error) {
-                console.error("Error updating online status:", error);
+            } catch (e) {
+                console.error(e);
             }
         }
     });
 
-    // 2. Send Message
     socket.on(
         "send-chat-message",
         async ({ senderId, receiverId, message }) => {
             const receiverSocketId = userSocketMap.get(receiverId);
-            let status = receiverSocketId ? "delivered" : "sent";
-
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("receive-chat-message", {
                     sender: senderId,
-                    message: message,
-                    status: status,
+                    message,
+                    status: "delivered",
                     createdAt: new Date().toISOString(),
                 });
             }
         }
     );
 
-    // 3. Mark as Read (Blue Ticks)
     socket.on("mark-as-read", async ({ senderId, receiverId }) => {
         const senderSocketId = userSocketMap.get(senderId);
-        if (senderSocketId) {
-            io.to(senderSocketId).emit("messages-read-update", {
-                receiverId: receiverId,
-            });
-        }
+        if (senderSocketId)
+            io.to(senderSocketId).emit("messages-read-update", { receiverId });
     });
 
-    // 4. Edit & Delete
     socket.on("edit-message", ({ messageId, newMessage, receiverId }) => {
         const receiverSocketId = userSocketMap.get(receiverId);
-        if (receiverSocketId) {
+        if (receiverSocketId)
             io.to(receiverSocketId).emit("message-updated", {
                 messageId,
                 newMessage,
                 isEdited: true,
             });
-        }
     });
 
     socket.on("delete-message", ({ messageId, receiverId }) => {
         const receiverSocketId = userSocketMap.get(receiverId);
-        if (receiverSocketId) {
+        if (receiverSocketId)
             io.to(receiverSocketId).emit("message-deleted", {
                 messageId,
                 isDeleted: true,
                 message: "This message was deleted",
             });
-        }
     });
 
-    // 5. Video Call
     socket.on("start-call", ({ fromUser, toUserId, roomUrl }) => {
         const toSocketId = userSocketMap.get(toUserId);
         if (toSocketId) {
@@ -193,25 +173,105 @@ io.on("connection", (socket) => {
         }
     });
 
-    // 6. Disconnect
-    socket.on("disconnect", async () => {
+    // ==================================================
+    // 2. SECURE VIDEO MEETING LOGIC (UPDATED)
+    // ==================================================
+
+    socket.on("join-call", (roomId, userId) => {
+        // --- SECURITY CHECK START ---
+        // Check if roomId looks like "ID1-ID2" (MongoDB IDs are 24 chars hex)
+        const isPrivateRoom = /^[a-f\d]{24}-[a-f\d]{24}$/i.test(roomId);
+
+        if (isPrivateRoom) {
+            const allowedUsers = roomId.split("-");
+
+            // 1. If user is not logged in
+            if (!userId) {
+                console.log(
+                    `[Security] Guest blocked from private room ${roomId}`
+                );
+                socket.emit(
+                    "call-denied",
+                    "Authentication required for private calls."
+                );
+                return;
+            }
+
+            // 2. If user is NOT one of the two participants
+            if (!allowedUsers.includes(userId)) {
+                console.log(
+                    `[Security] Unauthorized user ${userId} blocked from room ${roomId}`
+                );
+                socket.emit(
+                    "call-denied",
+                    "Access Denied: You are not invited to this private meeting."
+                );
+                return;
+            }
+        }
+        // --- SECURITY CHECK END ---
+
+        socket.join(roomId);
+        socket.room = roomId;
+
+        // Notify others
+        const clients = io.sockets.adapter.rooms.get(roomId);
+        const clientsArr = clients ? Array.from(clients) : [];
+        io.to(roomId).emit("user-joined", socket.id, clientsArr);
+
+        // Send meeting chat history
+        if (meetingMessages[roomId]) {
+            meetingMessages[roomId].forEach((msg) => {
+                io.to(socket.id).emit(
+                    "video-chat-message",
+                    msg.data,
+                    msg.sender,
+                    msg.socketIdSender
+                );
+            });
+        }
+        console.log(`User ${userId || "Guest"} joined room: ${roomId}`);
+    });
+
+    socket.on("signal", (toId, message) => {
+        io.to(toId).emit("signal", socket.id, message);
+    });
+
+    socket.on("video-chat-message", (data, sender) => {
+        const room = socket.room;
+        if (room) {
+            if (!meetingMessages[room]) meetingMessages[room] = [];
+            meetingMessages[room].push({
+                sender,
+                data,
+                socketIdSender: socket.id,
+            });
+            io.to(room).emit("video-chat-message", data, sender, socket.id);
+        }
+    });
+
+    // ==================================================
+    // 3. DISCONNECT LOGIC
+    // ==================================================
+    socket.on("disconnect", () => {
+        const room = socket.room;
+        if (room) {
+            io.to(room).emit("user-left", socket.id);
+            setTimeout(() => {
+                const clients = io.sockets.adapter.rooms.get(room);
+                if (!clients || clients.size === 0) {
+                    delete meetingMessages[room];
+                }
+            }, 1000);
+        }
+
         for (let [userId, socketId] of userSocketMap.entries()) {
             if (socketId === socket.id) {
                 userSocketMap.delete(userId);
-                const lastSeen = new Date();
-                try {
-                    await User.findByIdAndUpdate(userId, {
-                        isOnline: false,
-                        lastSeen: lastSeen,
-                    });
-                    io.emit("user-status-change", {
-                        userId,
-                        isOnline: false,
-                        lastSeen: lastSeen,
-                    });
-                } catch (error) {
-                    console.error("Error updating offline status:", error);
-                }
+                User.findByIdAndUpdate(userId, { isOnline: false }).catch(
+                    (e) => {}
+                );
+                io.emit("user-status-change", { userId, isOnline: false });
                 break;
             }
         }
@@ -221,15 +281,12 @@ io.on("connection", (socket) => {
 const start = async () => {
     try {
         await mongoose.connect(URL);
-        console.log("✅ MongoDB connected successfully");
-        await User.updateMany({}, { $set: { isOnline: false } });
-        httpServer.listen(PORT, () => {
-            console.log(`🚀 Server is running on http://localhost:${PORT}`);
-        });
+        console.log("✅ MongoDB connected");
+        httpServer.listen(PORT, () =>
+            console.log(`🚀 Server running on port ${PORT}`)
+        );
     } catch (err) {
-        console.error("❌ Database connection failed:", err.message);
-        process.exit(1);
+        console.error(err);
     }
 };
-
 start();

@@ -15,6 +15,7 @@ import {
     acceptConnectionRequest,
     getUserProfileAndUserBasedOnUername,
     forgotPassword,
+    resetPassword,
 } from "../controllers/user.controller.js";
 
 import upload from "../config/cloudinary.config.js";
@@ -60,6 +61,7 @@ router
 router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/forgot_password").post(forgotPassword);
+router.route("/reset_password/:token").put(resetPassword); // <--- New Route
 
 router.route("/user_update").post(updateUserProfile);
 router.route("/get_user_and_profile").get(getUserAndProfile);

@@ -1,0 +1,430 @@
+/* frontend/src/styles/videoComponent.module.css */
+
+:root {
+    --holo-bg: #020410;
+    --holo-panel: #0b0f2a;
+    --holo-border: rgba(139, 92, 246, 0.4);
+    --neon-teal: #0fffc6;
+    --neon-violet: #8b5cf6;
+    --neon-pink: #ff4d7d;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+}
+
+.meetVideoContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    background-color: var(--holo-bg);
+    color: var(--text-primary);
+    overflow: hidden;
+    position: relative;
+    font-family: "Poppins", sans-serif;
+}
+
+/* LOBBY */
+.lobbyOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 4, 16, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+.lobbyCard {
+    background: rgba(11, 15, 42, 0.9);
+    border: 1px solid var(--holo-border);
+    border-radius: 20px;
+    padding: 30px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+}
+.title {
+    font-family: "Orbitron", sans-serif;
+    color: var(--neon-teal);
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+.previewBox {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--neon-violet);
+    margin-bottom: 20px;
+}
+.previewBox .videoElement {
+    transform: scaleX(-1);
+}
+.videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.noVideo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: #1a1a1a;
+    color: #555;
+}
+.previewControls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 16px;
+    border-radius: 20px;
+}
+.nameInput {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    color: #fff;
+    margin-bottom: 15px;
+    outline: none;
+    font-size: 1rem;
+}
+.nameInput:focus {
+    border-color: var(--neon-blue);
+}
+.connectButton {
+    width: 100%;
+    background: var(--neon-violet);
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: "Orbitron", sans-serif;
+    font-size: 1rem;
+}
+
+/* MAIN LAYOUT */
+.videoChatLayout {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+.mainArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+}
+
+/* DESKTOP GRID */
+.videoGrid {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    overflow-y: auto;
+}
+.videoTile {
+    width: 48%;
+    max-width: 600px;
+    aspect-ratio: 16/9;
+    background: #000;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+/* Mirror local only */
+.videoGrid > .videoTile:first-child .videoElement {
+    transform: scaleX(-1);
+}
+.videoGrid > .videoTile:nth-child(n + 2) .videoElement {
+    transform: none;
+}
+
+.userLabel {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--neon-teal);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* CONTROLS */
+.controlsBar {
+    height: 80px;
+    background: rgba(11, 15, 42, 0.95);
+    border-top: 1px solid var(--holo-border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    z-index: 100;
+    flex-shrink: 0;
+}
+.controlBtn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+.controlBtn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+.micOff,
+.videoOff {
+    background: var(--neon-pink);
+}
+.screenActive {
+    background: var(--neon-teal);
+    color: #000;
+}
+.endCallBtn {
+    background: var(--neon-pink);
+    width: 60px;
+    height: 50px;
+    border-radius: 25px;
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.chatActive {
+    color: var(--neon-teal);
+}
+.badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: var(--neon-pink);
+    color: white;
+    font-size: 0.7rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* CHAT */
+.sidePanel {
+    width: 350px;
+    background: rgba(2, 4, 16, 0.95);
+    border-left: 1px solid var(--holo-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 150;
+}
+.chatHeader {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.chatHeader h3 {
+    margin: 0;
+    color: var(--neon-teal);
+    font-family: "Orbitron", sans-serif;
+}
+.closeChatBtn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+}
+.chattingArea {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.myMessage {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #4ea7ff, #8b5cf6);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 12px 12px 0 12px;
+    max-width: 85%;
+    font-size: 0.9rem;
+}
+.otherMessage {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.1);
+    color: #eee;
+    padding: 8px 12px;
+    border-radius: 12px 12px 12px 0;
+    max-width: 85%;
+    font-size: 0.9rem;
+}
+.sender {
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-bottom: 2px;
+    color: #0fffc6;
+}
+.chatInputArea {
+    padding: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 10px;
+}
+.chatInput {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px;
+    border-radius: 20px;
+    outline: none;
+}
+.sendButton {
+    background: none;
+    border: none;
+    color: var(--neon-teal);
+    cursor: pointer;
+}
+
+/* =================================================================
+   MOBILE OPTIMIZATION (Dynamic Switching)
+   ================================================================= */
+@media (max-width: 768px) {
+    /* 1. DEFAULT: 1-on-1 (PiP Mode) */
+    .videoGrid {
+        display: block;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        padding: 0;
+    }
+
+    .videoGrid:not(.groupGrid) > .videoTile:nth-child(2) {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        border: none;
+        border-radius: 0;
+    }
+
+    .videoGrid:not(.groupGrid) > .videoTile:first-child {
+        position: absolute;
+        bottom: 120px;
+        right: 16px;
+        width: 110px;
+        height: 150px;
+        z-index: 10;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+        border: 2px solid var(--neon-teal);
+        aspect-ratio: auto;
+    }
+
+    .videoGrid:not(.groupGrid) > .videoTile:first-child .userLabel {
+        display: none;
+    }
+
+    /* 2. GROUP CALL (>2 people) */
+    .groupGrid {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        align-content: flex-start;
+    }
+
+    .groupGrid > .videoTile {
+        position: relative !important;
+        width: 50% !important;
+        height: auto !important;
+        aspect-ratio: 1/1 !important;
+        border: 1px solid #000;
+        bottom: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    .groupGrid > .videoTile:first-child .userLabel {
+        display: block !important;
+    }
+
+    /* Waiting state (Only me) */
+    .videoGrid > .videoTile:first-child:only-child {
+        width: 100% !important;
+        height: 100% !important;
+        top: 0;
+        left: 0;
+        border: none;
+        z-index: 1;
+    }
+
+    /* Controls */
+    .controlsBar {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        height: 70px;
+        background: rgba(15, 20, 40, 0.85);
+        backdrop-filter: blur(12px);
+        border-radius: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        justify-content: space-evenly;
+        padding: 0 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .sidePanel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 200;
+    }
+}

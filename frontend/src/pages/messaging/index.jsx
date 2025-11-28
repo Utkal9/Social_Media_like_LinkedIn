@@ -8,9 +8,6 @@ import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import Head from "next/head";
 
-const VIDEO_CALL_URL =
-    process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
-
 // --- ICONS ---
 const SearchIcon = () => (
     <svg
@@ -123,7 +120,6 @@ const TrashIcon = () => (
         />
     </svg>
 );
-
 const SingleTick = () => (
     <svg
         viewBox="0 0 24 24"
@@ -231,7 +227,6 @@ export default function MessagingPage() {
     const [notification, setNotification] = useState(null);
     const [showHeaderMenu, setShowHeaderMenu] = useState(false);
 
-    // Keep a ref for socket listeners to access latest state
     const conversationsRef = useRef(conversations);
     useEffect(() => {
         conversationsRef.current = conversations;
@@ -246,7 +241,6 @@ export default function MessagingPage() {
         }
     }, [router]);
 
-    // Close menus on outside click
     useEffect(() => {
         const closeMenu = () => {
             setActiveMessageId(null);
@@ -306,7 +300,6 @@ export default function MessagingPage() {
         }
     };
 
-    // --- FIX: Handle 'chatWith' query param correctly ---
     useEffect(() => {
         if (!router.isReady || !localStorage.getItem("token")) return;
         const { chatWith } = router.query;
@@ -319,7 +312,6 @@ export default function MessagingPage() {
             if (existingChat) {
                 handleSelectChat(existingChat.user);
             } else {
-                // Fetch and Add User to List if not present
                 const fetchTargetUser = async () => {
                     try {
                         const res = await clientServer.get(
@@ -328,11 +320,9 @@ export default function MessagingPage() {
                         );
                         const targetUser = res.data.profile.userId;
 
-                        // Prevent duplicates
                         setConversations((prev) => {
                             if (prev.find((c) => c.user._id === targetUser._id))
                                 return prev;
-                            // Create dummy conversation structure
                             return [
                                 {
                                     user: targetUser,
@@ -351,7 +341,7 @@ export default function MessagingPage() {
                 fetchTargetUser();
             }
         }
-    }, [router.isReady, router.query, conversations.length]); // Added length to trigger re-check
+    }, [router.isReady, router.query, conversations.length]);
 
     const markAsRead = async (senderId) => {
         try {
@@ -366,7 +356,6 @@ export default function MessagingPage() {
                     receiverId: auth.user?.userId?._id,
                 });
             }
-            // Clear local unread count
             setConversations((prev) =>
                 prev.map((c) => {
                     if (c.user._id === senderId)
@@ -379,7 +368,6 @@ export default function MessagingPage() {
         }
     };
 
-    // Fetch messages when chat opens
     useEffect(() => {
         if (!activeChat) return;
         const fetchMessages = async () => {
@@ -400,21 +388,16 @@ export default function MessagingPage() {
         fetchMessages();
     }, [activeChat]);
 
-    // --- SOCKET LISTENERS ---
     useEffect(() => {
         if (!socket) return;
 
         const handleReceiveMessage = (data) => {
             if (activeChat && data.sender === activeChat._id) {
-                // If chat open with sender, append and mark read
                 setMessages((prev) => [...prev, data]);
                 scrollToBottom();
                 markAsRead(activeChat._id);
             } else {
-                // If chat NOT open, refresh list and show TOAST
                 fetchConversations();
-
-                // --- SHOW NOTIFICATION POPUP ---
                 const senderEntry = conversationsRef.current.find(
                     (c) => c.user._id === data.sender
                 );
@@ -482,7 +465,6 @@ export default function MessagingPage() {
         setActiveChat(user);
         setShowMobileChat(true);
         if (router.query.chatWith) {
-            // Clear query param to avoid re-triggering logic
             router.replace("/messaging", undefined, { shallow: true });
         }
     };
@@ -517,7 +499,6 @@ export default function MessagingPage() {
                 toUserId: activeChat._id,
                 message: newMsg.message,
             });
-            // Replace temp message with real one
             setMessages((prev) =>
                 prev.map((m) => (m._id === tempId ? res.data : m))
             );
@@ -629,20 +610,24 @@ export default function MessagingPage() {
         setActiveMessageId(null);
     };
 
+    // --- FIX: INTEGRATE INTERNAL VIDEO CALL ---
     const handleStartVideoCall = () => {
         if (!activeChat || !auth.user?.userId || !socket) return;
         const roomId = [auth.user.userId._id, activeChat._id].sort().join("-");
-        const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
-        const returnUrl = `${window.location.origin}/dashboard`;
-        const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
-            returnUrl
-        )}`;
+
+        // --- FIX: Use router.push + Return URL ---
+        const currentPath = router.asPath; // e.g. /messaging?chatWith=...
+        router.push(
+            `/meet/${roomId}?returnTo=${encodeURIComponent(currentPath)}`
+        );
+
+        // Notify other user
+        const roomUrl = `${window.location.origin}/meet/${roomId}`;
         socket.emit("start-call", {
             fromUser: auth.user.userId,
             toUserId: activeChat._id,
-            roomUrl: roomUrlWithRedirect,
+            roomUrl: roomUrl,
         });
-        window.open(roomUrlWithRedirect, "_blank");
     };
 
     const filteredConversations = conversations.filter((c) => {

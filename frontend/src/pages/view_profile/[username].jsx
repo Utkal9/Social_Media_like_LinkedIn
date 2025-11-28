@@ -11,14 +11,12 @@ import {
     getConnectionsRequest,
     getMyConnectionRequests,
     sendConnectionRequest,
-    AcceptConnection, // Ensure this is imported if you plan to add accept logic here later
+    AcceptConnection,
 } from "@/config/redux/action/authAction";
 import { useSocket } from "@/context/SocketContext";
 
 const DEFAULT_BG =
     "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80";
-const VIDEO_CALL_URL =
-    process.env.NEXT_PUBLIC_VIDEO_CALL_URL || "http://localhost:3001";
 
 // --- Holo Icons ---
 const MessageIcon = () => (
@@ -283,6 +281,7 @@ export default function ViewProfilePage({ userProfile }) {
         router.push(`/messaging?chatWith=${localProfile.userId.username}`);
     };
 
+    // --- UPDATED VIDEO CALL LOGIC ---
     const handleStartVideoCall = () => {
         const currentUser = authState.user?.userId;
         const targetUserId = localProfile.userId._id;
@@ -290,18 +289,19 @@ export default function ViewProfilePage({ userProfile }) {
         if (!currentUser || !targetUserId || !socket) return;
 
         const roomId = [currentUser._id, targetUserId].sort().join("-");
-        const baseRoomUrl = `${VIDEO_CALL_URL}/${roomId}`;
-        const returnUrl = `${window.location.origin}/view_profile/${localProfile.userId.username}`;
-        const roomUrlWithRedirect = `${baseRoomUrl}?redirect_url=${encodeURIComponent(
-            returnUrl
-        )}`;
 
+        // --- FIX: Use router.push + Return URL ---
+        const currentPath = router.asPath;
+        router.push(
+            `/meet/${roomId}?returnTo=${encodeURIComponent(currentPath)}`
+        );
+
+        const roomUrl = `${window.location.origin}/meet/${roomId}`;
         socket.emit("start-call", {
             fromUser: currentUser,
             toUserId: targetUserId,
-            roomUrl: roomUrlWithRedirect,
+            roomUrl: roomUrl,
         });
-        window.open(roomUrlWithRedirect, "_blank");
     };
 
     const isOnline =
