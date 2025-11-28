@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import clientServer from "@/config";
-import styles from "@/pages/login/style.module.css"; // Reusing login styles
+import styles from "@/pages/login/style.module.css";
 import Head from "next/head";
 
 export default function ResetPasswordPage() {
     const router = useRouter();
-    const { token } = router.query; // Get token from URL
+    const { token } = router.query;
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,7 +29,6 @@ export default function ResetPasswordPage() {
             });
             setError(false);
             setMessage(res.data.message);
-            // Redirect to login after 2 seconds
             setTimeout(() => router.push("/login"), 2000);
         } catch (err) {
             setError(true);
@@ -52,7 +51,7 @@ export default function ResetPasswordPage() {
                     <div className={styles.formHeader}>
                         <h1 className={styles.formTitle}>Reset Password</h1>
                         <p className={styles.formSubtitle}>
-                            Enter your new secure password.
+                            Enter your new password below.
                         </p>
                     </div>
 
