@@ -1,7 +1,7 @@
 /* frontend/src/pages/messaging/index.module.css */
 
 .pageWrapper {
-    padding-top: 80px; /* Nav offset */
+    padding-top: 80px;
     min-height: 100vh;
     background-color: var(--holo-bg);
     position: relative;
@@ -32,7 +32,7 @@
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: rgba(11, 15, 42, 0.95);
+    background: var(--holo-panel);
     border: 1px solid var(--neon-teal);
     padding: 12px 24px;
     border-radius: 12px;
@@ -40,7 +40,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     z-index: 9999;
     animation: slideIn 0.3s ease-out;
 }
@@ -60,11 +60,11 @@
     width: 95%;
     max-width: 1200px;
     height: 85vh;
-    background: rgba(11, 15, 42, 0.7);
+    background: var(--holo-panel);
     backdrop-filter: blur(20px);
     border: 1px solid var(--holo-border);
     border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     display: flex;
     overflow: hidden;
     position: relative;
@@ -74,10 +74,10 @@
 /* --- Sidebar --- */
 .sidebar {
     width: 350px;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid var(--holo-border);
     display: flex;
     flex-direction: column;
-    background: rgba(2, 4, 16, 0.4);
+    background: var(--holo-bg);
 }
 
 .sidebarHeader {
@@ -89,14 +89,14 @@
 
 .headerTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.2rem;
     margin: 0;
     letter-spacing: 1px;
 }
 
 .iconBtn {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
     border: none;
     color: var(--text-secondary);
     width: 36px;
@@ -126,11 +126,11 @@
 }
 .searchBar input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     padding: 10px 12px 10px 40px;
     border-radius: 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-family: inherit;
     outline: none;
 }
@@ -155,11 +155,11 @@
     margin-bottom: 4px;
 }
 .conversationItem:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
 }
 .activeItem {
     background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    border: 1px solid var(--holo-border);
 }
 
 .avatarWrapper {
@@ -173,7 +173,7 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--holo-border);
 }
 .onlineDot {
     position: absolute;
@@ -185,12 +185,12 @@
     border-radius: 50%;
     border: 2px solid var(--holo-panel);
 }
-/* Unread Badge Style */
+/* Unread Badge */
 .avatarBadge {
     position: absolute;
     top: -2px;
     right: -2px;
-    background-color: #ff4d7d;
+    background-color: var(--neon-pink);
     color: white;
     font-size: 0.65rem;
     font-weight: 700;
@@ -200,7 +200,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #0b0f2a;
+    border: 2px solid var(--holo-bg);
     z-index: 5;
     box-shadow: 0 0 5px rgba(255, 77, 125, 0.5);
 }
@@ -217,7 +217,7 @@
     margin-bottom: 2px;
 }
 .info h4 {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.95rem;
     margin: 0;
     font-weight: 600;
@@ -233,7 +233,7 @@
 }
 .statusOffline {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 .preview {
@@ -246,7 +246,7 @@
     max-width: 200px;
 }
 .previewBold {
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 600;
     font-size: 0.8rem;
     margin: 0;
@@ -261,24 +261,24 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: rgba(11, 15, 42, 0.3);
+    background: var(--holo-panel);
     position: relative;
 }
 
 .chatHeader {
     padding: 15px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--holo-border);
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(11, 15, 42, 0.8);
-    position: relative; /* For absolute menu */
+    background: var(--holo-panel);
+    position: relative;
 }
 .backBtn {
     display: none;
     background: none;
     border: none;
-    color: #fff;
+    color: var(--text-primary);
     cursor: pointer;
 }
 .headerUserInfo {
@@ -309,7 +309,7 @@
     border-radius: 50%;
 }
 .headerText h3 {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1rem;
     margin: 0;
     font-weight: 600;
@@ -323,8 +323,8 @@
     gap: 8px;
 }
 .headerActions .actionBtn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     color: var(--neon-teal);
     width: 40px;
     height: 40px;
@@ -337,13 +337,13 @@
 .headerActions .actionBtn:hover {
     background: var(--neon-teal);
     color: #000;
-    box-shadow: 0 0 10px var(--neon-teal);
+    box-shadow: var(--glow-teal);
 }
 .headerMenuDropdown {
     position: absolute;
     top: 110%;
     right: 0;
-    background: #0b0f2a;
+    background: var(--holo-bg);
     border: 1px solid var(--holo-border);
     border-radius: 8px;
     padding: 8px;
@@ -413,16 +413,16 @@
     box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
 }
 .bubbleOther {
-    background: rgba(255, 255, 255, 0.1);
-    color: #eee;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    color: var(--text-primary);
+    border: 1px solid var(--holo-border);
     border-bottom-left-radius: 4px;
 }
 .deletedBubble {
     font-style: italic;
-    color: rgba(255, 255, 255, 0.5) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px dashed rgba(255, 255, 255, 0.2);
+    color: var(--text-secondary) !important;
+    background: var(--holo-glass) !important;
+    border: 1px dashed var(--holo-border);
 }
 .editedTag {
     font-size: 0.7rem;
@@ -462,7 +462,7 @@
 .menuTrigger {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px;
     border-radius: 50%;
@@ -476,14 +476,14 @@
     opacity: 1;
 }
 .menuTrigger:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    background: var(--holo-glass);
 }
 .messageMenu {
     position: absolute;
-    top: 24px; /* Opens DOWN */
+    top: 24px;
     right: 0;
-    background: #0b0f2a;
+    background: var(--holo-bg);
     border: 1px solid var(--holo-border);
     border-radius: 8px;
     padding: 4px;
@@ -508,7 +508,7 @@
 .messageMenu button {
     background: none;
     border: none;
-    color: #ddd;
+    color: var(--text-primary);
     padding: 8px;
     text-align: left;
     font-size: 0.85rem;
@@ -519,8 +519,8 @@
     gap: 8px;
 }
 .messageMenu button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--holo-glass);
+    color: var(--text-primary);
 }
 .deleteOption:hover {
     color: var(--neon-pink) !important;
@@ -565,8 +565,8 @@
     background: transparent;
 }
 .inputWrapper {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     border-radius: 24px;
     padding: 8px 16px;
     display: flex;
@@ -578,7 +578,7 @@
     flex: 1;
     background: transparent;
     border: none;
-    color: #fff;
+    color: var(--text-primary);
     font-family: inherit;
     font-size: 0.95rem;
     resize: none;
@@ -606,7 +606,7 @@
 }
 .sendBtn:hover:not(:disabled) {
     transform: scale(1.1);
-    box-shadow: 0 0 10px var(--neon-teal);
+    box-shadow: var(--glow-teal);
 }
 
 /* Info Modal */
@@ -624,19 +624,19 @@
     backdrop-filter: blur(5px);
 }
 .infoCard {
-    background: #0b0f2a;
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     padding: 20px;
     border-radius: 16px;
     min-width: 300px;
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.4);
+    box-shadow: var(--glow-primary);
     animation: fadeIn 0.2s ease-out;
 }
 .infoCard h3 {
-    color: #fff;
+    color: var(--text-primary);
     font-family: "Orbitron", sans-serif;
     margin-top: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 10px;
 }
 .infoRow {
@@ -649,7 +649,7 @@
     color: var(--text-secondary);
 }
 .infoRow span {
-    color: #fff;
+    color: var(--text-primary);
     font-family: monospace;
 }
 .infoCard button {
@@ -679,7 +679,7 @@
     opacity: 0.5;
 }
 .emptyState h3 {
-    color: #fff;
+    color: var(--text-primary);
     font-family: "Orbitron", sans-serif;
     font-weight: 400;
     margin-bottom: 8px;

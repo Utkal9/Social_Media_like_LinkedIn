@@ -21,11 +21,11 @@
 
 .header {
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
 }
 .header h2 {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 5px 0;
     font-size: 1.5rem;
 }
@@ -39,7 +39,7 @@
 .tabContainer {
     display: flex;
     gap: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
 }
 
 .tab {
@@ -55,7 +55,7 @@
 }
 
 .tab:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .activeTab {
@@ -92,9 +92,9 @@
     padding: 40px;
     color: var(--text-secondary);
     font-style: italic;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--holo-glass);
     border-radius: 12px;
-    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border: 1px dashed var(--holo-border);
 }
 .discoverBtn {
     margin-top: 15px;
@@ -115,7 +115,7 @@
 }
 
 .requestCard {
-    background: rgba(11, 15, 42, 0.6);
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 20px;
@@ -124,10 +124,11 @@
     align-items: center;
     text-align: center;
     transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow-card);
 }
 .requestCard:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+    box-shadow: var(--glow-primary);
     border-color: var(--neon-violet);
 }
 
@@ -156,7 +157,7 @@
 
 .userInfo h3 {
     font-size: 1rem;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     font-weight: 600;
     cursor: pointer;
@@ -202,9 +203,9 @@
 }
 
 .declineButton {
-    background: rgba(255, 255, 255, 0.05);
-    color: #ccc;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    color: var(--text-secondary);
+    border: 1px solid var(--holo-border);
 }
 .declineButton:hover {
     border-color: var(--neon-pink);
@@ -223,14 +224,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--holo-panel);
+    border: 1px solid var(--holo-border);
     border-radius: 12px;
     transition: background 0.2s;
 }
 .networkRow:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    border-color: var(--holo-border);
 }
 
 .rowLeft {
@@ -251,12 +252,12 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--holo-border);
 }
 
 .rowInfo h3 {
     font-size: 1rem;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
 }
 .rowInfo p {
@@ -284,12 +285,12 @@
 }
 
 .actionBtn {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ccc;
+    background: var(--holo-glass);
+    color: var(--text-secondary);
 }
 .actionBtn:hover {
-    background: #fff;
-    color: #000;
+    background: var(--holo-border);
+    color: var(--text-primary);
 }
 
 .actionBtnPrimary {
@@ -328,12 +329,12 @@
 /* --- Mobile --- */
 @media (max-width: 576px) {
     .requestGrid {
-        grid-template-columns: 1fr; /* Stack cards on mobile */
+        grid-template-columns: 1fr;
     }
     .networkRow {
         padding: 12px;
     }
     .rowInfo p {
         display: none;
-    } /* Hide username to save space on very small screens */
+    }
 }

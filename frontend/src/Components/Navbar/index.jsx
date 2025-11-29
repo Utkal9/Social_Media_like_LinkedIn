@@ -7,6 +7,7 @@ import { reset, setTokenIsThere } from "@/config/redux/reducer/authReducer";
 import { getAboutUser } from "@/config/redux/action/authAction";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
+import { useTheme } from "@/context/ThemeContext";
 
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (
@@ -90,6 +91,61 @@ const MessagingIcon = ({ isActive }) => (
     </svg>
 );
 
+// --- Theme & Menu Icons ---
+const SunIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <circle cx="12" cy="12" r="5" />
+        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+);
+const MoonIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+);
+const UserIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+        />
+    </svg>
+);
+const LogoutIcon = () => (
+    <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        width="18"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+        />
+    </svg>
+);
+
 const LogoIcon = () => (
     <div className={styles.holoLogo}>
         <span>Link</span>Ups
@@ -101,6 +157,7 @@ export default function NavbarComponent() {
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
     const { socket, onlineStatuses, unreadCount } = useSocket() || {};
+    const { theme, toggleTheme, mounted } = useTheme();
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
@@ -141,6 +198,7 @@ export default function NavbarComponent() {
     const handleLogout = () => {
         if (socket) socket.disconnect();
         localStorage.removeItem("token");
+        localStorage.removeItem("tokenTimestamp");
         setIsTokenFound(false);
         dispatch(reset());
         setDropdownOpen(false);
@@ -161,7 +219,6 @@ export default function NavbarComponent() {
           true
         : false;
 
-    // Filter Links based on Auth
     const navItems = [
         {
             path: "/dashboard",
@@ -197,13 +254,12 @@ export default function NavbarComponent() {
     ];
 
     const renderNavLinks = () => {
-        const filteredItems = navItems.filter((item) =>
-            isTokenFound ? true : !item.protected
-        );
+        // Hide nav links if not logged in
+        if (!isTokenFound) return null;
 
         return (
             <>
-                {filteredItems.map((item) => (
+                {navItems.map((item) => (
                     <div
                         key={item.path}
                         className={`${styles.navLink} ${
@@ -216,7 +272,6 @@ export default function NavbarComponent() {
                                 isActive={router.pathname === item.path}
                             />
                         </div>
-                        {/* --- NEW: Badge Logic --- */}
                         {item.hasBadge && unreadCount > 0 && (
                             <span className={styles.badge}>
                                 {unreadCount > 99 ? "99+" : unreadCount}
@@ -236,7 +291,7 @@ export default function NavbarComponent() {
 
     return (
         <>
-            {/* --- TOP NAV (Desktop + Mobile Top Bar) --- */}
+            {/* --- TOP NAV --- */}
             <nav className={styles.container}>
                 <div className={styles.navbar}>
                     <div
@@ -246,10 +301,10 @@ export default function NavbarComponent() {
                         <LogoIcon />
                     </div>
 
-                    {/* Desktop Center Links (Hidden on Mobile) */}
+                    {/* Desktop Center Links - Hidden if not logged in */}
                     <div className={styles.navCenter}>{renderNavLinks()}</div>
 
-                    {/* Right Side (Profile / Login) - Visible on Mobile too */}
+                    {/* Right Side: Profile (Logged In) OR Buttons (Logged Out) */}
                     <div className={styles.navRight}>
                         {authState.profileFetched &&
                         authState.user &&
@@ -339,14 +394,45 @@ export default function NavbarComponent() {
                                                             "/profile"
                                                         )
                                                     }
+                                                    style={{
+                                                        display: "flex",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        alignItems: "center",
+                                                    }}
                                                 >
-                                                    View Profile
+                                                    <span>View Profile</span>
+                                                    <UserIcon />
+                                                </button>
+                                                <button
+                                                    onClick={toggleTheme}
+                                                    style={{
+                                                        display: "flex",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        alignItems: "center",
+                                                    }}
+                                                >
+                                                    <span>Theme</span>
+                                                    {mounted &&
+                                                        (theme === "dark" ? (
+                                                            <SunIcon />
+                                                        ) : (
+                                                            <MoonIcon />
+                                                        ))}
                                                 </button>
                                                 <button
                                                     onClick={handleLogout}
                                                     className={styles.logoutBtn}
+                                                    style={{
+                                                        display: "flex",
+                                                        justifyContent:
+                                                            "space-between",
+                                                        alignItems: "center",
+                                                    }}
                                                 >
-                                                    Disconnect
+                                                    <span>Disconnect</span>
+                                                    <LogoutIcon />
                                                 </button>
                                             </div>
                                         </motion.div>
@@ -354,18 +440,27 @@ export default function NavbarComponent() {
                                 </AnimatePresence>
                             </div>
                         ) : (
-                            <button
-                                onClick={() => handleNavigation("/login")}
-                                className={styles.buttonJoin}
-                            >
-                                Login
-                            </button>
+                            /* --- LOGGED OUT STATE: Login & Sign Up Buttons --- */
+                            <div style={{ display: "flex", gap: "12px" }}>
+                                <button
+                                    onClick={() => handleNavigation("/login")}
+                                    className={styles.buttonJoin}
+                                >
+                                    Login
+                                </button>
+                                <button
+                                    onClick={() => handleNavigation("/login")}
+                                    className={styles.buttonJoin}
+                                >
+                                    Sign Up
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
             </nav>
 
-            {/* --- BOTTOM NAV (Mobile Only) --- */}
+            {/* --- BOTTOM NAV (Mobile Only) - Only shows if Token Found --- */}
             {isTokenFound && (
                 <div className={styles.bottomNav}>
                     {navItems.map((item) => (
@@ -381,7 +476,6 @@ export default function NavbarComponent() {
                             <item.icon
                                 isActive={router.pathname === item.path}
                             />
-                            {/* --- NEW: Mobile Badge --- */}
                             {item.hasBadge && unreadCount > 0 && (
                                 <span className={styles.badge}>
                                     {unreadCount > 99 ? "99+" : unreadCount}

@@ -7,11 +7,12 @@
     left: 0;
     width: 100%;
     height: 70px;
-    background: rgba(11, 15, 42, 0.85);
+    background: var(--holo-panel);
     backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--holo-border);
     z-index: 1000;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .navbar {
@@ -29,26 +30,28 @@
     font-family: "Orbitron", sans-serif;
     font-weight: 800;
     font-size: 1.5rem;
-    color: #fff;
+    color: var(--text-primary);
     cursor: pointer;
     letter-spacing: 1px;
     user-select: none;
 }
 .holoLogo span {
     color: var(--neon-teal);
-    text-shadow: 0 0 10px rgba(15, 255, 198, 0.4);
+    text-shadow: 0 0 10px rgba(15, 255, 198, 0.2);
 }
+
+/* Badge */
 .badge {
     position: absolute;
-    top: 10px;
+    top: 5px; /* Adjusted for better positioning */
     right: 10px;
-    background-color: #ff4d7d; /* Neon Red/Pink */
+    background-color: var(--neon-pink);
     color: white;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    height: 18px;
-    min-width: 18px;
-    border-radius: 9px;
+    height: 16px;
+    min-width: 16px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -65,10 +68,11 @@
         transform: scale(1);
     }
 }
+
 /* Desktop Nav Links */
 .navCenter {
     display: flex;
-    gap: 20px;
+    gap: 10px;
     height: 100%;
 }
 
@@ -77,29 +81,43 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 15px;
+    padding: 0 20px;
     color: var(--text-secondary);
     cursor: pointer;
-    position: relative; /* Essential for badge positioning */
+    position: relative;
     transition: color 0.3s ease;
     height: 100%;
 }
+
+/* --- RESTORED HOVER EFFECT --- */
 .navLink:hover {
-    color: #fff;
-}
-.navLink.active {
-    color: var(--neon-teal);
+    color: var(--neon-teal); /* Highlight text on hover */
 }
 
 .navIcon {
     width: 24px;
     height: 24px;
-    transition: filter 0.3s ease;
+    transition: all 0.3s ease;
 }
+
+/* Glow Effect on Hover */
+.navLink:hover .navIcon {
+    filter: drop-shadow(0 0 8px var(--neon-teal)); /* Restore Icon Glow */
+    transform: translateY(-2px); /* Slight bounce */
+}
+
 .navLabel {
     font-size: 0.75rem;
     margin-top: 4px;
     font-weight: 500;
+}
+
+/* Active State */
+.navLink.active {
+    color: var(--neon-teal);
+}
+.navLink.active .navIcon {
+    filter: drop-shadow(0 0 5px var(--neon-teal));
 }
 
 .activeBar {
@@ -123,16 +141,18 @@
     background: transparent;
     border: 1px solid var(--neon-teal);
     color: var(--neon-teal);
-    padding: 6px 18px;
+    padding: 8px 20px;
     border-radius: 20px;
     font-family: "Orbitron", sans-serif;
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.3s;
+    font-weight: 600;
 }
 .buttonJoin:hover {
-    background: rgba(15, 255, 198, 0.1);
-    color: #fff;
+    background: var(--neon-teal);
+    color: #000; /* Invert on hover for visibility */
+    box-shadow: 0 0 15px var(--neon-teal);
 }
 
 .profileButton {
@@ -154,11 +174,16 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--holo-border);
+    transition: border-color 0.2s;
 }
+.profileButton:hover .profilePic {
+    border-color: var(--neon-teal);
+}
+
 .profileFallback {
     background: var(--holo-panel);
-    color: white;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,23 +206,23 @@
     position: absolute;
     top: 75px;
     right: 0;
-    width: 220px;
-    background: rgba(11, 15, 42, 0.95);
+    width: 240px; /* Slightly wider for new icons */
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 12px;
     backdrop-filter: blur(20px);
     padding: 15px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     overflow: hidden;
     z-index: 2000;
 }
 .dropdownHeader {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+    border-bottom: 1px solid var(--holo-border);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
 }
 .userName {
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 600;
     font-size: 1rem;
     margin: 0;
@@ -209,43 +234,58 @@
 }
 
 .dropdownBody button {
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
     text-align: left;
     background: none;
     border: none;
     color: var(--text-primary);
     padding: 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s;
     font-size: 0.9rem;
+    margin-bottom: 4px;
 }
 .dropdownBody button:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--neon-violet);
+    background: var(--holo-glass);
+    color: var(--neon-teal);
 }
+/* Icon styling inside dropdown */
+.dropdownBody button svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+.dropdownBody button:hover svg {
+    color: var(--neon-teal);
+}
+
+/* Logout specific */
 .logoutBtn:hover {
+    color: var(--neon-pink) !important;
+    background: rgba(236, 72, 153, 0.1) !important;
+}
+.logoutBtn:hover svg {
     color: var(--neon-pink) !important;
 }
 
 /* --- BOTTOM NAV (Mobile Only) --- */
 .bottomNav {
-    display: none; /* Hidden on desktop */
+    display: none;
 }
 
 @media (max-width: 768px) {
-    /* Hide Center Nav on Mobile */
     .navCenter {
         display: none;
     }
-
-    /* Profile Icon acts as Menu Trigger on Top Right */
     .navRight {
         display: flex;
     }
 
-    /* Show Bottom Nav */
     .bottomNav {
         display: flex;
         justify-content: space-around;
@@ -255,17 +295,12 @@
         left: 0;
         width: 100%;
         height: 65px;
-        background: rgba(
-            11,
-            15,
-            42,
-            0.95
-        ); /* Almost opaque for better reading */
+        background: var(--holo-panel);
         backdrop-filter: blur(20px);
         border-top: 1px solid var(--holo-border);
         z-index: 2000;
-        padding-bottom: 5px; /* For safe area on some phones */
-        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+        padding-bottom: 5px;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
     }
 
     .bottomNavItem {
@@ -278,7 +313,7 @@
         height: 100%;
         cursor: pointer;
         transition: color 0.2s ease;
-        position: relative; /* For badge */
+        position: relative;
     }
 
     .bottomNavItem svg {
@@ -302,6 +337,6 @@
 
     .bottomNavItem .badge {
         top: 4px;
-        right: 25%; /* Adjust based on icon centering */
+        right: 25%;
     }
 }

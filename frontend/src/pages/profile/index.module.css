@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    padding-bottom: 80px; /* Increased for Mobile Nav Safety */
+    padding-bottom: 80px;
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -32,15 +32,15 @@
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: rgba(11, 15, 42, 0.95);
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     padding: 16px 24px;
     border-radius: 12px;
-    color: #fff;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     z-index: 9999;
     animation: slideIn 0.3s ease-out;
     backdrop-filter: blur(10px);
@@ -59,7 +59,7 @@
 }
 
 .notificationToast span {
-    color: #eee;
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: 500;
 }
@@ -79,17 +79,17 @@
 .confirmModalContent {
     width: 90%;
     max-width: 400px;
-    background: #0b0f2a;
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--shadow-card);
     text-align: center;
 }
 
 .confirmTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 12px 0;
     font-size: 1.2rem;
 }
@@ -108,9 +108,9 @@
 }
 
 .cancelBtn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ccc;
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
+    color: var(--text-secondary);
     padding: 10px 20px;
     border-radius: 8px;
     cursor: pointer;
@@ -118,8 +118,8 @@
     transition: all 0.2s;
 }
 .cancelBtn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: var(--holo-glass);
+    color: var(--text-primary);
 }
 
 .deleteConfirmBtn {
@@ -140,8 +140,8 @@
 
 /* --- Header Card --- */
 .headerCard {
-    background: rgba(11, 15, 42, 0.6);
-    backdrop-filter: blur(16px);
+    background: var(--holo-panel);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     overflow: hidden;
@@ -161,7 +161,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, transparent, rgba(11, 15, 42, 1));
+    background: linear-gradient(to bottom, transparent, var(--holo-panel));
 }
 
 /* --- UNIFIED RESUME WRAPPER --- */
@@ -218,14 +218,14 @@
 }
 .downloadResumeBtn:hover:not(:disabled) {
     background: var(--neon-violet);
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    box-shadow: var(--glow-primary);
 }
 .downloadResumeBtn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
-/* --- Tooltip (Holo Themed) --- */
+/* --- Tooltip --- */
 .resumeActionWrapper:hover .completionTooltip {
     display: block;
     opacity: 1;
@@ -238,14 +238,14 @@
     top: 110%;
     left: 0;
     width: 280px;
-    background: rgba(11, 15, 42, 0.95); /* Holo Dark */
+    background: var(--holo-panel);
     backdrop-filter: blur(12px);
     border: 1px solid var(--holo-border);
     padding: 14px;
     border-radius: 12px;
     font-size: 0.85rem;
-    color: #eee;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-card);
     z-index: 100;
     text-align: left;
     animation: fadeInTooltip 0.2s ease-in-out;
@@ -266,7 +266,7 @@
     margin: 0 0 10px 0;
     color: var(--neon-blue);
     font-size: 0.9rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 6px;
     display: flex;
     justify-content: space-between;
@@ -282,7 +282,7 @@
 .completionTooltip li {
     margin-bottom: 4px;
     line-height: 1.4;
-    color: var(--neon-pink); /* Error / Missing Color */
+    color: var(--neon-pink);
     font-size: 0.8rem;
 }
 
@@ -336,7 +336,7 @@
 }
 
 .identitySection {
-    color: white;
+    color: var(--text-primary);
 }
 
 .identityTop {
@@ -344,7 +344,7 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
-    flex-wrap: wrap; /* Important for mobile */
+    flex-wrap: wrap;
 }
 
 .nameWrapper {
@@ -357,17 +357,17 @@
     font-size: 1.8rem;
     font-weight: 700;
     margin: 0;
-    color: #fff;
+    color: var(--text-primary);
     line-height: 1.2;
-    word-break: break-word; /* Prevent layout break on long names */
+    word-break: break-word;
 }
 .editName {
     font-family: "Orbitron", sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-violet);
-    color: white;
+    color: var(--text-primary);
     width: 100%;
     padding: 8px;
     border-radius: 4px;
@@ -381,9 +381,9 @@
 }
 .editHeadline {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 8px;
     border-radius: 4px;
 }
@@ -409,19 +409,19 @@
 }
 
 .editModeBtn {
-    background: rgba(15, 255, 198, 0.1);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-teal);
     color: var(--neon-teal);
 }
 .editModeBtn:hover {
-    background: rgba(15, 255, 198, 0.2);
+    background: rgba(15, 255, 198, 0.1);
 }
 
 .saveModeBtn {
     background: var(--neon-violet);
     border: none;
     color: white;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    box-shadow: var(--glow-primary);
 }
 .saveModeBtn:hover {
     background: #7c3aed;
@@ -445,7 +445,7 @@
     text-decoration: underline;
 }
 .metaDivider {
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .contactGrid {
@@ -455,13 +455,13 @@
     margin-top: 16px;
 }
 .contactPill {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
     padding: 8px 12px;
     border-radius: 8px;
-    color: #ccc;
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.85rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--holo-border);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -471,14 +471,14 @@
 }
 .contactPill:hover {
     border-color: var(--neon-blue);
-    color: #fff;
+    color: var(--text-primary);
     background: rgba(255, 255, 255, 0.08);
 }
 
 .editInput {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 10px;
     border-radius: 6px;
     width: 100%;
@@ -492,16 +492,16 @@
 .viewBio {
     margin-top: 20px;
     line-height: 1.6;
-    color: #eee;
+    color: var(--text-primary);
     font-size: 0.95rem;
 }
 .editBio {
     width: 100%;
     min-height: 100px;
     margin-top: 20px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 12px;
     border-radius: 8px;
     font-family: inherit;
@@ -510,17 +510,11 @@
 /* --- GRID LAYOUT --- */
 .gridLayout {
     display: grid;
-    /* Left Column (Main) 2.5x wider than Right Column (Side) */
     grid-template-columns: 2.5fr 1fr;
     gap: 24px;
 }
 
-.mainColumn {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
+.mainColumn,
 .sideColumn {
     display: flex;
     flex-direction: column;
@@ -529,7 +523,7 @@
 
 /* --- Cards --- */
 .dataCard {
-    background: rgba(11, 15, 42, 0.6);
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 20px;
@@ -537,10 +531,10 @@
 }
 .cardTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.1rem;
     margin-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 8px;
     display: flex;
     justify-content: space-between;
@@ -551,7 +545,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 8px;
 }
 .cardHeaderRow .cardTitle {
@@ -574,18 +568,18 @@
     font-weight: 600;
 }
 .viewStackText {
-    color: #ddd;
+    color: var(--text-primary);
     font-size: 0.9rem;
     line-height: 1.4;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--holo-glass);
     padding: 8px;
     border-radius: 4px;
 }
 .editTextarea {
     width: 100%;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 8px;
     border-radius: 6px;
     min-height: 60px;
@@ -599,7 +593,7 @@
     gap: 8px;
 }
 .skillTag {
-    background: rgba(139, 92, 246, 0.1);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-violet);
     color: var(--neon-violet);
     padding: 6px 12px;
@@ -627,9 +621,9 @@
 }
 .addSkillBox input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 8px 12px;
     border-radius: 6px;
     outline: none;
@@ -655,8 +649,8 @@
 .timelineItem {
     position: relative;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     border-radius: 12px;
     transition: background 0.2s;
 }
@@ -667,7 +661,7 @@
 .timelineContent h4 {
     font-size: 1rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     padding-right: 60px;
 }
@@ -684,7 +678,7 @@
     font-size: 0.8rem;
 }
 .timelineContent p {
-    color: #ccc;
+    color: var(--text-primary);
     font-size: 0.9rem;
     margin: 8px 0 0 0;
     line-height: 1.5;
@@ -698,9 +692,9 @@
     gap: 8px;
 }
 .actionIconBtn {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
     border: none;
-    color: #ccc;
+    color: var(--text-secondary);
     width: 28px;
     height: 28px;
     border-radius: 6px;
@@ -726,8 +720,8 @@
     gap: 16px;
 }
 .projectItem {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     padding: 16px;
     border-radius: 12px;
     position: relative;
@@ -737,7 +731,7 @@
     padding-right: 70px;
 }
 .projectHeader h5 {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.1rem;
     margin: 0;
     font-weight: 600;
@@ -749,7 +743,7 @@
 }
 .projectItem p {
     font-size: 0.9rem;
-    color: #ccc;
+    color: var(--text-primary);
     margin-bottom: 12px;
     line-height: 1.5;
 }
@@ -763,7 +757,7 @@
     display: inline-block;
 }
 .projectLink:hover {
-    background: rgba(15, 255, 198, 0.1);
+    background: var(--holo-glass);
 }
 
 .addBtn {
@@ -777,7 +771,7 @@
     justify-content: center;
     cursor: pointer;
     color: #000;
-    box-shadow: 0 0 10px rgba(15, 255, 198, 0.3);
+    box-shadow: var(--glow-teal);
 }
 
 /* --- Activity (Sidebar Style) --- */
@@ -787,11 +781,11 @@
     gap: 16px;
 }
 .activityCard {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--holo-glass);
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--holo-border);
     transition: border-color 0.2s, transform 0.2s;
     display: flex;
     flex-direction: column;
@@ -814,7 +808,7 @@
 .textPreview {
     padding: 12px;
     font-size: 0.85rem;
-    color: #ddd;
+    color: var(--text-primary);
     line-height: 1.4;
 }
 .postBody {
@@ -830,7 +824,7 @@
 
 .viewAllBtn {
     width: 100%;
-    background: rgba(139, 92, 246, 0.1);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-violet);
     color: var(--neon-violet);
     padding: 8px;
@@ -866,7 +860,7 @@
     background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--shadow-card);
     padding: 24px;
     max-height: 90vh;
     overflow-y: auto;
@@ -875,14 +869,14 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 20px;
-    color: white;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 10px;
 }
 .closeBtn {
     background: none;
     border: none;
-    color: #ccc;
+    color: var(--text-secondary);
     cursor: pointer;
 }
 .modalBody {
@@ -892,9 +886,9 @@
 }
 .modalInput,
 .modalTextarea {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 12px;
     border-radius: 8px;
     width: 100%;
@@ -924,52 +918,114 @@
     font-weight: 600;
     cursor: pointer;
 }
+/* --- Image Modal (Lightbox) --- */
+.imageModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+.imageModalContent {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Ensure container allows image to grow */
+    width: auto;
+    height: auto;
+}
+
+.imageModalContent img {
+    display: block;
+    width: auto;
+    height: auto;
+    /* Constraints to prevent it from being too small or too big */
+    min-width: 300px; /* Force a minimum size */
+    min-height: 300px;
+    max-width: 100%;
+    max-height: 80vh;
+
+    object-fit: contain;
+    border-radius: 12px;
+    border: 2px solid var(--neon-teal);
+    box-shadow: 0 0 30px rgba(15, 255, 198, 0.3);
+    background-color: #000; /* Background for transparency */
+}
+
+.closeImageBtn {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 5001;
+}
+
+.closeImageBtn:hover {
+    background: var(--neon-pink);
+}
+
+.closeImageBtn svg {
+    width: 24px;
+    height: 24px;
+}
 
 /* --- Mobile Responsive --- */
 @media (max-width: 900px) {
     .gridLayout {
         grid-template-columns: 1fr;
     }
-
-    /* Reorder: Main Content (1) -> Sidebar (2) */
     .mainColumn {
         order: 1;
     }
     .sideColumn {
         order: 2;
     }
-
     .identityTop {
         flex-direction: column;
         gap: 10px;
     }
-
     .headerActions {
         width: 100%;
         justify-content: flex-start;
         margin-top: 10px;
     }
-
     .itemActions {
-        position: static; /* Un-float on mobile */
+        position: static;
         margin-top: 12px;
         justify-content: flex-end;
     }
     .projectHeader {
         padding-right: 0;
     }
-
-    /* Ensure modals fit */
     .modalContent {
-        max-height: 85dvh; /* Use dvh for mobile browsers */
+        max-height: 85dvh;
     }
-
     .contactGrid {
-        grid-template-columns: 1fr; /* Stack contact info */
+        grid-template-columns: 1fr;
     }
-
     .notificationToast {
-        bottom: 80px; /* Above nav */
+        bottom: 80px;
         right: 50%;
         transform: translateX(50%);
         width: 90%;

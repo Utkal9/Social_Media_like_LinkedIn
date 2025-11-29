@@ -9,12 +9,12 @@
 
 /* --- Create Post --- */
 .createPostContainer {
-    background: rgba(11, 15, 42, 0.6);
-    backdrop-filter: blur(16px);
+    background: var(--holo-panel);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card);
 }
 
 .createPostTop {
@@ -23,7 +23,6 @@
     align-items: flex-start;
 }
 
-/* FIXED: Container size matches the image size now (48px) */
 .avatarContainer {
     position: relative;
     width: 48px;
@@ -31,7 +30,6 @@
     flex-shrink: 0;
 }
 
-/* FIXED: Image fills the container completely */
 .userProfilePic {
     width: 100%;
     height: 100%;
@@ -46,11 +44,11 @@
 }
 .textAreaOfContent {
     width: 100%;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
     border-radius: 12px;
     padding: 14px;
-    color: #fff;
+    color: var(--text-primary);
     outline: none;
     font-family: inherit;
     font-size: 1rem;
@@ -79,7 +77,7 @@
     transition: background 0.2s;
 }
 .mediaButton:hover {
-    background: rgba(15, 255, 198, 0.1);
+    background: var(--holo-glass);
 }
 
 .uploadButton {
@@ -91,33 +89,34 @@
     cursor: pointer;
     font-weight: 600;
     font-family: "Orbitron", sans-serif;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    box-shadow: var(--glow-primary);
     transition: all 0.2s;
 }
 .uploadButton:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
 }
 .uploadButton:disabled {
-    background: #444;
-    color: #888;
+    background: var(--holo-border);
+    color: var(--text-secondary);
     cursor: default;
     box-shadow: none;
 }
 .charCounter {
     text-align: right;
     font-size: 0.75rem;
+    color: var(--text-secondary);
     margin-top: 4px;
     margin-right: 4px;
     font-family: monospace;
 }
-/* --- PREVIEW BOX WITH CLEAR BUTTON --- */
+
+/* --- PREVIEW BOX --- */
 .previewBox {
     margin-top: 12px;
     max-height: 250px;
     overflow: hidden;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--holo-border);
 }
 
 .previewWrapper {
@@ -169,7 +168,7 @@
 .fileName {
     font-size: 0.8rem;
     color: var(--neon-teal);
-    background: rgba(15, 255, 198, 0.1);
+    background: var(--holo-glass);
     padding: 2px 6px;
     border-radius: 4px;
     margin-left: 10px;
@@ -188,12 +187,12 @@
 
 /* --- Post Card --- */
 .postCard {
-    background: rgba(11, 15, 42, 0.6);
-    backdrop-filter: blur(16px);
+    background: var(--holo-panel);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     overflow: visible;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card);
     position: relative;
 }
 
@@ -209,7 +208,7 @@
     flex: 1;
 }
 .postCardUser {
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 700;
     margin: 0;
     cursor: pointer;
@@ -218,7 +217,6 @@
 }
 .postCardUser:hover {
     color: var(--neon-teal);
-    text-shadow: 0 0 8px var(--neon-teal);
 }
 .postCardUsername {
     color: var(--text-secondary);
@@ -232,18 +230,18 @@
 .iconBtn {
     background: none;
     border: none;
-    color: #aaa;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px;
 }
 .iconBtn:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 .optionsDropdown {
     position: absolute;
     top: 100%;
     right: 0;
-    background: #0b0f2a;
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 8px;
     overflow: hidden;
@@ -256,7 +254,7 @@
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
-    color: #ccc;
+    color: var(--text-primary);
     width: 100%;
     background: none;
     border: none;
@@ -265,8 +263,7 @@
     font-size: 0.9rem;
 }
 .optionItem:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--holo-glass);
 }
 .delete:hover {
     color: var(--neon-pink);
@@ -274,7 +271,7 @@
 
 .postCardBody {
     padding: 0 20px 16px;
-    color: #eee;
+    color: var(--text-primary);
     line-height: 1.6;
     font-size: 0.95rem;
     white-space: pre-wrap;
@@ -282,7 +279,7 @@
 .postCardImageContainer {
     width: calc(100% + 40px);
     margin-left: -20px;
-    background: #000;
+    background: #000; /* Videos/Images always look best on black */
     display: flex;
     justify-content: center;
     margin-top: 10px;
@@ -295,7 +292,7 @@
 
 .postCardStats {
     padding: 10px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     font-size: 0.85rem;
     color: var(--text-secondary);
 }
@@ -309,7 +306,7 @@
     transition: background 0.2s;
 }
 .reactionsCountWrapper:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
 }
 .reactionIconsStack {
     display: flex;
@@ -320,6 +317,9 @@
     font-size: 1rem;
     margin-right: -6px;
 }
+.reactionCountText {
+    color: var(--text-secondary);
+}
 
 .postCardActions {
     display: flex;
@@ -329,7 +329,7 @@
     flex: 1;
     background: transparent;
     border: none;
-    color: #aaa;
+    color: var(--text-secondary);
     padding: 12px;
     cursor: pointer;
     display: flex;
@@ -341,15 +341,12 @@
     transition: all 0.2s;
 }
 .actionButton:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    background: var(--holo-glass);
+    color: var(--text-primary);
     border-radius: 8px;
 }
-.activeAction {
-    color: var(--neon-blue);
-}
 
-/* --- Reaction Popup (The Dock) --- */
+/* --- Reaction Popup --- */
 .reactionWrapper {
     position: relative;
     flex: 1;
@@ -362,13 +359,13 @@
     bottom: 120%;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(2, 4, 16, 0.95);
+    background: var(--holo-panel);
     backdrop-filter: blur(12px);
     border-radius: 50px;
     padding: 8px 12px;
     gap: 8px;
     border: 1px solid var(--neon-violet);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--glow-primary);
     animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 100;
     white-space: nowrap;
@@ -409,28 +406,16 @@
     transform: scale(1.3) translateY(-5px);
 }
 
-@media (max-width: 576px) {
-    .reactionPopup {
-        bottom: 140%;
-        padding: 6px 10px;
-        gap: 6px;
-        border-radius: 30px;
-    }
-    .reactionBtn {
-        font-size: 1.4rem;
-    }
-}
-
-/* --- FIX: Modals & Mobile View --- */
+/* --- Comments Modal --- */
 .commentModalBackdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100dvh; /* Use dvh for mobile browsers */
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
-    z-index: 3000; /* High z-index to be above bottom nav */
+    z-index: 3000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -439,19 +424,19 @@
 .commentModalContent {
     width: 95%;
     max-width: 600px;
-    background: #0b0f2a;
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     height: 80vh;
-    max-height: 85dvh; /* Ensure it fits in viewport */
+    max-height: 85dvh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--shadow-card);
 }
 
 .commentModalHeader {
     padding: 16px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -459,13 +444,13 @@
 .commentModalHeader h3 {
     margin: 0;
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .closeModalButton {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
     border: none;
-    color: #aaa;
+    color: var(--text-secondary);
     cursor: pointer;
     width: 32px;
     height: 32px;
@@ -480,10 +465,6 @@
     color: #fff;
     transform: rotate(90deg);
 }
-.closeModalButton svg {
-    width: 20px;
-    height: 20px;
-}
 
 /* Edit Modal Specifics */
 .editModalBody {
@@ -497,8 +478,8 @@
 
 .cancelButton {
     background: transparent;
-    border: 1px solid #666;
-    color: #666;
+    border: 1px solid var(--text-secondary);
+    color: var(--text-secondary);
     padding: 6px 16px;
     border-radius: 20px;
     font-weight: 600;
@@ -507,9 +488,9 @@
     transition: all 0.2s;
 }
 .cancelButton:hover {
-    background-color: #f3f3f3;
-    border-color: #333;
-    color: #333;
+    background-color: var(--holo-glass);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
 }
 
 /* Comments */
@@ -525,10 +506,11 @@
     margin-bottom: 16px;
 }
 .singleCommentBody {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
     padding: 10px 14px;
     border-radius: 12px;
     flex-grow: 1;
+    border: 1px solid var(--holo-border);
 }
 .commentHeader {
     display: flex;
@@ -537,15 +519,15 @@
 }
 .commentUser {
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 .commentTime {
     font-size: 0.75rem;
-    color: #aaa;
+    color: var(--text-secondary);
 }
 .commentText {
-    color: #ddd;
+    color: var(--text-primary);
     font-size: 0.95rem;
     margin: 0;
     line-height: 1.4;
@@ -558,7 +540,7 @@
     gap: 12px;
 }
 .commentActions span {
-    color: #888;
+    color: var(--text-secondary);
     transition: color 0.2s;
 }
 .commentActions span:hover {
@@ -588,20 +570,20 @@
 
 .postCommentContainer {
     padding: 16px 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: #0b0f2a; /* Solid background to cover anything behind */
+    border-top: 1px solid var(--holo-border);
+    background: var(--holo-panel);
 }
 
 .commentInputWrapper {
     display: flex;
     gap: 12px;
-    align-items: center; /* Align button and input */
+    align-items: center;
 }
 .commentInputWrapper input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 10px 16px;
     border-radius: 24px;
     outline: none;
@@ -612,16 +594,16 @@
 .commentInputWrapper button {
     background: var(--neon-teal);
     border: none;
-    padding: 8px 16px; /* Reduced padding for mobile safety */
+    padding: 8px 16px;
     border-radius: 20px;
     color: #000;
     font-weight: 600;
     cursor: pointer;
-    white-space: nowrap; /* Prevent text clipping */
-    flex-shrink: 0; /* Prevent button from shrinking */
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-/* Reaction List Item Styles */
+/* Reaction List Item */
 .reactionUserItem {
     display: flex;
     align-items: center;
@@ -632,7 +614,7 @@
     transition: background 0.2s;
 }
 .reactionUserItem:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
 }
 
 .reactionTypeIconOnAvatar {
@@ -640,7 +622,7 @@
     bottom: -2px;
     right: -2px;
     font-size: 0.9rem;
-    background: #0b0f2a;
+    background: var(--holo-panel);
     border-radius: 50%;
     width: 20px;
     height: 20px;
@@ -655,39 +637,39 @@
 .userInfo h4 {
     margin: 0;
     font-size: 0.95rem;
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 600;
 }
 .userInfo p {
     margin: 0;
     font-size: 0.8rem;
-    color: #aaa;
+    color: var(--text-secondary);
 }
 
 /* Filter Banner */
 .filterBanner {
-    background: rgba(139, 92, 246, 0.15);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-violet);
     border-radius: 12px;
     padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #fff;
+    color: var(--text-primary);
 }
 .filterBanner button {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: #ddd;
+    border: 1px solid var(--holo-border);
+    color: var(--text-secondary);
     padding: 6px 16px;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s;
 }
 .filterBanner button:hover {
-    border-color: #fff;
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+    background: var(--holo-glass);
 }
 
 .noPosts {
@@ -697,25 +679,26 @@
     padding: 40px;
 }
 .errorMessage {
-    color: #ff4d7d;
+    color: var(--neon-pink);
     font-size: 0.85rem;
     text-align: center;
     margin: 5px 0;
 }
-/* --- TOAST NOTIFICATION --- */
+
+/* Toast */
 .notificationToast {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: rgba(11, 15, 42, 0.95);
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     padding: 16px 24px;
     border-radius: 12px;
-    color: #fff;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     z-index: 9999;
     animation: slideIn 0.3s ease-out;
     backdrop-filter: blur(10px);
@@ -723,18 +706,16 @@
 
 .notificationToast.success {
     border-color: var(--neon-teal);
-    box-shadow: 0 0 20px rgba(15, 255, 198, 0.2);
     color: var(--neon-teal);
 }
 
 .notificationToast.error {
     border-color: var(--neon-pink);
-    box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
     color: var(--neon-pink);
 }
 
 .notificationToast span {
-    color: #eee;
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: 500;
 }
@@ -750,21 +731,21 @@
     }
 }
 
-/* --- CONFIRMATION MODAL --- */
+/* Confirm Modal */
 .confirmModalContent {
     width: 90%;
     max-width: 400px;
-    background: #0b0f2a;
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--shadow-card);
     text-align: center;
 }
 
 .confirmTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 12px 0;
     font-size: 1.2rem;
 }
@@ -780,22 +761,6 @@
     display: flex;
     justify-content: center;
     gap: 16px;
-}
-
-.cancelButton {
-    /* Fixed class name to match usage in JSX */
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ccc;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-.cancelButton:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
 }
 
 .deleteConfirmBtn {
@@ -814,8 +779,6 @@
     transform: translateY(-1px);
 }
 
-/* ... existing styles ... */
-
 @media (max-width: 768px) {
     .notificationToast {
         bottom: 80px;
@@ -826,15 +789,23 @@
     }
 }
 
-/* --- Mobile Media Query for Modal Tweak --- */
 @media (max-width: 576px) {
     .commentModalContent {
-        height: 80dvh; /* Slightly shorter on mobile to avoid bottom nav overlay */
+        height: 80dvh;
     }
     .postCommentContainer {
         padding: 12px 16px;
     }
     .commentInputWrapper input {
-        font-size: 16px; /* Prevents iOS zoom on focus */
+        font-size: 16px;
+    }
+    .reactionPopup {
+        bottom: 140%;
+        padding: 6px 10px;
+        gap: 6px;
+        border-radius: 30px;
+    }
+    .reactionBtn {
+        font-size: 1.4rem;
     }
 }

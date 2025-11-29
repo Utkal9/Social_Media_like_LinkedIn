@@ -143,7 +143,6 @@ const CodeIcon = () => (
     </svg>
 );
 
-// --- Helper: Video Detection ---
 const isVideo = (fileType, mediaUrl) => {
     if (fileType && fileType.startsWith("video/")) return true;
     if (mediaUrl) {
@@ -153,7 +152,6 @@ const isVideo = (fileType, mediaUrl) => {
     return false;
 };
 
-// --- Helper: Truncated Text ---
 const TruncatedText = ({ content, postId }) => {
     const router = useRouter();
     const maxLength = 60;
@@ -186,6 +184,7 @@ export default function ViewProfilePage({ userProfile }) {
     const [userPosts, setUserPosts] = useState([]);
     const [connectStatus, setConnectStatus] = useState("Connect");
     const [showConnectionsModal, setShowConnectionsModal] = useState(false);
+    // --- NEW: Image Modal State ---
     const [showImageModal, setShowImageModal] = useState(false);
 
     const isOwnProfile =
@@ -281,21 +280,16 @@ export default function ViewProfilePage({ userProfile }) {
         router.push(`/messaging?chatWith=${localProfile.userId.username}`);
     };
 
-    // --- UPDATED VIDEO CALL LOGIC ---
     const handleStartVideoCall = () => {
         const currentUser = authState.user?.userId;
         const targetUserId = localProfile.userId._id;
-
         if (!currentUser || !targetUserId || !socket) return;
 
         const roomId = [currentUser._id, targetUserId].sort().join("-");
-
-        // --- FIX: Use router.push + Return URL ---
         const currentPath = router.asPath;
         router.push(
             `/meet/${roomId}?returnTo=${encodeURIComponent(currentPath)}`
         );
-
         const roomUrl = `${window.location.origin}/meet/${roomId}`;
         socket.emit("start-call", {
             fromUser: currentUser,
@@ -311,7 +305,30 @@ export default function ViewProfilePage({ userProfile }) {
 
     return (
         <div className={styles.profilePage}>
-            {/* --- Header Card --- */}
+            {/* --- Image Modal --- */}
+            {showImageModal && (
+                <div
+                    className={styles.imageModalOverlay}
+                    onClick={() => setShowImageModal(false)}
+                >
+                    <div
+                        className={styles.imageModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={localProfile.userId.profilePicture}
+                            alt="Profile Large"
+                        />
+                        <button
+                            className={styles.closeImageBtn}
+                            onClick={() => setShowImageModal(false)}
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className={styles.headerCard}>
                 <div
                     className={styles.coverImage}
@@ -321,7 +338,6 @@ export default function ViewProfilePage({ userProfile }) {
                         }")`,
                     }}
                 ></div>
-
                 <div className={styles.headerContent}>
                     <div
                         className={styles.avatarContainer}
@@ -347,10 +363,8 @@ export default function ViewProfilePage({ userProfile }) {
                                     {localProfile.currentPost || "No Headline"}
                                 </p>
                             </div>
-
                             {!isOwnProfile && (
                                 <div className={styles.headerActions}>
-                                    {/* Icon Group (Message + Video) */}
                                     <div className={styles.iconGroup}>
                                         <button
                                             onClick={handleMessage}
@@ -369,8 +383,6 @@ export default function ViewProfilePage({ userProfile }) {
                                             </button>
                                         )}
                                     </div>
-
-                                    {/* Main Connection Button */}
                                     <button
                                         onClick={handleConnect}
                                         className={`${styles.primaryBtn} ${
@@ -459,7 +471,6 @@ export default function ViewProfilePage({ userProfile }) {
             </div>
 
             <div className={styles.gridLayout}>
-                {/* --- Left Column: Main Info --- */}
                 <div className={styles.mainColumn}>
                     {/* Experience */}
                     <div className={styles.dataCard}>
@@ -548,7 +559,7 @@ export default function ViewProfilePage({ userProfile }) {
                         </div>
                     </div>
 
-                    {/* Certificates & Achievements */}
+                    {/* Certs & Achievements */}
                     <div className={styles.splitRow}>
                         <div className={styles.dataCard}>
                             <h4 className={styles.cardTitle}>Certificates</h4>
@@ -601,7 +612,6 @@ export default function ViewProfilePage({ userProfile }) {
                     </div>
                 </div>
 
-                {/* --- Right Column: Skills + Recent Activity (Sidebar) --- */}
                 <div className={styles.sideColumn}>
                     <div className={styles.dataCard}>
                         <h4 className={styles.cardTitle}>Tech Stack</h4>
@@ -647,7 +657,6 @@ export default function ViewProfilePage({ userProfile }) {
                         </div>
                     )}
 
-                    {/* Recent Activity (Moved to Side Column) */}
                     <div className={styles.dataCard}>
                         <h4 className={styles.cardTitle}>Recent Activity</h4>
                         <div className={styles.activityGrid}>
@@ -720,7 +729,6 @@ export default function ViewProfilePage({ userProfile }) {
                 </div>
             </div>
 
-            {/* --- Connections Modal --- */}
             {showConnectionsModal && (
                 <div
                     className={styles.modalOverlay}
@@ -782,30 +790,6 @@ export default function ViewProfilePage({ userProfile }) {
                                 </p>
                             )}
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* --- NEW: Image Modal (Lightbox) --- */}
-            {showImageModal && (
-                <div
-                    className={styles.imageModalOverlay}
-                    onClick={() => setShowImageModal(false)}
-                >
-                    <div
-                        className={styles.imageModalContent}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <img
-                            src={localProfile.userId.profilePicture}
-                            alt="Profile Large"
-                        />
-                        <button
-                            className={styles.closeImageBtn}
-                            onClick={() => setShowImageModal(false)}
-                        >
-                            <CloseIcon />
-                        </button>
                     </div>
                 </div>
             )}

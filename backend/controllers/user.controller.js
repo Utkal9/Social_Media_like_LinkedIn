@@ -2,11 +2,10 @@ import User from "../models/user.model.js";
 import Profile from "../models/profile.model.js";
 import Post from "../models/posts.model.js";
 import Comment from "../models/comments.model.js";
-import Message from "../models/message.model.js"; // Required for account deletion cleanup
+import Message from "../models/message.model.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import ConnectionRequest from "../models/connections.model.js";
-import request from "request";
 import { v2 as cloudinary } from "cloudinary";
 import {
     Document,
@@ -23,9 +22,9 @@ import {
     TabStopType,
     ExternalHyperlink,
 } from "docx";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import axios from "axios";
+import { emailTemplates } from "../config/emailTemplates.js"; // Ensure this file exists
 
 dotenv.config();
 
@@ -42,7 +41,6 @@ const sendEmail = async (options) => {
     }
 
     try {
-        console.log(`📧 Sending email to: ${options.email}`);
         await axios.post(
             "https://api.brevo.com/v3/smtp/email",
             {
@@ -60,7 +58,7 @@ const sendEmail = async (options) => {
                 },
             }
         );
-        console.log("✅ Email sent successfully.");
+        console.log(`✅ Email sent to ${options.email}`);
     } catch (error) {
         console.error("❌ Email Error:", error.response?.data || error.message);
         throw new Error("Failed to send email.");
@@ -150,7 +148,6 @@ const createSectionHeader = (title) => {
 
 // ================= AUTH CONTROLLERS ================= //
 
-// --- Register ---
 export const register = async (req, res) => {
     try {
         const { name, email, password, username } = req.body;
@@ -162,8 +159,6 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Generate Verification Token
         const verificationToken = crypto.randomBytes(20).toString("hex");
 
         const newUser = new User({
@@ -171,7 +166,7 @@ export const register = async (req, res) => {
             email,
             password: hashedPassword,
             username,
-            active: false, // Force false for new manual signups
+            active: false,
             verificationToken: verificationToken,
         });
 
@@ -179,58 +174,26 @@ export const register = async (req, res) => {
         const profile = new Profile({ userId: newUser._id });
         await profile.save();
 
-        // Send Verification Email
+        // --- Send Verification Email (Using Template) ---
         const backendUrl = process.env.BACKEND_URL || "http://localhost:9090";
         const verifyUrl = `${backendUrl}/verify/${verificationToken}`;
 
-        const htmlMessage = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body { font-family: 'Arial', sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-                    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-                    .header { background-color: #020410; padding: 30px; text-align: center; border-bottom: 3px solid #8b5cf6; }
-                    .logo { font-size: 24px; font-weight: bold; color: #ffffff; letter-spacing: 2px; }
-                    .logo span { color: #0fffc6; }
-                    .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
-                    .btn-wrapper { text-align: center; margin: 30px 0; }
-                    .btn { background-color: #8b5cf6; color: #ffffff !important; padding: 14px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; }
-                    .footer { background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #999; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <div class="logo"><span>Link</span>Ups</div>
-                    </div>
-                    <div class="content">
-                        <h3>Initialize Your Protocol</h3>
-                        <p>Hello <strong>${newUser.name}</strong>,</p>
-                        <p>Welcome to LinkUps. Please verify your identity to activate your node.</p>
-                        <div class="btn-wrapper">
-                            <a href="${verifyUrl}" class="btn">Verify Identity</a>
-                        </div>
-                        <p style="font-size: 12px; color: #888;">Or copy: ${verifyUrl}</p>
-                    </div>
-                    <div class="footer">&copy; ${new Date().getFullYear()} LinkUps Inc.</div>
-                </div>
-            </body>
-            </html>
-        `;
+        const emailContent = emailTemplates.verifyEmail(
+            verifyUrl,
+            newUser.name
+        );
 
         try {
             await sendEmail({
                 email: newUser.email,
-                subject: "Activate your LinkUps Node",
-                message: `Verify email: ${verifyUrl}`,
-                html: htmlMessage,
+                subject: emailContent.subject,
+                html: emailContent.html,
+                message: emailContent.text,
             });
             return res.json({
                 message: "Registration successful! Please check your email.",
             });
         } catch (emailError) {
-            // Rollback on email failure
             await User.deleteOne({ _id: newUser._id });
             await Profile.deleteOne({ userId: newUser._id });
             return res
@@ -242,7 +205,6 @@ export const register = async (req, res) => {
     }
 };
 
-// --- Verify Email ---
 export const verifyEmail = async (req, res) => {
     try {
         const { token } = req.params;
@@ -258,14 +220,29 @@ export const verifyEmail = async (req, res) => {
         user.verificationToken = undefined;
         await user.save();
 
+        // --- Send Welcome Email (Using Template) ---
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const dashboardUrl = `${frontendUrl}/login`;
+
+        const emailContent = emailTemplates.welcomeEmail(
+            user.name,
+            dashboardUrl
+        );
+
+        // Send in background
+        sendEmail({
+            email: user.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            message: emailContent.text,
+        }).catch((err) => console.error("Welcome email error:", err.message));
+
         return res.redirect(`${frontendUrl}/login?verified=true`);
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
-// --- Login ---
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -276,7 +253,6 @@ export const login = async (req, res) => {
         if (!user)
             return res.status(404).json({ message: "User does not exist" });
 
-        // Check if verified
         if (user.active === false) {
             return res
                 .status(403)
@@ -318,20 +294,19 @@ export const forgotPassword = async (req, res) => {
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
         const resetUrl = `${frontendUrl}/reset_password/${resetToken}`;
 
-        const htmlMessage = `
-            <div>
-                <h2>LinkUps Password Reset</h2>
-                <p>Click below to reset your password:</p>
-                <a href="${resetUrl}">Reset Password</a>
-            </div>
-        `;
+        // --- Use Template ---
+        const emailContent = emailTemplates.passwordReset(
+            resetUrl,
+            resetToken,
+            user.name
+        );
 
         try {
             await sendEmail({
                 email: user.email,
-                subject: "LinkUps Password Reset",
-                message: `Reset Link: ${resetUrl}`,
-                html: htmlMessage,
+                subject: emailContent.subject,
+                html: emailContent.html,
+                message: emailContent.text,
             });
             res.status(200).json({ success: true, message: "Email sent" });
         } catch (error) {
@@ -367,6 +342,20 @@ export const resetPassword = async (req, res) => {
             user.resetPasswordToken = undefined;
             user.resetPasswordExpires = undefined;
             await user.save();
+
+            // --- Send Confirmation Email ---
+            const emailContent = emailTemplates.passwordResetConfirmation(
+                user.name
+            );
+            sendEmail({
+                email: user.email,
+                subject: emailContent.subject,
+                html: emailContent.html,
+                message: emailContent.text,
+            }).catch((e) =>
+                console.error("Confirmation email error:", e.message)
+            );
+
             return res
                 .status(200)
                 .json({
@@ -381,9 +370,8 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-// ================= ACCOUNT DELETION CONTROLLERS ================= //
+// ================= ACCOUNT DELETION ================= //
 
-// --- Request Deletion ---
 export const requestAccountDeletion = async (req, res) => {
     try {
         const { token } = req.body;
@@ -402,16 +390,15 @@ export const requestAccountDeletion = async (req, res) => {
         const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
         const deleteUrl = `${frontendUrl}/confirm_delete/${deleteToken}`;
 
-        // Console log for local dev in case email fails
-        console.log(`🚨 DELETE REQUEST: ${deleteUrl}`);
-
+        // Inline styled template for deletion (Specific critical action)
         const htmlMessage = `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-                <h2 style="color: #ff4d7d;">⚠ Delete Account Request</h2>
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                <h2 style="color: #ff4d7d;">⚠ Confirm Account Deletion</h2>
                 <p>Hello <strong>${user.name}</strong>,</p>
-                <p>We received a request to permanently delete your LinkUps account.</p>
-                <a href="${deleteUrl}" style="background-color: #ff4d7d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Confirm Deletion</a>
-                <p style="margin-top: 20px; font-size: 12px; color: #999;">Or copy: ${deleteUrl}</p>
+                <p>We received a request to <strong>permanently delete</strong> your LinkUps account.</p>
+                <p>If you are sure, click the button below. This action cannot be undone.</p>
+                <a href="${deleteUrl}" style="background-color: #ff4d7d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin: 20px 0;">Confirm Deletion</a>
+                <p style="font-size: 12px; color: #999;">If you did not request this, change your password immediately.</p>
             </div>
         `;
 
@@ -438,7 +425,6 @@ export const requestAccountDeletion = async (req, res) => {
     }
 };
 
-// --- Confirm Deletion ---
 export const confirmAccountDeletion = async (req, res) => {
     try {
         const token = req.params.token;

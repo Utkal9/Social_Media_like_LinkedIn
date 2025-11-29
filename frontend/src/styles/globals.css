@@ -1,18 +1,19 @@
 /* frontend/src/styles/globals.css */
+
 :root {
-    /* --- HoloStream Palette --- */
-    --holo-bg: #020410; /* Deep Space Black */
-    --holo-panel: #0b0f2a; /* Midnight Blue */
-    --holo-glass: rgba(255, 255, 255, 0.03); /* Ultra-thin Glass */
-    --holo-border: rgba(139, 92, 246, 0.4); /* Neon Violet Border */
+    /* --- DEFAULT (DARK / HOLO MODE) --- */
+    --holo-bg: #020410;
+    --holo-panel: #0b0f2a;
+    --holo-glass: rgba(255, 255, 255, 0.03);
+    --holo-border: rgba(139, 92, 246, 0.4);
 
-    /* Neon Accents */
-    --neon-violet: #8b5cf6;
-    --neon-teal: #0fffc6;
-    --neon-blue: #3b82f6;
-    --neon-pink: #ec4899;
+    /* Accents */
+    --neon-violet: #8b5cf6; /* Primary Action Color */
+    --neon-teal: #0fffc6; /* Secondary/Highlight Color */
+    --neon-blue: #3b82f6; /* Links/Info */
+    --neon-pink: #ec4899; /* Danger/Warnings */
 
-    /* Text Colors */
+    /* Text */
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
 
@@ -20,22 +21,51 @@
     --glow-primary: 0 0 20px rgba(139, 92, 246, 0.5);
     --glow-teal: 0 0 15px rgba(15, 255, 198, 0.4);
     --glass-blur: blur(12px);
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* --- LIGHT MODE (ORANGE & WHITE / LPU STYLE) --- */
+[data-theme="light"] {
+    /* Backgrounds: Clean White & Light Grey */
+    --holo-bg: #ffffff;
+    --holo-panel: #f3f4f6; /* Light grey for cards/sidebars */
+    --holo-glass: rgba(0, 0, 0, 0.02); /* Very subtle dark tint for depth */
+    --holo-border: #e5e7eb; /* Light Grey Border */
+
+    /* Accents: Orange Brand Identity */
+    --neon-violet: #e85d04; /* Primary Orange (Replacing Violet) */
+    --neon-teal: #ea580c; /* Darker Orange (Replacing Teal) */
+    --neon-blue: #2563eb; /* Standard Blue for links */
+    --neon-pink: #dc2626; /* Standard Red for errors */
+
+    /* Text: High Contrast Dark */
+    --text-primary: #111827; /* Nearly Black */
+    --text-secondary: #4b5563; /* Dark Grey */
+
+    /* Effects: Flat Design (No Glows, just Shadows) */
+    --glow-primary: none;
+    --glow-teal: none;
+    --glass-blur: none; /* Remove glass effect for flat design */
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition: background-color 0.3s ease, border-color 0.3s ease,
+        color 0.3s ease; /* Smooth Theme Transition */
 }
 
 body {
     background-color: var(--holo-bg);
     color: var(--text-primary);
-    font-family: "Poppins", sans-serif; /* Readable Body Font */
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    font-family: "Poppins", sans-serif;
+    overflow-x: hidden;
 }
 
-/* Custom Scrollbar for Chrome/Edge/Safari */
+/* Custom Scrollbar Adaptation */
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -43,10 +73,10 @@ body {
     background: var(--holo-bg);
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--holo-panel);
+    background: var(--holo-panel); /* Will look grey in light mode */
     border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--holo-border);
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--neon-violet);
+    background: var(--neon-violet); /* Will be Orange in light mode */
 }

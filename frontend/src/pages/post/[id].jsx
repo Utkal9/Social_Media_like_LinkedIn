@@ -1,4 +1,3 @@
-// frontend/src/pages/post/[id].jsx
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import DashboardLayout from "@/layout/DashboardLayout";
@@ -7,14 +6,12 @@ import clientServer from "@/config";
 import { useDispatch, useSelector } from "react-redux";
 import {
     toggleLike,
-    getAllComments,
     postComment,
     deletePost,
-    updatePost,
     toggleCommentLike,
 } from "@/config/redux/action/postAction";
 import { useSocket } from "@/context/SocketContext";
-import styles from "../dashboard/index.module.css"; // Reuse Dashboard Styles for consistency
+import styles from "../dashboard/index.module.css"; // Reuse existing theme-aware styles
 import Head from "next/head";
 
 // --- HELPERS ---
@@ -60,19 +57,11 @@ const getReactionColor = (type) => {
         Insightful: "#F1C40F",
         Funny: "#E67E22",
     };
-    return map[type] || "#0fffc6";
+    // In light mode, default teal works fine. In dark, it's bright.
+    return map[type] || "var(--neon-teal)";
 };
 
 // --- ICONS ---
-const MoreHorizIcon = () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" width="24">
-        <path
-            fillRule="evenodd"
-            d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z"
-            clipRule="evenodd"
-        />
-    </svg>
-);
 const LikeIconOutline = () => (
     <svg
         viewBox="0 0 24 24"
@@ -157,16 +146,12 @@ export default function PostPage({ postData }) {
     const authState = useSelector((state) => state.auth);
     const { onlineStatuses } = useSocket() || {};
 
-    // Local state to manage optimistic updates independently from Redux list
     const [localPost, setLocalPost] = useState(postData);
     const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState("");
-
-    // Reaction State
     const [activeReactionId, setActiveReactionId] = useState(null);
     const reactionTimeoutRef = useRef(null);
 
-    // Fetch latest comments on mount
     useEffect(() => {
         if (localPost?._id) {
             const fetchComments = async () => {
@@ -187,7 +172,6 @@ export default function PostPage({ postData }) {
         return onlineStatuses && onlineStatuses[uid]?.isOnline;
     };
 
-    // --- Reaction Logic ---
     const handleReaction = async (type) => {
         const token = localStorage.getItem("token");
         const response = await dispatch(
@@ -229,7 +213,6 @@ export default function PostPage({ postData }) {
         );
     };
 
-    // --- Comment Logic ---
     const handlePostComment = async () => {
         if (!commentText.trim()) return;
         const token = localStorage.getItem("token");
@@ -237,7 +220,6 @@ export default function PostPage({ postData }) {
             postComment({ post_id: localPost._id, body: commentText })
         );
         if (response.meta.requestStatus === "fulfilled") {
-            // Refresh comments
             const res = await clientServer.get("/get_comments", {
                 params: { post_id: localPost._id },
             });
@@ -255,7 +237,6 @@ export default function PostPage({ postData }) {
                 post_id: localPost._id,
             })
         );
-        // Refresh comments to show updated like
         const res = await clientServer.get("/get_comments", {
             params: { post_id: localPost._id },
         });
@@ -284,20 +265,20 @@ export default function PostPage({ postData }) {
     return (
         <div
             className={styles.feedContainer}
-            style={{ maxWidth: "800px", margin: "0 auto" }}
+            style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "20px" }}
         >
             <Head>
                 <title>{`${localPost.userId.name}'s Post | LinkUps`}</title>
             </Head>
 
-            {/* Back Button */}
+            {/* Back Button - Updated to use theme variables */}
             <button
                 onClick={() => router.back()}
                 style={{
                     marginBottom: "1.5rem",
                     cursor: "pointer",
                     border: "1px solid var(--neon-teal)",
-                    background: "rgba(15, 255, 198, 0.1)",
+                    background: "var(--holo-glass)", // Dynamic background
                     color: "var(--neon-teal)",
                     fontWeight: "600",
                     display: "inline-flex",
@@ -312,7 +293,7 @@ export default function PostPage({ postData }) {
                 <BackIcon /> Return
             </button>
 
-            {/* --- Main Post Card --- */}
+            {/* --- Main Post Card (Uses Dashboard Styles) --- */}
             <div className={styles.postCard}>
                 <div className={styles.postCardHeader}>
                     <div
@@ -380,19 +361,13 @@ export default function PostPage({ postData }) {
                 </div>
 
                 <div className={styles.postCardStats}>
-                    <span
-                        style={{
-                            color: "var(--text-secondary)",
-                            fontSize: "0.9rem",
-                        }}
-                    >
+                    <span>
                         {localPost.reactions ? localPost.reactions.length : 0}{" "}
                         Reactions • {comments.length} Comments
                     </span>
                 </div>
 
                 <div className={styles.postCardActions}>
-                    {/* Reaction Dock */}
                     <div
                         className={styles.reactionWrapper}
                         onMouseEnter={handleMouseEnter}
@@ -482,19 +457,14 @@ export default function PostPage({ postData }) {
                 </div>
             </div>
 
-            {/* --- Comments Section (Inline) --- */}
+            {/* --- Comments Section (Updated for Theme) --- */}
             <div
-                style={{
-                    marginTop: "20px",
-                    background: "rgba(11, 15, 42, 0.4)",
-                    borderRadius: "16px",
-                    padding: "20px",
-                    border: "1px solid var(--holo-border)",
-                }}
+                className={styles.postCommentContainer}
+                style={{ marginTop: "20px", borderRadius: "16px" }}
             >
                 <h3
                     style={{
-                        color: "#fff",
+                        color: "var(--text-primary)",
                         fontFamily: "Orbitron",
                         fontSize: "1.1rem",
                         marginBottom: "15px",
@@ -503,7 +473,6 @@ export default function PostPage({ postData }) {
                     Signal Log ({comments.length})
                 </h3>
 
-                {/* Comment Input */}
                 <div
                     className={styles.commentInputWrapper}
                     style={{ marginBottom: "20px" }}
@@ -521,7 +490,6 @@ export default function PostPage({ postData }) {
                     <button onClick={handlePostComment}>Transmit</button>
                 </div>
 
-                {/* Comments List */}
                 <div
                     className={styles.allCommentsContainer}
                     style={{ maxHeight: "none", overflow: "visible" }}
@@ -560,7 +528,7 @@ export default function PostPage({ postData }) {
                                                 authState.user?.userId?._id
                                             )
                                                 ? "var(--neon-teal)"
-                                                : "#888",
+                                                : "var(--text-secondary)",
                                         }}
                                     >
                                         Like{" "}
@@ -573,11 +541,8 @@ export default function PostPage({ postData }) {
                     ))}
                     {comments.length === 0 && (
                         <p
-                            style={{
-                                color: "#666",
-                                fontStyle: "italic",
-                                textAlign: "center",
-                            }}
+                            className={styles.emptyText}
+                            style={{ textAlign: "center" }}
                         >
                             No signals detected yet.
                         </p>

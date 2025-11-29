@@ -1,3 +1,4 @@
+// frontend/src/pages/profile/index.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import styles from "./index.module.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +16,13 @@ import { useRouter } from "next/router";
 const DEFAULT_BG =
     "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80";
 
+const ensureProtocol = (url) => {
+    if (!url) return "#";
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        return `https://${url}`;
+    }
+    return url;
+};
 // --- Holo Icons ---
 const EditIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="18">
@@ -150,10 +158,9 @@ const calculateProfileCompletion = (profile) => {
     if (!profile || !profile.userId) return { percentage: 0, missing: [] };
 
     let score = 0;
-    const totalPoints = 20; // Total weighted points
+    const totalPoints = 20;
     const missing = [];
 
-    // 1. Basic Contact Details (5 points)
     if (profile.userId.name) score++;
     else missing.push("Full Name");
     if (profile.userId.email) score++;
@@ -165,7 +172,6 @@ const calculateProfileCompletion = (profile) => {
     if (profile.leetcode) score++;
     else missing.push("LeetCode Profile Link");
 
-    // 2. Resume Specific Skills (5 points) - One in each field
     if (profile.skillLanguages) score++;
     else missing.push("Skills: Languages");
     if (profile.skillCloudDevOps) score++;
@@ -177,9 +183,7 @@ const calculateProfileCompletion = (profile) => {
     if (profile.skillSoft) score++;
     else missing.push("Skills: Soft Skills");
 
-    // 3. Projects (Minimum 2) (10 points total)
     const projects = profile.projects || [];
-
     if (projects.length >= 2) {
         score += 2;
     } else {
@@ -235,11 +239,12 @@ export default function Profilepage() {
     const [modalInput, setModalInput] = useState({});
 
     // --- Notifications & Confirmation State ---
-    const [notification, setNotification] = useState(null); // { message, type: 'success' | 'error' }
-    const [deleteTarget, setDeleteTarget] = useState(null); // { type, index }
-
-    // --- NEW: Custom Account Deletion Modal State ---
+    const [notification, setNotification] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+    // --- NEW: Image Preview Modal State ---
+    const [showImageModal, setShowImageModal] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -279,7 +284,6 @@ export default function Profilepage() {
         return [...sentAccepted, ...receivedAccepted].filter((u) => u);
     }, [authState.connections, authState.connectionRequest]);
 
-    // --- Helper to Show Notification ---
     const showToast = (msg, type = "success") => {
         setNotification({ message: msg, type });
         setTimeout(() => setNotification(null), 3000);
@@ -372,9 +376,7 @@ export default function Profilepage() {
     };
 
     const handleDownloadResume = async () => {
-        if (completionStats.percentage < 90) {
-            return;
-        }
+        if (completionStats.percentage < 90) return;
         if (!userProfile?.userId?._id) return;
         try {
             const response = await clientServer.get(
@@ -430,7 +432,6 @@ export default function Profilepage() {
         closeModal();
     };
 
-    // --- Item Deletion Logic ---
     const initiateDelete = (type, index) => {
         setDeleteTarget({ type, index });
     };
@@ -454,7 +455,6 @@ export default function Profilepage() {
         setDeleteTarget(null);
     };
 
-    // --- NEW: Custom Account Deletion Logic ---
     const triggerDeleteAccountModal = () => {
         setShowDeleteModal(true);
     };
@@ -464,7 +464,6 @@ export default function Profilepage() {
             const token = localStorage.getItem("token");
             await clientServer.post("/request_account_deletion", { token });
             setShowDeleteModal(false);
-            // Success notification
             showToast("Verification email sent to your inbox", "success");
         } catch (error) {
             setShowDeleteModal(false);
@@ -530,7 +529,7 @@ export default function Profilepage() {
                 </div>
             )}
 
-            {/* --- NEW: Account Deletion Modal (Custom) --- */}
+            {/* --- Account Deletion Modal --- */}
             {showDeleteModal && (
                 <div className={styles.modalOverlay} style={{ zIndex: 4000 }}>
                     <div
@@ -557,8 +556,7 @@ export default function Profilepage() {
                         </h3>
                         <p className={styles.confirmText}>
                             You are about to request permanent deletion of your
-                            account. All your data (posts, connections,
-                            messages) will be lost forever.
+                            account. All your data will be lost forever.
                         </p>
                         <p
                             className={styles.confirmText}
@@ -585,6 +583,30 @@ export default function Profilepage() {
                                 Send Verification Link
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Image Preview Modal (Lightbox) --- */}
+            {showImageModal && (
+                <div
+                    className={styles.imageModalOverlay}
+                    onClick={() => setShowImageModal(false)}
+                >
+                    <div
+                        className={styles.imageModalContent}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={userProfile.userId.profilePicture}
+                            alt="Profile Large"
+                        />
+                        <button
+                            className={styles.closeImageBtn}
+                            onClick={() => setShowImageModal(false)}
+                        >
+                            <CloseIcon />
+                        </button>
                     </div>
                 </div>
             )}
@@ -621,7 +643,7 @@ export default function Profilepage() {
                         </button>
                         <div className={styles.completionTooltip}>
                             <h5>
-                                {completionStats.percentage}% Ready
+                                {completionStats.percentage}% Ready{" "}
                                 <span
                                     style={{
                                         color:
@@ -651,8 +673,7 @@ export default function Profilepage() {
                                         margin: 0,
                                     }}
                                 >
-                                    Profile complete! You can now generate your
-                                    Holo-Resume.
+                                    Profile complete!
                                 </p>
                             )}
                         </div>
@@ -679,7 +700,13 @@ export default function Profilepage() {
                 </div>
 
                 <div className={styles.headerContent}>
-                    <div className={styles.avatarContainer}>
+                    {/* --- UPDATED: Avatar Click Logic --- */}
+                    <div
+                        className={styles.avatarContainer}
+                        onClick={() => !isEditing && setShowImageModal(true)}
+                        style={{ cursor: !isEditing ? "pointer" : "default" }}
+                        title={!isEditing ? "View Profile Picture" : ""}
+                    >
                         <img
                             src={userProfile.userId.profilePicture}
                             alt="Avatar"
@@ -690,6 +717,7 @@ export default function Profilepage() {
                                 <label
                                     htmlFor="pfpUpload"
                                     className={styles.uploadBtnAvatar}
+                                    onClick={(e) => e.stopPropagation()}
                                 >
                                     <EditIcon />
                                 </label>
@@ -740,7 +768,6 @@ export default function Profilepage() {
                                     </p>
                                 )}
                             </div>
-
                             <div className={styles.headerActions}>
                                 <button
                                     onClick={toggleEditMode}
@@ -817,7 +844,9 @@ export default function Profilepage() {
                                     )}
                                     {userProfile.linkedin && (
                                         <a
-                                            href={userProfile.linkedin}
+                                            href={ensureProtocol(
+                                                userProfile.linkedin
+                                            )}
                                             target="_blank"
                                             className={styles.contactPill}
                                         >
@@ -826,7 +855,9 @@ export default function Profilepage() {
                                     )}
                                     {userProfile.github && (
                                         <a
-                                            href={userProfile.github}
+                                            href={ensureProtocol(
+                                                userProfile.github
+                                            )}
                                             target="_blank"
                                             className={styles.contactPill}
                                         >
@@ -835,7 +866,9 @@ export default function Profilepage() {
                                     )}
                                     {userProfile.leetcode && (
                                         <a
-                                            href={userProfile.leetcode}
+                                            href={ensureProtocol(
+                                                userProfile.leetcode
+                                            )}
                                             target="_blank"
                                             className={styles.contactPill}
                                         >
@@ -1143,7 +1176,8 @@ export default function Profilepage() {
                             ))}
                         </div>
                     </div>
-                    {/* --- DANGER ZONE --- */}
+
+                    {/* DANGER ZONE */}
                     {isEditing && (
                         <div
                             className={styles.dataCard}
@@ -1175,7 +1209,6 @@ export default function Profilepage() {
                                     from the network. This action is
                                     irreversible.
                                 </p>
-                                {/* UPDATED: Opens Custom Modal */}
                                 <button
                                     onClick={triggerDeleteAccountModal}
                                     style={{
@@ -1197,9 +1230,8 @@ export default function Profilepage() {
                     )}
                 </div>
 
-                {/* --- RIGHT COLUMN: Skills + Activity --- */}
                 <div className={styles.sideColumn}>
-                    {/* Tech Stack */}
+                    {/* Skills */}
                     <div className={styles.dataCard}>
                         <div className={styles.cardTitle}>
                             Tech Stack (Resume)
@@ -1211,40 +1243,38 @@ export default function Profilepage() {
                                 "skillFrameworks",
                                 "skillTools",
                                 "skillSoft",
-                            ].map((field) => {
-                                const labels = {
-                                    skillLanguages: "Languages",
-                                    skillCloudDevOps: "Cloud/DevOps",
-                                    skillFrameworks: "Frameworks",
-                                    skillTools: "Tools",
-                                    skillSoft: "Soft Skills",
-                                };
-                                return (
-                                    <div
-                                        key={field}
-                                        className={styles.stackItem}
-                                    >
-                                        <label>{labels[field]}</label>
-                                        {isEditing ? (
-                                            <textarea
-                                                name={field}
-                                                className={styles.editTextarea}
-                                                value={userProfile[field] || ""}
-                                                onChange={handleProfileChange}
-                                                placeholder={`e.g. Item 1, Item 2...`}
-                                            />
-                                        ) : (
-                                            <p className={styles.viewStackText}>
-                                                {userProfile[field] || "—"}
-                                            </p>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                            ].map((field) => (
+                                <div key={field} className={styles.stackItem}>
+                                    <label>
+                                        {
+                                            {
+                                                skillLanguages: "Languages",
+                                                skillCloudDevOps:
+                                                    "Cloud/DevOps",
+                                                skillFrameworks: "Frameworks",
+                                                skillTools: "Tools",
+                                                skillSoft: "Soft Skills",
+                                            }[field]
+                                        }
+                                    </label>
+                                    {isEditing ? (
+                                        <textarea
+                                            name={field}
+                                            className={styles.editTextarea}
+                                            value={userProfile[field] || ""}
+                                            onChange={handleProfileChange}
+                                            placeholder="e.g. Item 1, Item 2..."
+                                        />
+                                    ) : (
+                                        <p className={styles.viewStackText}>
+                                            {userProfile[field] || "—"}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* General Skills */}
                     <div className={styles.dataCard}>
                         <div className={styles.cardTitle}>General Skills</div>
                         <div className={styles.skillsWrapper}>
@@ -1282,7 +1312,7 @@ export default function Profilepage() {
                         )}
                     </div>
 
-                    {/* Recent Activity (Sidebar) */}
+                    {/* Recent Activity */}
                     <div className={styles.dataCard}>
                         <div className={styles.cardHeaderRow}>
                             <div className={styles.cardTitle}>
@@ -1290,76 +1320,48 @@ export default function Profilepage() {
                             </div>
                         </div>
                         <div className={styles.activityGrid}>
-                            {userPosts.length > 0 ? (
-                                <>
-                                    {userPosts.slice(0, 4).map((post) => (
-                                        <div
-                                            key={post._id}
-                                            className={styles.activityCard}
-                                            onClick={() =>
-                                                router.push(`/post/${post._id}`)
-                                            }
-                                        >
-                                            {post.media ? (
-                                                <div
-                                                    className={
-                                                        styles.mediaPreview
-                                                    }
-                                                >
-                                                    {isVideo(
-                                                        post.fileType,
-                                                        post.media
-                                                    ) ? (
-                                                        <video
-                                                            src={post.media}
-                                                            className={
-                                                                styles.mediaImg
-                                                            }
-                                                            muted
-                                                        />
-                                                    ) : (
-                                                        <img
-                                                            src={post.media}
-                                                            alt="Post"
-                                                            className={
-                                                                styles.mediaImg
-                                                            }
-                                                        />
-                                                    )}
-                                                </div>
-                                            ) : null}
-                                            <div className={styles.textPreview}>
-                                                <TruncatedText
-                                                    content={post.body}
-                                                    postId={post._id}
+                            {userPosts.slice(0, 4).map((post) => (
+                                <div
+                                    key={post._id}
+                                    className={styles.activityCard}
+                                    onClick={() =>
+                                        router.push(`/post/${post._id}`)
+                                    }
+                                >
+                                    {post.media ? (
+                                        <div className={styles.mediaPreview}>
+                                            {isVideo(
+                                                post.fileType,
+                                                post.media
+                                            ) ? (
+                                                <video
+                                                    src={post.media}
+                                                    className={styles.mediaImg}
+                                                    muted
                                                 />
-                                            </div>
+                                            ) : (
+                                                <img
+                                                    src={post.media}
+                                                    alt="Post"
+                                                    className={styles.mediaImg}
+                                                />
+                                            )}
                                         </div>
-                                    ))}
-                                    {userPosts.length > 4 && (
-                                        <button
-                                            className={styles.viewAllBtn}
-                                            onClick={() =>
-                                                router.push(
-                                                    `/dashboard?username=${userProfile.userId.username}`
-                                                )
-                                            }
-                                        >
-                                            View All Activity
-                                        </button>
-                                    )}
-                                </>
-                            ) : (
-                                <p className={styles.emptyText}>
-                                    No recent activity.
-                                </p>
-                            )}
+                                    ) : null}
+                                    <div className={styles.textPreview}>
+                                        <TruncatedText
+                                            content={post.body}
+                                            postId={post._id}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* --- Connections List Modal --- */}
+            {/* --- Connections Modal --- */}
             {showConnectionsModal && (
                 <div
                     className={styles.modalOverlay}
@@ -1368,7 +1370,6 @@ export default function Profilepage() {
                     <div
                         className={styles.modalContent}
                         onClick={(e) => e.stopPropagation()}
-                        style={{ maxHeight: "70vh" }}
                     >
                         <div className={styles.modalHeader}>
                             <h3>Connections</h3>
@@ -1490,7 +1491,7 @@ export default function Profilepage() {
                                         name="years"
                                         value={modalInput.years || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Duration (e.g. 2022 - 2023)"
+                                        placeholder="Duration"
                                     />
                                     <textarea
                                         className={styles.modalTextarea}
@@ -1501,7 +1502,6 @@ export default function Profilepage() {
                                     />
                                 </>
                             )}
-                            {/* ... Other modal cases (project, edu, cert, achieve) ... */}
                             {modalMode.includes("project") && (
                                 <>
                                     <input
@@ -1509,14 +1509,14 @@ export default function Profilepage() {
                                         name="title"
                                         value={modalInput.title || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Project Title"
+                                        placeholder="Title"
                                     />
                                     <input
                                         className={styles.modalInput}
                                         name="link"
                                         value={modalInput.link || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Project Link"
+                                        placeholder="Link"
                                     />
                                     <input
                                         className={styles.modalInput}
@@ -1530,7 +1530,7 @@ export default function Profilepage() {
                                         name="description"
                                         value={modalInput.description || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="What did you build?"
+                                        placeholder="Details"
                                     />
                                 </>
                             )}
@@ -1562,7 +1562,7 @@ export default function Profilepage() {
                                         name="years"
                                         value={modalInput.years || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Graduation Year"
+                                        placeholder="Year"
                                     />
                                 </>
                             )}
@@ -1573,21 +1573,21 @@ export default function Profilepage() {
                                         name="name"
                                         value={modalInput.name || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Certificate Name"
+                                        placeholder="Name"
                                     />
                                     <input
                                         className={styles.modalInput}
                                         name="link"
                                         value={modalInput.link || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Credential URL"
+                                        placeholder="URL"
                                     />
                                     <input
                                         className={styles.modalInput}
                                         name="date"
                                         value={modalInput.date || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Date Issued"
+                                        placeholder="Date"
                                     />
                                 </>
                             )}
@@ -1612,7 +1612,7 @@ export default function Profilepage() {
                                         name="description"
                                         value={modalInput.description || ""}
                                         onChange={handleModalInputChange}
-                                        placeholder="Details"
+                                        placeholder="Description"
                                     />
                                 </>
                             )}

@@ -3,10 +3,9 @@ import "@/styles/globals.css";
 import { Provider } from "react-redux";
 import Head from "next/head";
 import { SocketProvider } from "@/context/SocketContext";
+import { ThemeProvider } from "@/context/ThemeContext"; // <--- IMPORT THIS
 
 export default function App({ Component, pageProps }) {
-    // Get a layout function from the page component, if it exists.
-    // Otherwise, just render the page.
     const getLayout = Component.getLayout || ((page) => page);
 
     return (
@@ -24,9 +23,12 @@ export default function App({ Component, pageProps }) {
                 />
             </Head>
             <Provider store={store}>
-                <SocketProvider>
-                    {getLayout(<Component {...pageProps} />)}
-                </SocketProvider>
+                {/* --- THEME PROVIDER MUST BE HERE --- */}
+                <ThemeProvider>
+                    <SocketProvider>
+                        {getLayout(<Component {...pageProps} />)}
+                    </SocketProvider>
+                </ThemeProvider>
             </Provider>
         </>
     );

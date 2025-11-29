@@ -1,15 +1,6 @@
 /* frontend/src/styles/videoComponent.module.css */
 
-:root {
-    --holo-bg: #020410;
-    --holo-panel: #0b0f2a;
-    --holo-border: rgba(139, 92, 246, 0.4);
-    --neon-teal: #0fffc6;
-    --neon-violet: #8b5cf6;
-    --neon-pink: #ff4d7d;
-    --text-primary: #e2e8f0;
-    --text-secondary: #94a3b8;
-}
+/* --- Note: Variables are inherited from globals.css --- */
 
 .meetVideoContainer {
     display: flex;
@@ -21,6 +12,7 @@
     overflow: hidden;
     position: relative;
     font-family: "Poppins", sans-serif;
+    transition: background-color 0.3s ease;
 }
 
 /* LOBBY */
@@ -30,7 +22,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(2, 4, 16, 0.95);
+    background: var(--holo-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -38,14 +30,14 @@
     padding: 20px;
 }
 .lobbyCard {
-    background: rgba(11, 15, 42, 0.9);
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 20px;
     padding: 30px;
     width: 100%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--shadow-card);
 }
 .title {
     font-family: "Orbitron", sans-serif;
@@ -57,7 +49,7 @@
     position: relative;
     width: 100%;
     aspect-ratio: 16/9;
-    background: #000;
+    background: #000; /* Video preview always black */
     border-radius: 12px;
     overflow: hidden;
     border: 2px solid var(--neon-violet);
@@ -92,11 +84,11 @@
 }
 .nameInput {
     width: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
     padding: 12px;
     border-radius: 8px;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 15px;
     outline: none;
     font-size: 1rem;
@@ -134,7 +126,7 @@
     height: 100%;
 }
 
-/* DESKTOP GRID */
+/* GRID */
 .videoGrid {
     flex: 1;
     display: flex;
@@ -153,11 +145,10 @@
     position: relative;
     border-radius: 12px;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid var(--holo-border);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
 }
-/* Mirror local only */
 .videoGrid > .videoTile:first-child .videoElement {
     transform: scaleX(-1);
 }
@@ -181,7 +172,7 @@
 /* CONTROLS */
 .controlsBar {
     height: 80px;
-    background: rgba(11, 15, 42, 0.95);
+    background: var(--holo-panel);
     border-top: 1px solid var(--holo-border);
     display: flex;
     justify-content: center;
@@ -191,12 +182,12 @@
     flex-shrink: 0;
 }
 .controlBtn {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
     border: none;
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    color: #fff;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -205,12 +196,13 @@
     transition: all 0.2s;
 }
 .controlBtn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--holo-border);
     transform: scale(1.1);
 }
 .micOff,
 .videoOff {
     background: var(--neon-pink);
+    color: white;
 }
 .screenActive {
     background: var(--neon-teal);
@@ -249,7 +241,7 @@
 /* CHAT */
 .sidePanel {
     width: 350px;
-    background: rgba(2, 4, 16, 0.95);
+    background: var(--holo-panel);
     border-left: 1px solid var(--holo-border);
     display: flex;
     flex-direction: column;
@@ -257,7 +249,7 @@
 }
 .chatHeader {
     padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -270,7 +262,7 @@
 .closeChatBtn {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--text-primary);
     cursor: pointer;
 }
 .chattingArea {
@@ -283,7 +275,7 @@
 }
 .myMessage {
     align-self: flex-end;
-    background: linear-gradient(135deg, #4ea7ff, #8b5cf6);
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-violet));
     color: white;
     padding: 8px 12px;
     border-radius: 12px 12px 0 12px;
@@ -292,8 +284,8 @@
 }
 .otherMessage {
     align-self: flex-start;
-    background: rgba(255, 255, 255, 0.1);
-    color: #eee;
+    background: var(--holo-glass);
+    color: var(--text-primary);
     padding: 8px 12px;
     border-radius: 12px 12px 12px 0;
     max-width: 85%;
@@ -303,19 +295,19 @@
     font-size: 0.7rem;
     font-weight: bold;
     margin-bottom: 2px;
-    color: #0fffc6;
+    color: var(--neon-teal);
 }
 .chatInputArea {
     padding: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--holo-border);
     display: flex;
     gap: 10px;
 }
 .chatInput {
     flex: 1;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 10px;
     border-radius: 20px;
     outline: none;
@@ -327,11 +319,7 @@
     cursor: pointer;
 }
 
-/* =================================================================
-   MOBILE OPTIMIZATION (Dynamic Switching)
-   ================================================================= */
 @media (max-width: 768px) {
-    /* 1. DEFAULT: 1-on-1 (PiP Mode) */
     .videoGrid {
         display: block;
         width: 100%;
@@ -339,7 +327,6 @@
         position: relative;
         padding: 0;
     }
-
     .videoGrid:not(.groupGrid) > .videoTile:nth-child(2) {
         position: absolute;
         top: 0;
@@ -350,7 +337,6 @@
         border: none;
         border-radius: 0;
     }
-
     .videoGrid:not(.groupGrid) > .videoTile:first-child {
         position: absolute;
         bottom: 120px;
@@ -361,49 +347,13 @@
         border-radius: 12px;
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
         border: 2px solid var(--neon-teal);
-        aspect-ratio: auto;
     }
-
-    .videoGrid:not(.groupGrid) > .videoTile:first-child .userLabel {
-        display: none;
-    }
-
-    /* 2. GROUP CALL (>2 people) */
-    .groupGrid {
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: row;
-        align-content: flex-start;
-    }
-
     .groupGrid > .videoTile {
         position: relative !important;
         width: 50% !important;
         height: auto !important;
         aspect-ratio: 1/1 !important;
-        border: 1px solid #000;
-        bottom: auto !important;
-        right: auto !important;
-        z-index: auto !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
     }
-
-    .groupGrid > .videoTile:first-child .userLabel {
-        display: block !important;
-    }
-
-    /* Waiting state (Only me) */
-    .videoGrid > .videoTile:first-child:only-child {
-        width: 100% !important;
-        height: 100% !important;
-        top: 0;
-        left: 0;
-        border: none;
-        z-index: 1;
-    }
-
-    /* Controls */
     .controlsBar {
         position: absolute;
         bottom: 30px;
@@ -411,20 +361,9 @@
         transform: translateX(-50%);
         width: 90%;
         height: 70px;
-        background: rgba(15, 20, 40, 0.85);
+        background: var(--holo-panel);
         backdrop-filter: blur(12px);
         border-radius: 50px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        justify-content: space-evenly;
-        padding: 0 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-    .sidePanel {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 200;
+        border: 1px solid var(--holo-border);
     }
 }
