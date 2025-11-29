@@ -1,15 +1,15 @@
 /* frontend/src/pages/meet/index.module.css */
 
 .meetContainer {
-    min-height: 80dvh; /* Use dynamic viewport height */
+    min-height: 80dvh;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 40px 20px;
     position: relative;
-    overflow-x: hidden; /* FIX: Allow vertical scroll, prevent horizontal */
-    /* Remove overflow: hidden to let content grow */
+    overflow-x: hidden;
+    background-color: var(--holo-bg); /* Dynamic BG */
 }
 
 /* Background Effect */
@@ -85,9 +85,8 @@
 .title {
     font-family: "Orbitron", sans-serif;
     font-size: 2.5rem;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 12px 0;
-    text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
 }
 
 .highlight {
@@ -114,7 +113,7 @@
 
 .glassCard {
     flex: 1;
-    background: rgba(11, 15, 42, 0.6);
+    background: var(--holo-panel);
     backdrop-filter: blur(16px);
     border: 1px solid var(--holo-border);
     border-radius: 24px;
@@ -125,6 +124,7 @@
     align-items: center;
     transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
     min-width: 280px;
+    box-shadow: var(--shadow-card);
 }
 
 .glassCard:hover {
@@ -148,7 +148,7 @@
 .cardTitle {
     font-family: "Orbitron", sans-serif;
     font-size: 1.4rem;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0 0 8px 0;
 }
 
@@ -156,7 +156,7 @@
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin: 0 0 24px 0;
-    flex-grow: 1; /* Push button to bottom */
+    flex-grow: 1;
 }
 
 /* --- Buttons & Inputs --- */
@@ -176,13 +176,12 @@
     justify-content: center;
     gap: 10px;
     transition: all 0.2s;
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--glow-primary);
 }
 
 .primaryBtn:hover {
     background: #7c3aed;
     transform: scale(1.02);
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
 }
 
 .inputGroup {
@@ -193,11 +192,11 @@
 
 .inputField {
     flex: 1;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
     border-radius: 12px;
     padding: 12px 16px;
-    color: #fff;
+    color: var(--text-primary);
     outline: none;
     font-family: "Poppins", sans-serif;
     font-size: 1rem;
@@ -225,7 +224,7 @@
 .joinBtn:hover:not(:disabled) {
     background: var(--neon-teal);
     color: #000;
-    box-shadow: 0 0 15px var(--neon-teal);
+    box-shadow: var(--glow-teal);
 }
 
 .joinBtn:disabled {
@@ -234,7 +233,6 @@
     cursor: not-allowed;
 }
 
-/* Divider (OR) */
 .divider {
     display: flex;
     align-items: center;
@@ -243,37 +241,31 @@
 }
 
 .divider span {
-    background: rgba(255, 255, 255, 0.1);
-    color: #aaa;
+    background: var(--holo-glass);
+    color: var(--text-secondary);
     padding: 8px;
     border-radius: 50%;
     font-size: 0.75rem;
     font-weight: 700;
 }
 
-/* --- MOBILE RESPONSIVE --- */
 @media (max-width: 768px) {
     .meetContainer {
-        /* Extra padding at bottom to clear Fixed Bottom Nav */
-        padding-bottom: 120px; /* Increased from 100px to be safe */
+        padding-bottom: 120px;
         justify-content: flex-start;
     }
-
     .title {
         font-size: 2rem;
     }
-
     .actionGrid {
-        flex-direction: column; /* Stack cards */
+        flex-direction: column;
         gap: 24px;
     }
-
     .glassCard {
         width: 100%;
         padding: 24px;
         min-width: auto;
     }
-
     .divider {
         display: none;
     }

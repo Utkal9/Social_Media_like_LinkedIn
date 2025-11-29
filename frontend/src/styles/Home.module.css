@@ -1,10 +1,11 @@
 /* frontend/src/styles/Home.module.css */
 
 .landingWrapper {
-    background-color: #020410;
-    color: #fff;
+    background-color: var(--holo-bg);
+    color: var(--text-primary);
     overflow-x: hidden;
     position: relative;
+    transition: background-color 0.3s ease;
 }
 
 /* --- HERO SECTION --- */
@@ -32,8 +33,8 @@
     align-items: center;
     gap: 8px;
     background: rgba(15, 255, 198, 0.1);
-    border: 1px solid rgba(15, 255, 198, 0.3);
-    color: #0fffc6;
+    border: 1px solid var(--neon-teal);
+    color: var(--neon-teal);
     padding: 6px 16px;
     border-radius: 50px;
     font-family: "Orbitron", sans-serif;
@@ -43,9 +44,9 @@
 .pulseDot {
     width: 8px;
     height: 8px;
-    background: #0fffc6;
+    background: var(--neon-teal);
     border-radius: 50%;
-    box-shadow: 0 0 10px #0fffc6;
+    box-shadow: 0 0 10px var(--neon-teal);
     animation: pulse 2s infinite;
 }
 .heroTitle {
@@ -54,15 +55,16 @@
     line-height: 1.1;
     margin-bottom: 20px;
     font-weight: 800;
+    color: var(--text-primary);
 }
 .gradientText {
-    background: linear-gradient(90deg, #8b5cf6, #0fffc6);
+    background: linear-gradient(90deg, var(--neon-violet), var(--neon-teal));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
 .heroSubtitle {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 1.1rem;
     line-height: 1.6;
     margin-bottom: 40px;
@@ -73,7 +75,7 @@
     gap: 16px;
 }
 .primaryBtn {
-    background: #8b5cf6;
+    background: var(--neon-violet);
     color: white;
     border: none;
     padding: 14px 32px;
@@ -82,17 +84,16 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+    box-shadow: var(--glow-primary);
 }
 .primaryBtn:hover {
     background: #7c3aed;
     transform: translateY(-2px);
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
 }
 .secondaryBtn {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     padding: 14px 32px;
     border-radius: 8px;
     font-family: "Orbitron", sans-serif;
@@ -101,11 +102,11 @@
     transition: all 0.3s;
 }
 .secondaryBtn:hover {
-    border-color: #0fffc6;
-    color: #0fffc6;
+    border-color: var(--neon-teal);
+    color: var(--neon-teal);
 }
 
-/* --- RESTORED: HOLOGRAM FRAME STYLES --- */
+/* --- HOLOGRAM FRAME --- */
 .heroVisual {
     position: relative;
     display: flex;
@@ -124,8 +125,8 @@
     position: relative;
     border-radius: 20px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.2);
+    border: 1px solid var(--holo-border);
+    box-shadow: var(--shadow-card);
     background: #000;
 }
 
@@ -140,7 +141,6 @@
     transform: scale(1.03);
 }
 
-/* Scanline */
 .scanline {
     position: absolute;
     top: 0;
@@ -166,19 +166,19 @@
 /* Floating Cards */
 .floatCard {
     position: absolute;
-    background: rgba(11, 15, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-panel);
+    border: 1px solid var(--holo-border);
     padding: 12px 16px;
     border-radius: 12px;
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     z-index: 10;
     min-width: 180px;
     animation: float 4s ease-in-out infinite;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
@@ -202,16 +202,16 @@
 .cardBottomLeft {
     bottom: 15%;
     left: -30px;
-    border-left: 3px solid #0fffc6;
+    border-left: 3px solid var(--neon-teal);
     animation-delay: 2s;
 }
 
 /* --- MARQUEE --- */
 .marqueeContainer {
-    background: #0b0f2a;
+    background: var(--holo-panel);
     padding: 20px 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--holo-border);
+    border-bottom: 1px solid var(--holo-border);
     overflow: hidden;
     white-space: nowrap;
 }
@@ -222,7 +222,8 @@
 .techItem {
     font-family: "Orbitron", sans-serif;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--text-secondary);
+    opacity: 0.5;
     font-size: 1.5rem;
     margin: 0 30px;
     letter-spacing: 2px;
@@ -238,7 +239,7 @@
 }
 .reverse {
     flex-direction: row-reverse;
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--holo-glass);
 }
 .featureText {
     flex: 1;
@@ -248,13 +249,10 @@
     font-family: "Orbitron", sans-serif;
     font-size: 2.5rem;
     margin-bottom: 20px;
-    background: linear-gradient(to right, #fff, #ccc);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--text-primary);
 }
 .featureDesc {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 1.1rem;
     line-height: 1.7;
     margin-bottom: 20px;
@@ -266,7 +264,7 @@
 .featureList li {
     margin-bottom: 10px;
     font-size: 1rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
 }
 .featureDemo {
     flex: 1;
@@ -278,7 +276,7 @@
 .mockDoc {
     width: 300px;
     height: 380px;
-    background: #fff;
+    background: #fff; /* Keep doc white */
     border-radius: 4px;
     padding: 30px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
@@ -322,12 +320,12 @@
 
 .mockPost {
     width: 350px;
-    background: #0b0f2a;
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--holo-panel);
+    border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 20px;
     transform: rotate(3deg);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
 }
 .mockPostHeader {
     display: flex;
@@ -338,31 +336,35 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #8b5cf6;
+    background: var(--neon-violet);
+}
+.mockMeta {
+    flex: 1;
 }
 .mockLine {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--text-secondary);
+    opacity: 0.2;
     height: 10px;
     border-radius: 4px;
     margin-bottom: 4px;
 }
 .mockContent {
     height: 120px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
     border-radius: 8px;
     margin-bottom: 16px;
 }
 .mockActions {
     display: flex;
     gap: 20px;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.9rem;
 }
 
 .mockChat {
     width: 320px;
-    background: rgba(11, 15, 42, 0.9);
-    border: 1px solid #0fffc6;
+    background: var(--holo-panel);
+    border: 1px solid var(--neon-teal);
     border-radius: 20px;
     padding: 20px;
     display: flex;
@@ -372,14 +374,15 @@
 }
 .chatBubbleLeft {
     align-self: flex-start;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    color: var(--text-primary);
     padding: 10px;
     border-radius: 12px 12px 12px 0;
     font-size: 0.9rem;
 }
 .chatBubbleRight {
     align-self: flex-end;
-    background: #0fffc6;
+    background: var(--neon-teal);
     color: #000;
     padding: 10px;
     border-radius: 12px 12px 0 12px;
@@ -388,7 +391,7 @@
 }
 .videoCallBtn {
     margin-top: 10px;
-    background: #ff4d7d;
+    background: var(--neon-pink);
     color: white;
     padding: 12px;
     border-radius: 12px;
@@ -412,11 +415,11 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
-    background: linear-gradient(to bottom, #020410, #0b0f2a);
+    background: var(--holo-panel);
 }
 .statCard {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     border-radius: 12px;
     padding: 30px;
     text-align: center;
@@ -425,12 +428,12 @@
 .statCard:hover {
     transform: translateY(-5px);
     border-color: var(--neon-teal);
-    box-shadow: 0 0 20px rgba(15, 255, 198, 0.1);
+    box-shadow: var(--glow-teal);
 }
 .statCard h3 {
     font-family: "Orbitron";
     font-size: 2.5rem;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 5px;
 }
 .statCard p {
@@ -441,7 +444,7 @@
     letter-spacing: 1px;
 }
 
-/* --- DEVELOPER SECTION (Restored) --- */
+/* --- DEVELOPER SECTION --- */
 .developerSection {
     padding: 80px 0;
     position: relative;
@@ -458,7 +461,7 @@
     text-align: center;
     font-family: "Orbitron", sans-serif;
     font-size: 2.5rem;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -470,9 +473,9 @@
     font-size: 1rem;
 }
 .devCard {
-    background: rgba(11, 15, 42, 0.8);
+    background: var(--holo-panel);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(139, 92, 246, 0.4);
+    border: 1px solid var(--holo-border);
     border-radius: 24px;
     padding: 40px;
     display: flex;
@@ -480,13 +483,13 @@
     gap: 40px;
     margin-top: 20px;
     text-align: left;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-card);
     transition: transform 0.3s ease;
 }
 .devCard:hover {
     transform: translateY(-5px);
     border-color: var(--neon-blue);
-    box-shadow: 0 15px 50px rgba(139, 92, 246, 0.2);
+    box-shadow: var(--glow-primary);
 }
 .devAvatarWrapper {
     position: relative;
@@ -499,7 +502,7 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #020410;
+    border: 3px solid var(--holo-bg);
     position: relative;
     z-index: 2;
 }
@@ -522,7 +525,7 @@
 .devName {
     font-family: "Orbitron", sans-serif;
     font-size: 1.8rem;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
 }
 .devRole {
@@ -534,7 +537,7 @@
     letter-spacing: 1px;
 }
 .devBio {
-    color: #ccc;
+    color: var(--text-secondary);
     font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 20px;
@@ -547,12 +550,12 @@
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #aaa;
+    color: var(--text-secondary);
     transition: all 0.2s;
 }
 .socialLink:hover {
@@ -560,7 +563,6 @@
     color: #fff;
     border-color: var(--neon-blue);
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
 }
 .contactSvg {
     width: 22px;
@@ -570,13 +572,13 @@
 /* --- TESTIMONIALS --- */
 .testimonialsSection {
     padding: 80px 10%;
-    background: #020410;
+    background: var(--holo-bg);
 }
 .sectionHeader {
     text-align: center;
     font-family: "Orbitron";
     font-size: 2.5rem;
-    color: #fff;
+    color: var(--text-primary);
     margin-bottom: 50px;
 }
 .testiGrid {
@@ -585,8 +587,8 @@
     gap: 30px;
 }
 .testimonialCard {
-    background: rgba(11, 15, 42, 0.6);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: var(--holo-panel);
+    border: 1px solid var(--holo-border);
     padding: 30px;
     border-radius: 16px;
     position: relative;
@@ -604,16 +606,16 @@
     border: 2px solid var(--neon-teal);
 }
 .testiHeader h4 {
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     font-size: 1.1rem;
 }
 .testiHeader span {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.85rem;
 }
 .testimonialCard p {
-    color: #ddd;
+    color: var(--text-secondary);
     font-style: italic;
     line-height: 1.6;
 }
@@ -627,21 +629,21 @@
 .ctaSection {
     text-align: center;
     padding: 100px 20px;
-    background: linear-gradient(to bottom, #020410, #0b0f2a);
+    background: linear-gradient(to bottom, var(--holo-bg), var(--holo-panel));
 }
 .ctaSection h2 {
     font-family: "Orbitron";
     font-size: 3rem;
     margin-bottom: 10px;
-    color: #fff;
+    color: var(--text-primary);
 }
 .ctaSection p {
-    color: #94a3b8;
+    color: var(--text-secondary);
     margin-bottom: 30px;
     font-size: 1.2rem;
 }
 .glowBtn {
-    background: #0fffc6;
+    background: var(--neon-teal);
     color: #000;
     border: none;
     padding: 16px 40px;
@@ -649,12 +651,12 @@
     font-size: 1.1rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 0 30px rgba(15, 255, 198, 0.5);
+    box-shadow: var(--glow-teal);
     transition: transform 0.2s;
 }
 .glowBtn:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 50px rgba(15, 255, 198, 0.8);
+    box-shadow: 0 0 50px rgba(15, 255, 198, 0.5);
 }
 
 /* --- UTILS --- */
@@ -728,13 +730,13 @@
     .hologramFrame {
         max-width: 350px;
         margin-top: 40px;
-    } /* Adjusted for mobile */
+    }
     .cardTopRight {
         right: -10px;
-    } /* Adjusted for mobile */
+    }
     .cardBottomLeft {
         left: -10px;
-    } /* Adjusted for mobile */
+    }
     .statsSection {
         grid-template-columns: 1fr 1fr;
     }

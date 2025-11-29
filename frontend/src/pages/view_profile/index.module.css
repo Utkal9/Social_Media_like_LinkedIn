@@ -29,8 +29,8 @@
 
 /* --- Header Card --- */
 .headerCard {
-    background: rgba(11, 15, 42, 0.6);
-    backdrop-filter: blur(16px);
+    background: var(--holo-panel);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     overflow: visible;
@@ -55,7 +55,7 @@
     background: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(11, 15, 42, 0.8) 100%
+        var(--holo-panel) 100%
     );
 }
 
@@ -100,7 +100,7 @@
 
 /* Identity Section */
 .identitySection {
-    color: white;
+    color: var(--text-primary);
 }
 
 .identityTop {
@@ -121,7 +121,7 @@
     font-size: 1.8rem;
     font-weight: 700;
     margin: 0;
-    color: #fff;
+    color: var(--text-primary);
     line-height: 1.2;
 }
 
@@ -131,7 +131,7 @@
     margin-top: 4px;
 }
 
-/* --- NEW: Consolidated Action Buttons --- */
+/* --- Header Actions --- */
 .headerActions {
     display: flex;
     align-items: center;
@@ -148,9 +148,9 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -161,7 +161,8 @@
     background: var(--neon-violet);
     border-color: var(--neon-violet);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--glow-primary);
+    color: #fff;
 }
 
 .primaryBtn {
@@ -175,7 +176,7 @@
     gap: 8px;
     transition: all 0.2s;
     font-size: 0.9rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card);
 }
 
 /* Button Status Colors */
@@ -186,13 +187,13 @@
 }
 .connect:hover {
     background: #0fd1a3;
-    box-shadow: 0 0 15px rgba(15, 255, 198, 0.4);
+    box-shadow: var(--glow-teal);
 }
 
 .pending {
-    background: rgba(255, 255, 255, 0.05);
-    color: #ccc;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-glass);
+    color: var(--text-secondary);
+    border: 1px solid var(--holo-border);
     cursor: not-allowed;
 }
 
@@ -224,7 +225,7 @@
     flex-wrap: wrap;
 }
 .metaDivider {
-    color: #555;
+    color: var(--text-secondary);
 }
 .connectionCount {
     color: var(--neon-blue);
@@ -244,13 +245,13 @@
     margin-top: 12px;
 }
 .contactPill {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
     padding: 6px 12px;
     border-radius: 6px;
-    color: #ccc;
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: 0.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--holo-border);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -258,25 +259,25 @@
 }
 .contactPill:hover {
     border-color: var(--neon-blue);
-    color: #fff;
+    color: var(--text-primary);
     background: rgba(255, 255, 255, 0.08);
 }
 
 .bioBox {
     margin-top: 20px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--holo-glass);
     border-radius: 8px;
-    color: #ddd;
+    color: var(--text-primary);
     line-height: 1.5;
     font-size: 0.95rem;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--holo-border);
 }
 
 /* --- GRID LAYOUT --- */
 .gridLayout {
     display: grid;
-    grid-template-columns: 2.5fr 1fr; /* Main Left, Sidebar Right */
+    grid-template-columns: 2.5fr 1fr;
     gap: 24px;
     align-items: start;
 }
@@ -290,7 +291,7 @@
 
 /* --- Cards --- */
 .dataCard {
-    background: rgba(11, 15, 42, 0.6);
+    background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 20px;
@@ -298,10 +299,10 @@
 }
 .cardTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.1rem;
     margin-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 8px;
     display: flex;
     justify-content: space-between;
@@ -312,7 +313,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 8px;
 }
 .cardHeaderRow .cardTitle {
@@ -335,10 +336,10 @@
     font-weight: 600;
 }
 .viewStackText {
-    color: #ddd;
+    color: var(--text-primary);
     font-size: 0.9rem;
     line-height: 1.4;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--holo-glass);
     padding: 8px;
     border-radius: 4px;
     margin: 0;
@@ -350,7 +351,7 @@
     gap: 8px;
 }
 .skillTag {
-    background: rgba(139, 92, 246, 0.1);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-violet);
     color: var(--neon-violet);
     padding: 4px 10px;
@@ -366,12 +367,12 @@
 }
 .timelineItem {
     padding-left: 12px;
-    border-left: 2px solid rgba(255, 255, 255, 0.1);
+    border-left: 2px solid var(--holo-border);
 }
 .timelineContent h4 {
     font-size: 1rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
 }
 .timelineContent h4 span {
@@ -387,7 +388,7 @@
     font-size: 0.8rem;
 }
 .timelineContent p {
-    color: #ccc;
+    color: var(--text-primary);
     font-size: 0.9rem;
     margin: 6px 0 0 0;
     line-height: 1.5;
@@ -400,8 +401,8 @@
     gap: 16px;
 }
 .projectItem {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     padding: 16px;
     border-radius: 12px;
     position: relative;
@@ -412,7 +413,7 @@
     margin-bottom: 8px;
 }
 .projectHeader h5 {
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     font-size: 1rem;
 }
@@ -422,7 +423,7 @@
 }
 .projectItem p {
     font-size: 0.9rem;
-    color: #ccc;
+    color: var(--text-secondary);
     margin-bottom: 8px;
 }
 .projectLink {
@@ -434,7 +435,7 @@
     gap: 6px;
 }
 
-/* --- Split Row (Certs/Achievements) --- */
+/* --- Split Row --- */
 .splitRow {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -442,14 +443,14 @@
 }
 .miniItem {
     margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 8px;
 }
 .miniItem:last-child {
     border: none;
 }
 .miniItem h5 {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 0.95rem;
     margin: 0;
 }
@@ -475,18 +476,18 @@
     text-decoration: underline;
 }
 
-/* --- Activity (Sidebar Style) --- */
+/* --- Activity --- */
 .activityGrid {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 .activityCard {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--holo-glass);
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--holo-border);
     transition: border-color 0.2s, transform 0.2s;
     display: flex;
     flex-direction: column;
@@ -512,7 +513,7 @@
 .textPreview {
     padding: 12px;
     font-size: 0.85rem;
-    color: #ddd;
+    color: var(--text-primary);
     line-height: 1.4;
 }
 .postBody {
@@ -528,7 +529,7 @@
 
 .viewAllBtn {
     width: 100%;
-    background: rgba(139, 92, 246, 0.1);
+    background: var(--holo-glass);
     border: 1px solid var(--neon-violet);
     color: var(--neon-violet);
     padding: 8px;
@@ -567,7 +568,7 @@
 }
 
 .modalBox {
-    background: #0b0f2a;
+    background: var(--holo-panel);
     padding: 30px;
     border-radius: 16px;
     width: 95%;
@@ -575,7 +576,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    box-shadow: 0 0 60px rgba(139, 92, 246, 0.4);
+    box-shadow: var(--shadow-card);
     border: 1px solid var(--holo-border);
     max-height: 90vh;
     overflow-y: auto;
@@ -585,24 +586,24 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--holo-border);
     padding-bottom: 1rem;
     margin-bottom: 0.5rem;
 }
 .modalHeader h3 {
     margin: 0;
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
 }
 .closeIcon {
     background: none;
     border: none;
     cursor: pointer;
-    color: #aaa;
+    color: var(--text-secondary);
     padding: 4px;
 }
 .closeIcon:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .connectionsList {
@@ -616,10 +617,10 @@
     cursor: pointer;
     border-radius: 8px;
     transition: background 0.2s;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--holo-border);
 }
 .connectionItem:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-glass);
 }
 .connectionAvatar {
     width: 48px;
@@ -630,19 +631,19 @@
 }
 .connectionName {
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     font-size: 1rem;
 }
 .connectionUsername {
-    color: #888;
+    color: var(--text-secondary);
     margin: 0;
     font-size: 0.85rem;
 }
 .noConnectionsText {
     text-align: center;
     padding: 2rem;
-    color: #666;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
@@ -676,7 +677,7 @@
     max-height: 80vh;
     border-radius: 12px;
     border: 2px solid var(--neon-teal);
-    box-shadow: 0 0 30px rgba(15, 255, 198, 0.3);
+    box-shadow: var(--glow-teal);
 }
 .closeImageBtn {
     position: absolute;
@@ -703,14 +704,12 @@
     .gridLayout {
         grid-template-columns: 1fr;
     }
-
     .mainColumn {
         order: 1;
     }
     .sideColumn {
         order: 2;
     }
-
     .splitRow {
         grid-template-columns: 1fr;
     }
@@ -721,14 +720,13 @@
     .contactPill {
         justify-content: center;
     }
-    /* Mobile: Stack Header Actions */
     .headerActions {
         width: 100%;
         justify-content: flex-start;
         margin-top: 12px;
     }
     .primaryBtn {
-        flex-grow: 1; /* Full width on very small screens? Or fill remaining space */
+        flex-grow: 1;
         justify-content: center;
     }
 }

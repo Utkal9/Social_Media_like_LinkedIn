@@ -4,16 +4,20 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background-color: var(
+        --holo-bg
+    ); /* Ensures full height background matches theme */
+    color: var(--text-primary);
+    transition: background-color 0.3s ease;
 }
 
 .mainContent {
     flex: 1;
-    /* It pushes the footer to the bottom */
+    /* Pushes footer to bottom */
 }
 
-/* --- FIX: Add padding on mobile to prevent Bottom Nav overlap --- */
 @media (max-width: 768px) {
     .layoutWrapper {
-        padding-bottom: 80px; /* 65px (Nav Height) + 15px (Spacing Buffer) */
+        padding-bottom: 80px;
     }
 }

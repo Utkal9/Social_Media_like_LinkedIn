@@ -4,14 +4,15 @@
     padding-top: 90px;
     min-height: 100vh;
     background-color: var(--holo-bg);
+    color: var(--text-primary);
     position: relative;
-    /* Subtle Grid Background */
-    background-image: linear-gradient(
-            rgba(255, 255, 255, 0.02) 1px,
-            transparent 1px
-        ),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 30px 30px;
+    /* Subtle Grid Background - Visible in Dark, Clean in Light via variables */
+    /* If you want it completely clear in both, keep this commented out, 
+       otherwise uncomment to use the subtle grid from globals */
+    /* background-image: linear-gradient(var(--holo-border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--holo-border) 1px, transparent 1px);
+    background-size: 40px 40px; */
+    transition: background-color 0.3s ease;
 }
 
 .bgGlow {
@@ -31,14 +32,15 @@
 
 /* --- Glass Panels --- */
 .glassPanel {
-    background: rgba(11, 15, 42, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: var(--holo-panel);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease, border-color 0.2s ease,
+        background-color 0.3s ease;
 }
 
 .glassPanel:hover {
@@ -46,7 +48,7 @@
     box-shadow: 0 10px 30px rgba(139, 92, 246, 0.15);
 }
 
-/* --- FIXED: Sticky Sidebar Logic --- */
+/* --- Sticky Sidebar --- */
 .stickySidebar {
     position: sticky;
     top: 90px; /* Stick below navbar */
@@ -62,7 +64,7 @@
     display: none; /* Chrome/Safari */
 }
 
-/* --- Profile Card --- */
+/* --- Profile Card (ENHANCED) --- */
 .cardHeader {
     height: 100px;
     background-size: cover;
@@ -79,14 +81,15 @@
     background: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(11, 15, 42, 1) 90%
+        var(--holo-panel) 100%
     );
 }
 
+/* Enhanced Avatar Wrapper */
 .avatarWrapper {
-    width: 80px;
-    height: 80px;
-    margin: -40px auto 0;
+    width: 90px; /* Larger size */
+    height: 90px;
+    margin: -45px auto 10px; /* Vertically centered on split */
     position: relative;
     z-index: 2;
 }
@@ -96,26 +99,63 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--neon-teal);
-    box-shadow: 0 0 15px rgba(15, 255, 198, 0.3);
+    /* Thicker border matching card bg creates "cutout" effect */
+    border: 4px solid var(--holo-panel);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: var(--holo-panel);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.profilePic:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.25);
 }
 
 .profileFallback {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: var(--holo-panel);
+    background: var(--holo-bg);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    color: white;
-    border: 2px solid var(--neon-teal);
+    color: var(--text-primary);
+    border: 4px solid var(--holo-panel);
+    font-size: 1.5rem;
 }
 
+/* Enhanced Online Dot with Pulse */
+.onlineDot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: var(--neon-teal);
+    /* Border matches card bg to separate from avatar */
+    border: 3px solid var(--holo-panel);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 3;
+    animation: onlinePulse 2s infinite;
+}
+
+@keyframes onlinePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(15, 255, 198, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(15, 255, 198, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(15, 255, 198, 0);
+    }
+}
+
+/* User Info Text */
 .userName {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.3rem;
     font-weight: 600;
     margin-bottom: 2px;
@@ -134,22 +174,23 @@
 }
 
 .userBio {
-    color: #ccc;
+    color: var(--text-primary);
     font-size: 0.9rem;
     font-style: italic;
     margin-bottom: 20px;
     line-height: 1.5;
+    opacity: 0.8;
 }
 
-/* UPDATED: Stats Container (Single Item Center) */
+/* Stats Container */
 .statsContainer {
     display: flex;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--holo-bg);
     border-radius: 12px;
     padding: 12px;
     margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--holo-border);
 }
 
 .statBox {
@@ -162,7 +203,7 @@
 .statNum {
     font-family: "Orbitron", sans-serif;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.4rem;
 }
 
@@ -187,18 +228,17 @@
     font-family: "Orbitron", sans-serif;
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    box-shadow: var(--glow-primary);
 }
 .holoBtnFull:hover {
-    background: #7c3aed;
+    filter: brightness(1.1);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
 }
 
 /* --- Recommendations --- */
 .panelTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1rem;
     margin: 0;
     letter-spacing: 1px;
@@ -234,13 +274,13 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--holo-border);
 }
 .suggestionItem:last-child {
     border-bottom: none;
 }
 .suggestionItem:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--holo-bg);
 }
 
 .suggestionPic {
@@ -248,11 +288,11 @@
     height: 42px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--holo-border);
 }
 
 .suggestionName {
-    color: #eee;
+    color: var(--text-primary);
     font-size: 0.9rem;
     margin: 0;
     font-weight: 600;
@@ -265,8 +305,8 @@
 }
 
 .plusBtn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
     color: var(--neon-teal);
     width: 32px;
     height: 32px;
@@ -282,7 +322,6 @@
     background: var(--neon-teal);
     border-color: var(--neon-teal);
     color: #000;
-    box-shadow: 0 0 10px var(--neon-teal);
 }
 
 .textLinkBtn {
@@ -300,27 +339,21 @@
     color: var(--neon-teal);
 }
 
-.onlineDot,
+/* Dot for small lists */
 .onlineDotSmall {
     position: absolute;
     bottom: 0;
     right: 0;
+    width: 10px;
+    height: 10px;
     background-color: var(--neon-teal);
     border: 2px solid var(--holo-bg);
     border-radius: 50%;
 }
-.onlineDot {
-    width: 12px;
-    height: 12px;
-}
-.onlineDotSmall {
-    width: 8px;
-    height: 8px;
-}
 
 /* --- Mobile Profile Summary --- */
 .mobileProfileSummary {
-    background: rgba(11, 15, 42, 0.8);
+    background: var(--holo-panel);
     backdrop-filter: blur(12px);
     border: 1px solid var(--holo-border);
     padding: 12px 16px;
@@ -342,7 +375,7 @@
 }
 
 .mobileName {
-    color: #fff;
+    color: var(--text-primary);
     font-family: "Orbitron", sans-serif;
     font-size: 1rem;
     margin: 0;

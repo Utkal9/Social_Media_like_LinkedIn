@@ -9,8 +9,8 @@
 
 /* --- Header & Search --- */
 .headerSection {
-    background: rgba(11, 15, 42, 0.6);
-    backdrop-filter: blur(12px);
+    background: var(--holo-panel);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     padding: 20px;
@@ -19,12 +19,12 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-card);
 }
 
 .pageTitle {
     font-family: "Orbitron", sans-serif;
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.5rem;
     margin: 0;
     letter-spacing: 1px;
@@ -51,18 +51,18 @@
 }
 .searchWrapper input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
     border-radius: 30px;
     padding: 10px 40px 10px 40px;
-    color: #fff;
+    color: var(--text-primary);
     font-family: "Poppins", sans-serif;
     font-size: 0.95rem;
     outline: none;
     transition: all 0.2s;
 }
 .searchWrapper input:focus {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--holo-panel);
     border-color: var(--neon-teal);
     box-shadow: 0 0 15px rgba(15, 255, 198, 0.2);
 }
@@ -91,8 +91,8 @@
     pointer-events: auto;
 }
 .clearBtn:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    background: var(--holo-glass);
 }
 
 /* --- Loading State --- */
@@ -130,8 +130,8 @@
 }
 
 .userCard {
-    background: rgba(11, 15, 42, 0.6);
-    backdrop-filter: blur(10px);
+    background: var(--holo-panel);
+    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--holo-border);
     border-radius: 16px;
     overflow: hidden;
@@ -139,13 +139,14 @@
     flex-direction: column;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow-card);
 }
 
 .cardBanner {
     height: 80px;
     background-size: cover;
     background-position: center;
-    background-color: #1a1a2e;
+    background-color: var(--holo-bg);
     position: relative;
 }
 .cardBanner::after {
@@ -158,7 +159,7 @@
     background: linear-gradient(
         to bottom,
         transparent 0%,
-        rgba(11, 15, 42, 1) 100%
+        var(--holo-panel) 100%
     );
 }
 
@@ -204,7 +205,7 @@
 .userInfo h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-primary);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -217,7 +218,7 @@
 }
 .userBio {
     font-size: 0.85rem;
-    color: #ccc;
+    color: var(--text-secondary);
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -251,12 +252,12 @@
 .connect:hover {
     background: var(--neon-violet);
     color: white;
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    box-shadow: var(--glow-primary);
 }
 
 .pending {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: var(--holo-glass);
+    border-color: var(--holo-border);
     color: var(--text-secondary);
     cursor: not-allowed;
 }
@@ -275,7 +276,7 @@
 }
 .accept:hover {
     background: #0fd1a3;
-    box-shadow: 0 0 15px rgba(15, 255, 198, 0.4);
+    box-shadow: var(--glow-teal);
 }
 
 .emptyState {
@@ -283,9 +284,9 @@
     text-align: center;
     padding: 4rem;
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--holo-glass);
     border-radius: 16px;
-    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border: 1px dashed var(--holo-border);
 }
 .emptyState button {
     margin-top: 1rem;

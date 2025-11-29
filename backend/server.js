@@ -14,14 +14,25 @@ import { Server } from "socket.io";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
 
+// --- SWAGGER IMPORTS ---
+import swaggerUi from "swagger-ui-express";
+import swaggerJsDoc from "swagger-jsdoc";
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 9090;
 const URL = process.env.MONGO_URL;
 
+// --- 1. DETERMINE SERVER URL ---
+// If on Render, use BACKEND_URL. If local, use localhost.
+const SERVER_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: [
+        "http://localhost:3000",
+        process.env.FRONTEND_URL, // Allow deployed frontend
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 };
@@ -73,6 +84,60 @@ app.get(
     }
 );
 
+// --- SWAGGER CONFIGURATION ---
+const swaggerOptions = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "LinkUps API Documentation",
+            version: "1.0.0",
+            description:
+                "API documentation for the LinkUps Professional Network",
+            contact: {
+                name: "LinkUps Support",
+            },
+        },
+        // --- 2. DYNAMIC SERVER URL ---
+        servers: [
+            {
+                url: SERVER_URL,
+                description:
+                    process.env.NODE_ENV === "production"
+                        ? "Production Server"
+                        : "Development Server",
+            },
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
+        security: [
+            {
+                bearerAuth: [],
+            },
+        ],
+    },
+    apis: ["./routes/*.js"],
+};
+
+const specs = swaggerJsDoc(swaggerOptions);
+
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(specs, {
+        explorer: true,
+        customCss: ".swagger-ui .topbar { display: none }",
+        customSiteTitle: "LinkUps API Docs",
+    })
+);
+
+// --- API ROUTES ---
 app.use(postRoutes);
 app.use(userRoutes);
 app.use(messagingRoutes);
@@ -84,7 +149,6 @@ let meetingMessages = {};
 io.on("connection", (socket) => {
     console.log(`Socket Connected: ${socket.id}`);
 
-    // --- 1. GLOBAL APP LOGIC (Chat/Online) ---
     socket.on("register-user", async (userId) => {
         if (userId) {
             userSocketMap.set(userId, socket.id);
@@ -92,7 +156,6 @@ io.on("connection", (socket) => {
                 await User.findByIdAndUpdate(userId, { isOnline: true });
                 io.emit("user-status-change", { userId, isOnline: true });
 
-                // Deliver pending messages
                 const pendingMessages = await Message.find({
                     receiver: userId,
                     status: "sent",
@@ -173,23 +236,13 @@ io.on("connection", (socket) => {
         }
     });
 
-    // ==================================================
-    // 2. SECURE VIDEO MEETING LOGIC (UPDATED)
-    // ==================================================
-
     socket.on("join-call", (roomId, userId) => {
-        // --- SECURITY CHECK START ---
-        // Check if roomId looks like "ID1-ID2" (MongoDB IDs are 24 chars hex)
         const isPrivateRoom = /^[a-f\d]{24}-[a-f\d]{24}$/i.test(roomId);
 
         if (isPrivateRoom) {
             const allowedUsers = roomId.split("-");
 
-            // 1. If user is not logged in
             if (!userId) {
-                console.log(
-                    `[Security] Guest blocked from private room ${roomId}`
-                );
                 socket.emit(
                     "call-denied",
                     "Authentication required for private calls."
@@ -197,11 +250,7 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            // 2. If user is NOT one of the two participants
             if (!allowedUsers.includes(userId)) {
-                console.log(
-                    `[Security] Unauthorized user ${userId} blocked from room ${roomId}`
-                );
                 socket.emit(
                     "call-denied",
                     "Access Denied: You are not invited to this private meeting."
@@ -209,17 +258,14 @@ io.on("connection", (socket) => {
                 return;
             }
         }
-        // --- SECURITY CHECK END ---
 
         socket.join(roomId);
         socket.room = roomId;
 
-        // Notify others
         const clients = io.sockets.adapter.rooms.get(roomId);
         const clientsArr = clients ? Array.from(clients) : [];
         io.to(roomId).emit("user-joined", socket.id, clientsArr);
 
-        // Send meeting chat history
         if (meetingMessages[roomId]) {
             meetingMessages[roomId].forEach((msg) => {
                 io.to(socket.id).emit(
@@ -230,7 +276,6 @@ io.on("connection", (socket) => {
                 );
             });
         }
-        console.log(`User ${userId || "Guest"} joined room: ${roomId}`);
     });
 
     socket.on("signal", (toId, message) => {
@@ -250,9 +295,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // ==================================================
-    // 3. DISCONNECT LOGIC
-    // ==================================================
     socket.on("disconnect", () => {
         const room = socket.room;
         if (room) {
@@ -282,6 +324,8 @@ const start = async () => {
     try {
         await mongoose.connect(URL);
         console.log("✅ MongoDB connected");
+        // --- 3. DYNAMIC LOGGING ---
+        console.log(`📄 Swagger Docs available at ${SERVER_URL}/api-docs`);
         httpServer.listen(PORT, () =>
             console.log(`🚀 Server running on port ${PORT}`)
         );
