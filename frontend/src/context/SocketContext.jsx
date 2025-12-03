@@ -7,8 +7,9 @@ import React, {
     useRef,
 } from "react";
 import { io } from "socket.io-client";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import clientServer from "@/config"; // Import API client
+import { addNewNotification } from "@/config/redux/reducer/notificationReducer"; // Import action
 
 const SocketContext = createContext(null);
 
@@ -74,6 +75,7 @@ export const SocketProvider = ({ children }) => {
     const [unreadCount, setUnreadCount] = useState(0); // --- NEW STATE ---
     const auth = useSelector((state) => state.auth);
     const socketInstance = useRef(null);
+    const dispatch = useDispatch();
 
     // --- NEW: Function to fetch initial count ---
     const fetchUnreadCount = async () => {
@@ -124,6 +126,9 @@ export const SocketProvider = ({ children }) => {
             // But globally, we can just increment.
             // The Messaging page will correct it if it's open.
             setUnreadCount((prev) => prev + 1);
+        });
+        newSocket.on("new_notification", (notificationData) => {
+            dispatch(addNewNotification(notificationData));
         });
 
         return () => {

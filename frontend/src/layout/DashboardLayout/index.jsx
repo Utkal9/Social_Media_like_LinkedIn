@@ -84,12 +84,17 @@ export default function DashboardLayout({ children }) {
         const received = Array.isArray(authState.connectionRequest)
             ? authState.connectionRequest
             : [];
+
+        // FIX: Check if 'r.connectionId' or 'r.userId' exists before counting
+        // If a user is deleted, mongoose populate returns null for these fields.
         const acceptedSent = sent.filter(
-            (r) => r.status_accepted === true
+            (r) => r.status_accepted === true && r.connectionId
         ).length;
+
         const acceptedReceived = received.filter(
-            (r) => r.status_accepted === true
+            (r) => r.status_accepted === true && r.userId
         ).length;
+
         return acceptedSent + acceptedReceived;
     }, [authState.connections, authState.connectionRequest]);
 

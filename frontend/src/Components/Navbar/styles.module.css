@@ -23,6 +23,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+    width: 100%;
 }
 
 /* Logo */
@@ -43,8 +44,8 @@
 /* Badge */
 .badge {
     position: absolute;
-    top: 5px; /* Adjusted for better positioning */
-    right: 10px;
+    top: 5px;
+    right: 15px; /* Adjusted slightly */
     background-color: var(--neon-pink);
     color: white;
     font-size: 0.65rem;
@@ -69,11 +70,13 @@
     }
 }
 
-/* Desktop Nav Links */
+/* --- Desktop Navigation --- */
 .navCenter {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     height: 100%;
+    justify-content: center;
+    flex-grow: 1; /* Allow center to take space */
 }
 
 .navLink {
@@ -81,17 +84,19 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 20px;
     color: var(--text-secondary);
     cursor: pointer;
     position: relative;
     transition: color 0.3s ease;
     height: 100%;
+
+    /* --- FIXED WIDTH FOR EVEN SPACING --- */
+    width: 90px;
+    flex: none; /* Prevent shrinking or growing based on text */
 }
 
-/* --- RESTORED HOVER EFFECT --- */
 .navLink:hover {
-    color: var(--neon-teal); /* Highlight text on hover */
+    color: var(--neon-teal);
 }
 
 .navIcon {
@@ -100,10 +105,9 @@
     transition: all 0.3s ease;
 }
 
-/* Glow Effect on Hover */
 .navLink:hover .navIcon {
-    filter: drop-shadow(0 0 8px var(--neon-teal)); /* Restore Icon Glow */
-    transform: translateY(-2px); /* Slight bounce */
+    filter: drop-shadow(0 0 8px var(--neon-teal));
+    transform: translateY(-2px);
 }
 
 .navLabel {
@@ -112,7 +116,6 @@
     font-weight: 500;
 }
 
-/* Active State */
 .navLink.active {
     color: var(--neon-teal);
 }
@@ -130,7 +133,7 @@
     box-shadow: 0 -2px 10px var(--neon-teal);
 }
 
-/* Right Side (Profile) */
+/* --- Desktop Right (Profile) --- */
 .navRight {
     display: flex;
     align-items: center;
@@ -151,7 +154,7 @@
 }
 .buttonJoin:hover {
     background: var(--neon-teal);
-    color: #000; /* Invert on hover for visibility */
+    color: #000;
     box-shadow: 0 0 15px var(--neon-teal);
 }
 
@@ -205,8 +208,9 @@
 .dropdownContent {
     position: absolute;
     top: 75px;
+    /* Default desktop right alignment */
     right: 0;
-    width: 240px; /* Slightly wider for new icons */
+    width: 240px;
     background: var(--holo-panel);
     border: 1px solid var(--holo-border);
     border-radius: 12px;
@@ -216,6 +220,7 @@
     overflow: hidden;
     z-index: 2000;
 }
+
 .dropdownHeader {
     border-bottom: 1px solid var(--holo-border);
     padding-bottom: 12px;
@@ -253,7 +258,6 @@
     background: var(--holo-glass);
     color: var(--neon-teal);
 }
-/* Icon styling inside dropdown */
 .dropdownBody button svg {
     width: 18px;
     height: 18px;
@@ -263,8 +267,6 @@
 .dropdownBody button:hover svg {
     color: var(--neon-teal);
 }
-
-/* Logout specific */
 .logoutBtn:hover {
     color: var(--neon-pink) !important;
     background: rgba(236, 72, 153, 0.1) !important;
@@ -273,19 +275,58 @@
     color: var(--neon-pink) !important;
 }
 
+/* --- MOBILE HEADER LOGIC --- */
+.mobileHeader {
+    display: none; /* Hidden on desktop */
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+.mobileProfileWrapper {
+    position: relative;
+    cursor: pointer;
+    z-index: 2001; /* Ensure clicks register */
+}
+/* Fix Dropdown pos for mobile (Left side) */
+.mobileProfileWrapper .dropdownContent {
+    top: 55px;
+    left: 0; /* Align left */
+    right: auto;
+}
+.mobileLogo {
+    /* Centered implicitly by flex space-between */
+}
+.mobileNotif {
+    cursor: pointer;
+    color: var(--text-secondary);
+    position: relative;
+}
+.mobileNotif:hover {
+    color: var(--neon-teal);
+}
+.mobileNotif .badge {
+    top: -5px;
+    right: -5px;
+}
+
 /* --- BOTTOM NAV (Mobile Only) --- */
 .bottomNav {
     display: none;
 }
 
+/* --- RESPONSIVE BREAKPOINT --- */
 @media (max-width: 768px) {
-    .navCenter {
-        display: none;
+    /* Hide desktop elements */
+    .desktopOnly {
+        display: none !important;
     }
-    .navRight {
+
+    /* Show Mobile Header */
+    .mobileHeader {
         display: flex;
     }
 
+    /* Bottom Nav */
     .bottomNav {
         display: flex;
         justify-content: space-around;
@@ -333,10 +374,5 @@
 
     .bottomNavActive svg {
         filter: drop-shadow(0 0 5px var(--neon-teal));
-    }
-
-    .bottomNavItem .badge {
-        top: 4px;
-        right: 25%;
     }
 }

@@ -90,6 +90,23 @@ const MessagingIcon = ({ isActive }) => (
         />
     </svg>
 );
+// New Bell Icon
+const BellIcon = ({ isActive }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill={isActive ? "currentColor" : "none"}
+        viewBox="0 0 24 24"
+        strokeWidth={2}
+        stroke="currentColor"
+        className={styles.navIcon}
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+        />
+    </svg>
+);
 
 // --- Theme & Menu Icons ---
 const SunIcon = () => (
@@ -156,12 +173,20 @@ export default function NavbarComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
-    const { socket, onlineStatuses, unreadCount } = useSocket() || {};
+    const notificationState = useSelector((state) => state.notification); // Assuming you have this from previous steps
+    const {
+        socket,
+        onlineStatuses,
+        unreadCount: chatUnreadCount,
+    } = useSocket() || {};
     const { theme, toggleTheme, mounted } = useTheme();
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [hasMounted, setHasMounted] = useState(false);
     const [isTokenFound, setIsTokenFound] = useState(false);
+
+    // Combined unread count logic
+    const notifUnreadCount = notificationState?.unreadCount || 0;
 
     useEffect(() => {
         setHasMounted(true);
@@ -220,12 +245,7 @@ export default function NavbarComponent() {
         : false;
 
     const navItems = [
-        {
-            path: "/dashboard",
-            icon: HomeIcon,
-            label: "Feed",
-            protected: true,
-        },
+        { path: "/dashboard", icon: HomeIcon, label: "Feed", protected: true },
         {
             path: "/my_connections",
             icon: NetworkIcon,
@@ -238,74 +258,185 @@ export default function NavbarComponent() {
             label: "Discover",
             protected: false,
         },
-        {
-            path: "/meet",
-            icon: MeetIcon,
-            label: "Meet",
-            protected: false,
-        },
+        { path: "/meet", icon: MeetIcon, label: "Meet", protected: false },
         {
             path: "/messaging",
             icon: MessagingIcon,
             label: "Chat",
             protected: true,
             hasBadge: true,
+            count: chatUnreadCount,
+        },
+        // Notifications added here for Desktop loop, usually we might want to filter it for mobile bottom nav
+        {
+            path: "/notifications",
+            icon: BellIcon,
+            label: "Notifications",
+            protected: true,
+            hasBadge: true,
+            count: notifUnreadCount,
         },
     ];
 
-    const renderNavLinks = () => {
-        // Hide nav links if not logged in
-        if (!isTokenFound) return null;
+    // Profile Dropdown Content - Reusable
+    const ProfileDropdownMenu = () => (
+        <motion.div
+            className={styles.dropdownContent}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+        >
+            <div className={styles.dropdownHeader}>
+                <p className={styles.userName}>{authState.user.userId.name}</p>
+                <p className={styles.userHandle}>
+                    @{authState.user.userId.username}
+                </p>
+            </div>
+            <div className={styles.dropdownBody}>
+                <button onClick={() => handleNavigation("/profile")}>
+                    <span>View Profile</span>
+                    <UserIcon />
+                </button>
+                <button onClick={toggleTheme}>
+                    <span>Theme</span>
+                    {mounted && (theme === "dark" ? <SunIcon /> : <MoonIcon />)}
+                </button>
+                <button onClick={handleLogout} className={styles.logoutBtn}>
+                    <span>Disconnect</span>
+                    <LogoutIcon />
+                </button>
+            </div>
+        </motion.div>
+    );
 
-        return (
-            <>
-                {navItems.map((item) => (
-                    <div
-                        key={item.path}
-                        className={`${styles.navLink} ${
-                            router.pathname === item.path ? styles.active : ""
-                        }`}
-                        onClick={() => handleNavigation(item.path)}
-                    >
-                        <div className={styles.iconGlow}>
-                            <item.icon
-                                isActive={router.pathname === item.path}
-                            />
-                        </div>
-                        {item.hasBadge && unreadCount > 0 && (
-                            <span className={styles.badge}>
-                                {unreadCount > 99 ? "99+" : unreadCount}
-                            </span>
-                        )}
-                        <span className={styles.navLabel}>{item.label}</span>
-                        {router.pathname === item.path && (
-                            <div className={styles.activeBar} />
-                        )}
-                    </div>
-                ))}
-            </>
-        );
-    };
+    // Profile Picture Component
+    const ProfileTrigger = () => (
+        <div className={styles.avatarContainer}>
+            {authState.user.userId.profilePicture ? (
+                <img
+                    src={authState.user.userId.profilePicture}
+                    alt="Profile"
+                    className={styles.profilePic}
+                />
+            ) : (
+                <div
+                    className={`${styles.profilePic} ${styles.profileFallback}`}
+                >
+                    {userFallback}
+                </div>
+            )}
+            {isMyOnline && <span className={styles.onlineDot}></span>}
+        </div>
+    );
 
     if (!hasMounted) return <nav className={styles.container} />;
 
     return (
         <>
-            {/* --- TOP NAV --- */}
+            {/* --- TOP NAV (DESKTOP & MOBILE) --- */}
             <nav className={styles.container}>
                 <div className={styles.navbar}>
+                    {/* 1. MOBILE TOP HEADER (Left: Profile, Center: Logo, Right: Notification) */}
+                    <div className={styles.mobileHeader}>
+                        {/* Left: Profile Dropdown */}
+                        <div
+                            className={styles.mobileProfileWrapper}
+                            ref={dropdownRef}
+                        >
+                            {isTokenFound &&
+                                authState.profileFetched &&
+                                authState.user && (
+                                    <div
+                                        onClick={() =>
+                                            setDropdownOpen(!dropdownOpen)
+                                        }
+                                    >
+                                        <ProfileTrigger />
+                                    </div>
+                                )}
+                            {/* Dropdown needs specific mobile positioning in CSS */}
+                            <AnimatePresence>
+                                {dropdownOpen && <ProfileDropdownMenu />}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Center: Logo */}
+                        <div
+                            className={styles.mobileLogo}
+                            onClick={() => handleNavigation("/")}
+                        >
+                            <LogoIcon />
+                        </div>
+
+                        {/* Right: Notification Bell */}
+                        <div
+                            className={styles.mobileNotif}
+                            onClick={() => handleNavigation("/notifications")}
+                        >
+                            <div className={styles.iconGlow}>
+                                <BellIcon
+                                    isActive={
+                                        router.pathname === "/notifications"
+                                    }
+                                />
+                                {notifUnreadCount > 0 && (
+                                    <span className={styles.badge}>
+                                        {notifUnreadCount > 99
+                                            ? "99+"
+                                            : notifUnreadCount}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. DESKTOP LAYOUT (Logo Left, Links Center, Profile Right) */}
                     <div
-                        className={styles.navLeft}
+                        className={`${styles.desktopNavLeft} ${styles.desktopOnly}`}
                         onClick={() => handleNavigation("/")}
                     >
                         <LogoIcon />
                     </div>
 
-                    {/* Desktop Center Links - Hidden if not logged in */}
-                    <div className={styles.navCenter}>{renderNavLinks()}</div>
+                    <div
+                        className={`${styles.navCenter} ${styles.desktopOnly}`}
+                    >
+                        {isTokenFound &&
+                            navItems.map((item) => (
+                                <div
+                                    key={item.path}
+                                    className={`${styles.navLink} ${
+                                        router.pathname === item.path
+                                            ? styles.active
+                                            : ""
+                                    }`}
+                                    onClick={() => handleNavigation(item.path)}
+                                >
+                                    <div className={styles.iconGlow}>
+                                        <item.icon
+                                            isActive={
+                                                router.pathname === item.path
+                                            }
+                                        />
+                                    </div>
+                                    {item.hasBadge && item.count > 0 && (
+                                        <span className={styles.badge}>
+                                            {item.count > 99
+                                                ? "99+"
+                                                : item.count}
+                                        </span>
+                                    )}
+                                    <span className={styles.navLabel}>
+                                        {item.label}
+                                    </span>
+                                    {router.pathname === item.path && (
+                                        <div className={styles.activeBar} />
+                                    )}
+                                </div>
+                            ))}
+                    </div>
 
-                    {/* Right Side: Profile (Logged In) OR Buttons (Logged Out) */}
-                    <div className={styles.navRight}>
+                    <div className={`${styles.navRight} ${styles.desktopOnly}`}>
                         {authState.profileFetched &&
                         authState.user &&
                         isTokenFound ? (
@@ -319,128 +450,13 @@ export default function NavbarComponent() {
                                     }
                                     className={styles.profileButton}
                                 >
-                                    <div className={styles.avatarContainer}>
-                                        {authState.user.userId
-                                            .profilePicture ? (
-                                            <img
-                                                src={
-                                                    authState.user.userId
-                                                        .profilePicture
-                                                }
-                                                alt="Profile"
-                                                className={styles.profilePic}
-                                            />
-                                        ) : (
-                                            <div
-                                                className={`${styles.profilePic} ${styles.profileFallback}`}
-                                            >
-                                                {userFallback}
-                                            </div>
-                                        )}
-                                        {isMyOnline && (
-                                            <span
-                                                className={styles.onlineDot}
-                                            ></span>
-                                        )}
-                                    </div>
+                                    <ProfileTrigger />
                                 </button>
-
                                 <AnimatePresence>
-                                    {dropdownOpen && (
-                                        <motion.div
-                                            className={styles.dropdownContent}
-                                            initial={{
-                                                opacity: 0,
-                                                y: 10,
-                                                scale: 0.95,
-                                            }}
-                                            animate={{
-                                                opacity: 1,
-                                                y: 0,
-                                                scale: 1,
-                                            }}
-                                            exit={{
-                                                opacity: 0,
-                                                y: 10,
-                                                scale: 0.95,
-                                            }}
-                                        >
-                                            <div
-                                                className={
-                                                    styles.dropdownHeader
-                                                }
-                                            >
-                                                <p className={styles.userName}>
-                                                    {authState.user.userId.name}
-                                                </p>
-                                                <p
-                                                    className={
-                                                        styles.userHandle
-                                                    }
-                                                >
-                                                    @
-                                                    {
-                                                        authState.user.userId
-                                                            .username
-                                                    }
-                                                </p>
-                                            </div>
-                                            <div
-                                                className={styles.dropdownBody}
-                                            >
-                                                <button
-                                                    onClick={() =>
-                                                        handleNavigation(
-                                                            "/profile"
-                                                        )
-                                                    }
-                                                    style={{
-                                                        display: "flex",
-                                                        justifyContent:
-                                                            "space-between",
-                                                        alignItems: "center",
-                                                    }}
-                                                >
-                                                    <span>View Profile</span>
-                                                    <UserIcon />
-                                                </button>
-                                                <button
-                                                    onClick={toggleTheme}
-                                                    style={{
-                                                        display: "flex",
-                                                        justifyContent:
-                                                            "space-between",
-                                                        alignItems: "center",
-                                                    }}
-                                                >
-                                                    <span>Theme</span>
-                                                    {mounted &&
-                                                        (theme === "dark" ? (
-                                                            <SunIcon />
-                                                        ) : (
-                                                            <MoonIcon />
-                                                        ))}
-                                                </button>
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className={styles.logoutBtn}
-                                                    style={{
-                                                        display: "flex",
-                                                        justifyContent:
-                                                            "space-between",
-                                                        alignItems: "center",
-                                                    }}
-                                                >
-                                                    <span>Disconnect</span>
-                                                    <LogoutIcon />
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    )}
+                                    {dropdownOpen && <ProfileDropdownMenu />}
                                 </AnimatePresence>
                             </div>
                         ) : (
-                            /* --- LOGGED OUT STATE: Login & Sign Up Buttons --- */
                             <div style={{ display: "flex", gap: "12px" }}>
                                 <button
                                     onClick={() => handleNavigation("/login")}
@@ -460,32 +476,45 @@ export default function NavbarComponent() {
                 </div>
             </nav>
 
-            {/* --- BOTTOM NAV (Mobile Only) - Only shows if Token Found --- */}
+            {/* --- BOTTOM NAV (Mobile Only) --- */}
+            {/* Exclude 'Notifications' from bottom because it's on top right now */}
             {isTokenFound && (
                 <div className={styles.bottomNav}>
-                    {navItems.map((item) => (
-                        <div
-                            key={item.path}
-                            className={`${styles.bottomNavItem} ${
-                                router.pathname === item.path
-                                    ? styles.bottomNavActive
-                                    : ""
-                            }`}
-                            onClick={() => handleNavigation(item.path)}
-                        >
-                            <item.icon
-                                isActive={router.pathname === item.path}
-                            />
-                            {item.hasBadge && unreadCount > 0 && (
-                                <span className={styles.badge}>
-                                    {unreadCount > 99 ? "99+" : unreadCount}
+                    {navItems
+                        .filter((item) => item.path !== "/notifications")
+                        .map((item) => (
+                            <div
+                                key={item.path}
+                                className={`${styles.bottomNavItem} ${
+                                    router.pathname === item.path
+                                        ? styles.bottomNavActive
+                                        : ""
+                                }`}
+                                onClick={() => handleNavigation(item.path)}
+                            >
+                                <div style={{ position: "relative" }}>
+                                    <item.icon
+                                        isActive={router.pathname === item.path}
+                                    />
+                                    {item.hasBadge && item.count > 0 && (
+                                        <span
+                                            className={styles.badge}
+                                            style={{
+                                                top: "-5px",
+                                                right: "-10px",
+                                            }}
+                                        >
+                                            {item.count > 99
+                                                ? "99+"
+                                                : item.count}
+                                        </span>
+                                    )}
+                                </div>
+                                <span className={styles.bottomNavLabel}>
+                                    {item.label}
                                 </span>
-                            )}
-                            <span className={styles.bottomNavLabel}>
-                                {item.label}
-                            </span>
-                        </div>
-                    ))}
+                            </div>
+                        ))}
                 </div>
             )}
         </>

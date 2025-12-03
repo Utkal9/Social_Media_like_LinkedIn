@@ -783,7 +783,10 @@
         flex-direction: column;
     }
     .statsSection {
-        grid-template-columns: 1fr 1fr;
+        /* Change to 1 column for better readability on mobile */
+        grid-template-columns: 1fr;
+        padding: 60px 20px; /* Reduce padding to give content more space */
+        gap: 20px;
     }
     .devCard {
         flex-direction: column;
