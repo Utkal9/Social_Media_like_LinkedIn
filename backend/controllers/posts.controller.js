@@ -1,7 +1,9 @@
 import Comment from "../models/comments.model.js";
 import Post from "../models/posts.model.js";
 import User from "../models/user.model.js";
+import Notification from "../models/notification.model.js"; // [NEW]
 import { v2 as cloudinary } from "cloudinary";
+
 export const activeCheck = async (req, res) => {
     return res.status(200).json({ message: "RUNNING" });
 };
@@ -25,36 +27,25 @@ export const createPost = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
-// --- Updated Helper: Delete File from Cloudinary ---
+
 const deleteFromCloudinary = async (url) => {
     if (!url) return;
-
-    // 1. Guard clause: Do not delete default assets
     if (
         url.includes("default_dlizpg") ||
         url.includes("3d-rendering-hexagonal")
     ) {
         return;
     }
-
     try {
-        // 2. Regex to extract the Public ID
-        // It looks for the segment after '/upload/' (ignoring optional version 'v123/')
-        // and captures everything up to the file extension.
         const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
         const match = url.match(regex);
 
         if (match && match[1]) {
-            const publicId = match[1]; // e.g., "pro-connect-uploads/my_image"
-
-            // 3. Detect Resource Type
+            const publicId = match[1];
             const resourceType = url.includes("/video/") ? "video" : "image";
-
-            // 4. Perform Deletion
             const result = await cloudinary.uploader.destroy(publicId, {
                 resource_type: resourceType,
             });
-
             console.log(`🗑️ Cloudinary Delete: ${publicId} ->`, result);
         } else {
             console.warn(`⚠️ Could not extract Public ID from URL: ${url}`);
@@ -63,6 +54,7 @@ const deleteFromCloudinary = async (url) => {
         console.error("❌ Cloudinary Deletion Error:", error);
     }
 };
+
 export const getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find()
@@ -70,7 +62,7 @@ export const getAllPosts = async (req, res) => {
                 "userId",
                 "name username email profilePicture isOnline lastSeen"
             )
-            .populate("reactions.userId", "name username profilePicture"); // Populate reaction users
+            .populate("reactions.userId", "name username profilePicture");
         return res.json({ posts });
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -85,7 +77,7 @@ export const getPostById = async (req, res) => {
                 "userId",
                 "name username email profilePicture isOnline lastSeen"
             )
-            .populate("reactions.userId", "name username profilePicture"); // Populate reaction users
+            .populate("reactions.userId", "name username profilePicture");
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
@@ -111,12 +103,17 @@ export const deletePost = async (req, res) => {
             await deleteFromCloudinary(post.media);
         }
         await Comment.deleteMany({ postId: post_id });
+
+        // Also delete any notifications related to this post
+        await Notification.deleteMany({ post: post_id });
+
         await Post.deleteOne({ _id: post_id });
         return res.json({ message: "Post and media deleted successfully" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const updatePost = async (req, res) => {
     const { token, post_id, body } = req.body;
     try {
@@ -128,25 +125,20 @@ export const updatePost = async (req, res) => {
             return res.status(404).json({ message: "Post not found" });
         }
 
-        // Check ownership
         if (post.userId.toString() !== user._id.toString()) {
             return res
                 .status(401)
                 .json({ message: "Unauthorized to edit this post" });
         }
 
-        // Update Text
         if (body !== undefined) {
             post.body = body;
         }
 
-        // Update Media if provided
         if (req.file) {
-            // 1. Delete the OLD media if it exists
             if (post.media) {
                 await deleteFromCloudinary(post.media);
             }
-            // 2. Set the NEW media
             post.media = req.file.path;
             post.fileType = req.file.mimetype;
         }
@@ -159,6 +151,7 @@ export const updatePost = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const get_comments_by_post = async (req, res) => {
     const { post_id } = req.query;
     try {
@@ -189,18 +182,23 @@ export const delete_comment_of_user = async (req, res) => {
             return res.status(404).json({ message: "Unauthorized" });
         }
         await Comment.deleteOne({ _id: comment_id });
+
+        // Optionally remove notification related to this comment (advanced logic would require storing commentId in notification)
+
         return res.json({ message: "Comment Deleted" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 };
 
-// --- NEW: Toggle Reaction Logic ---
+// --- UPDATED: Toggle Reaction Logic with Notifications ---
 export const toggleReactionOnPost = async (req, res) => {
     const { post_id, token, reactionType } = req.body;
 
     try {
-        const user = await User.findOne({ token: token }).select("_id");
+        const user = await User.findOne({ token: token }).select(
+            "_id name profilePicture"
+        );
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -213,48 +211,84 @@ export const toggleReactionOnPost = async (req, res) => {
 
         if (!post.reactions) post.reactions = [];
 
-        // Find if user has already reacted
         const existingIndex = post.reactions.findIndex(
             (r) => r.userId.toString() === userId.toString()
         );
 
+        let action = "added";
+
         if (existingIndex !== -1) {
             const existingReaction = post.reactions[existingIndex];
 
-            // 1. Same reaction clicked -> Remove it (Toggle Off)
+            // 1. Same reaction clicked -> Remove (Unlike)
             if (existingReaction.type === reactionType) {
                 post.reactions.splice(existingIndex, 1);
-                await post.save();
-                return res.json({
-                    message: "Reaction removed",
-                    post_id: post._id,
-                    reactions: post.reactions,
+                action = "removed";
+
+                // Ideally, remove the previous notification here
+                await Notification.deleteOne({
+                    sender: userId,
+                    recipient: post.userId,
+                    type: "like",
+                    post: post._id,
                 });
             }
-            // 2. Different reaction clicked -> Update type
+            // 2. Different reaction clicked -> Update
             else {
                 post.reactions[existingIndex].type = reactionType;
-                await post.save();
-                return res.json({
-                    message: "Reaction updated",
-                    post_id: post._id,
-                    reactions: post.reactions,
-                });
+                action = "updated";
             }
         } else {
-            // 3. New Reaction -> Add it
+            // 3. New Reaction -> Add
             post.reactions.push({ userId: userId, type: reactionType });
-            await post.save();
-            return res.json({
-                message: "Reaction added",
-                post_id: post._id,
-                reactions: post.reactions,
-            });
+
+            // --- NOTIFICATION START ---
+            if (post.userId.toString() !== userId.toString()) {
+                const newNotif = new Notification({
+                    recipient: post.userId,
+                    sender: userId,
+                    type: "like",
+                    post: post._id,
+                    message: `reacted to your post`,
+                });
+                await newNotif.save();
+
+                // Real-time Emit
+                const receiverSocketId = req.userSocketMap?.get(
+                    post.userId.toString()
+                );
+                if (receiverSocketId) {
+                    req.io.to(receiverSocketId).emit("new_notification", {
+                        _id: newNotif._id,
+                        recipient: newNotif.recipient,
+                        sender: {
+                            _id: userId,
+                            name: user.name,
+                            profilePicture: user.profilePicture,
+                        },
+                        type: "like",
+                        post: { _id: post._id, body: post.body },
+                        message: newNotif.message,
+                        isRead: false,
+                        createdAt: newNotif.createdAt,
+                    });
+                }
+            }
+            // --- NOTIFICATION END ---
         }
+
+        await post.save();
+        return res.json({
+            message: `Reaction ${action}`,
+            post_id: post._id,
+            reactions: post.reactions,
+        });
     } catch (error) {
+        console.error(error);
         return res.status(500).json({ message: error.message });
     }
 };
+
 export const toggleCommentLike = async (req, res) => {
     const { comment_id, token } = req.body;
     try {
@@ -265,7 +299,6 @@ export const toggleCommentLike = async (req, res) => {
         if (!comment)
             return res.status(404).json({ message: "Comment not found" });
 
-        // Initialize likes array if it doesn't exist (for old comments)
         if (!comment.likes) comment.likes = [];
 
         const index = comment.likes.indexOf(user._id);

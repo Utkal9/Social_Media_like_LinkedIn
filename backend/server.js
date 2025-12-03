@@ -7,12 +7,14 @@ import passport from "./config/passport.js";
 import postRoutes from "./routes/posts.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import messagingRoutes from "./routes/messaging.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
+import Notification from "./models/notification.model.js";
 
 // --- SWAGGER IMPORTS ---
 import swaggerUi from "swagger-ui-express";
@@ -25,14 +27,10 @@ const PORT = process.env.PORT || 9090;
 const URL = process.env.MONGO_URL;
 
 // --- 1. DETERMINE SERVER URL ---
-// If on Render, use BACKEND_URL. If local, use localhost.
 const SERVER_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 
 const corsOptions = {
-    origin: [
-        "http://localhost:3000",
-        process.env.FRONTEND_URL, // Allow deployed frontend
-    ],
+    origin: ["http://localhost:3000", process.env.FRONTEND_URL],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 };
@@ -97,7 +95,6 @@ const swaggerOptions = {
                 name: "LinkUps Support",
             },
         },
-        // --- 2. DYNAMIC SERVER URL ---
         servers: [
             {
                 url: SERVER_URL,
@@ -116,11 +113,7 @@ const swaggerOptions = {
                 },
             },
         },
-        security: [
-            {
-                bearerAuth: [],
-            },
-        ],
+        security: [{ bearerAuth: [] }],
     },
     apis: ["./routes/*.js"],
 };
@@ -137,14 +130,22 @@ app.use(
     })
 );
 
+// --- SOCKET LOGIC ---
+const userSocketMap = new Map();
+let meetingMessages = {};
+
+// Middleware to attach IO and SocketMap to Request
+app.use((req, res, next) => {
+    req.io = io;
+    req.userSocketMap = userSocketMap;
+    next();
+});
+
 // --- API ROUTES ---
 app.use(postRoutes);
 app.use(userRoutes);
 app.use(messagingRoutes);
-
-// --- SOCKET LOGIC ---
-const userSocketMap = new Map();
-let meetingMessages = {};
+app.use(notificationRoutes);
 
 io.on("connection", (socket) => {
     console.log(`Socket Connected: ${socket.id}`);
@@ -229,10 +230,25 @@ io.on("connection", (socket) => {
             });
     });
 
-    socket.on("start-call", ({ fromUser, toUserId, roomUrl }) => {
+    socket.on("start-call", async ({ fromUser, toUserId, roomUrl }) => {
         const toSocketId = userSocketMap.get(toUserId);
+
         if (toSocketId) {
+            // User is Online -> Ring them
             io.to(toSocketId).emit("incoming-call", { fromUser, roomUrl });
+        } else {
+            // User is Offline -> Create Missed Call Notification
+            try {
+                const newNotif = new Notification({
+                    recipient: toUserId,
+                    sender: fromUser._id,
+                    type: "missed_call",
+                    message: "tried to video call you.",
+                });
+                await newNotif.save();
+            } catch (err) {
+                console.error("Error saving offline notification", err);
+            }
         }
     });
 
@@ -310,10 +326,22 @@ io.on("connection", (socket) => {
         for (let [userId, socketId] of userSocketMap.entries()) {
             if (socketId === socket.id) {
                 userSocketMap.delete(userId);
-                User.findByIdAndUpdate(userId, { isOnline: false }).catch(
-                    (e) => {}
-                );
-                io.emit("user-status-change", { userId, isOnline: false });
+
+                // --- FIX STARTS HERE ---
+                const now = new Date();
+                // 1. Update DB with current time
+                User.findByIdAndUpdate(userId, {
+                    isOnline: false,
+                    lastSeen: now,
+                }).catch((e) => {});
+                // 2. Emit new time to frontend immediately
+                io.emit("user-status-change", {
+                    userId,
+                    isOnline: false,
+                    lastSeen: now,
+                });
+                // --- FIX ENDS HERE ---
+
                 break;
             }
         }
@@ -324,7 +352,6 @@ const start = async () => {
     try {
         await mongoose.connect(URL);
         console.log("✅ MongoDB connected");
-        // --- 3. DYNAMIC LOGGING ---
         console.log(`📄 Swagger Docs available at ${SERVER_URL}/api-docs`);
         httpServer.listen(PORT, () =>
             console.log(`🚀 Server running on port ${PORT}`)

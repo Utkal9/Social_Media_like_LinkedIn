@@ -3,6 +3,7 @@ import Profile from "../models/profile.model.js";
 import Post from "../models/posts.model.js";
 import Comment from "../models/comments.model.js";
 import Message from "../models/message.model.js";
+import Notification from "../models/notification.model.js"; // [NEW]
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import ConnectionRequest from "../models/connections.model.js";
@@ -254,12 +255,10 @@ export const login = async (req, res) => {
             return res.status(404).json({ message: "User does not exist" });
 
         if (user.active === false) {
-            return res
-                .status(403)
-                .json({
-                    message:
-                        "Please verify your email address to access the network.",
-                });
+            return res.status(403).json({
+                message:
+                    "Please verify your email address to access the network.",
+            });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -356,12 +355,10 @@ export const resetPassword = async (req, res) => {
                 console.error("Confirmation email error:", e.message)
             );
 
-            return res
-                .status(200)
-                .json({
-                    success: true,
-                    message: "Password updated successfully",
-                });
+            return res.status(200).json({
+                success: true,
+                message: "Password updated successfully",
+            });
         } else {
             return res.status(400).json({ message: "Password is required" });
         }
@@ -465,6 +462,9 @@ export const confirmAccountDeletion = async (req, res) => {
         await Message.deleteMany({
             $or: [{ sender: userId }, { receiver: userId }],
         });
+        await Notification.deleteMany({
+            $or: [{ sender: userId }, { recipient: userId }],
+        }); // Clean notifications
         await Profile.deleteOne({ userId });
         await User.deleteOne({ _id: userId });
 
@@ -1042,6 +1042,7 @@ export const downloadProfile = async (req, res) => {
     }
 };
 
+// --- UPDATED: Send Connection Request ---
 export const sendConnectionRequest = async (req, res) => {
     const { token, connectionId } = req.body;
     try {
@@ -1071,6 +1072,36 @@ export const sendConnectionRequest = async (req, res) => {
             connectionId: connectionUser._id,
         });
         await request.save();
+
+        // --- NOTIFICATION START ---
+        const newNotif = new Notification({
+            recipient: connectionUser._id,
+            sender: user._id,
+            type: "connection_request",
+            message: "sent you a connection request.",
+        });
+        await newNotif.save();
+
+        const receiverSocketId = req.userSocketMap?.get(
+            connectionUser._id.toString()
+        );
+        if (receiverSocketId) {
+            req.io.to(receiverSocketId).emit("new_notification", {
+                _id: newNotif._id,
+                recipient: newNotif.recipient,
+                sender: {
+                    _id: user._id,
+                    name: user.name,
+                    profilePicture: user.profilePicture,
+                },
+                type: "connection_request",
+                message: newNotif.message,
+                isRead: false,
+                createdAt: newNotif.createdAt,
+            });
+        }
+        // --- NOTIFICATION END ---
+
         return res.json({ message: "Request Sent" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
@@ -1111,6 +1142,7 @@ export const whatAreMyConnections = async (req, res) => {
     }
 };
 
+// --- UPDATED: Accept Connection Request ---
 export const acceptConnectionRequest = async (req, res) => {
     const { token, requestId, action_type } = req.body;
     try {
@@ -1126,6 +1158,36 @@ export const acceptConnectionRequest = async (req, res) => {
         if (action_type === "accept") {
             connection.status_accepted = true;
             await connection.save();
+
+            // --- NOTIFICATION START ---
+            const newNotif = new Notification({
+                recipient: connection.userId, // The person who sent the request
+                sender: user._id, // Me (The acceptor)
+                type: "connection_accepted",
+                message: "accepted your connection request.",
+            });
+            await newNotif.save();
+
+            const receiverSocketId = req.userSocketMap?.get(
+                connection.userId.toString()
+            );
+            if (receiverSocketId) {
+                req.io.to(receiverSocketId).emit("new_notification", {
+                    _id: newNotif._id,
+                    recipient: newNotif.recipient,
+                    sender: {
+                        _id: user._id,
+                        name: user.name,
+                        profilePicture: user.profilePicture,
+                    },
+                    type: "connection_accepted",
+                    message: newNotif.message,
+                    isRead: false,
+                    createdAt: newNotif.createdAt,
+                });
+            }
+            // --- NOTIFICATION END ---
+
             return res.json({ message: "Request Accepted" });
         } else {
             await ConnectionRequest.deleteOne({ _id: requestId });
@@ -1136,20 +1198,58 @@ export const acceptConnectionRequest = async (req, res) => {
     }
 };
 
+// --- UPDATED: Comment Post ---
 export const commentPost = async (req, res) => {
     const { token, post_id, commentBody } = req.body;
     try {
-        const user = await User.findOne({ token: token }).select("_id");
+        const user = await User.findOne({ token: token }).select(
+            "_id name profilePicture"
+        );
         if (!user) return res.status(404).json({ message: "User not found" });
         const post = await Post.findOne({ _id: post_id });
         if (!post) return res.status(404).json({ message: "Post not found" });
+
         const comment = new Comment({
             userId: user._id,
             postId: post_id,
             body: commentBody,
         });
         await comment.save();
-        return res.status(200).json({ message: "comment Added" });
+
+        // --- NOTIFICATION START ---
+        if (post.userId.toString() !== user._id.toString()) {
+            const newNotif = new Notification({
+                recipient: post.userId,
+                sender: user._id,
+                type: "comment",
+                post: post._id,
+                message: "commented on your post.",
+            });
+            await newNotif.save();
+
+            const receiverSocketId = req.userSocketMap?.get(
+                post.userId.toString()
+            );
+            if (receiverSocketId) {
+                req.io.to(receiverSocketId).emit("new_notification", {
+                    _id: newNotif._id,
+                    recipient: newNotif.recipient,
+                    sender: {
+                        _id: user._id,
+                        name: user.name,
+                        profilePicture: user.profilePicture,
+                    },
+                    type: "comment",
+                    post: { _id: post._id, body: post.body },
+                    message: newNotif.message,
+                    isRead: false,
+                    createdAt: newNotif.createdAt,
+                });
+            }
+        }
+        // --- NOTIFICATION END ---
+
+        return res.status(200).json({ message: "Comment Added" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
