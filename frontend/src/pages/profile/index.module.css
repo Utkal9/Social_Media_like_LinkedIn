@@ -918,76 +918,81 @@
     font-weight: 600;
     cursor: pointer;
 }
-/* --- Image Modal (Lightbox) --- */
+/* --- HD Profile Preview Modal --- */
 .imageModalOverlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.92); /* Darker background for focus */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 5000;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
     animation: fadeIn 0.3s ease;
 }
 
 .imageModalContent {
     position: relative;
-    max-width: 90%;
-    max-height: 90%;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Ensure container allows image to grow */
-    width: auto;
-    height: auto;
+    /* Fixed Logic for Consistency */
+    width: 500px; /* Base Desktop Width */
+    height: 500px; /* Base Desktop Height */
+    max-width: 90vw;
+    max-height: 90vh;
+    background: transparent;
 }
 
 .imageModalContent img {
-    display: block;
-    width: auto;
-    height: auto;
-    /* Constraints to prevent it from being too small or too big */
-    min-width: 300px; /* Force a minimum size */
-    min-height: 300px;
-    max-width: 100%;
-    max-height: 80vh;
-
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures HD image isn't cropped */
     border-radius: 12px;
     border: 2px solid var(--neon-teal);
-    box-shadow: 0 0 30px rgba(15, 255, 198, 0.3);
-    background-color: #000; /* Background for transparency */
+    box-shadow: 0 0 50px rgba(15, 255, 198, 0.2);
+    background-color: #000;
 }
 
 .closeImageBtn {
     position: absolute;
-    top: -50px;
+    top: -60px;
     right: 0;
     background: rgba(255, 255, 255, 0.1);
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
     cursor: pointer;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
     z-index: 5001;
 }
 
 .closeImageBtn:hover {
     background: var(--neon-pink);
+    border-color: var(--neon-pink);
+    transform: scale(1.1);
 }
 
 .closeImageBtn svg {
     width: 24px;
     height: 24px;
+}
+
+/* Mobile Adjustment */
+@media (max-width: 600px) {
+    .imageModalContent {
+        width: 100vw;
+        height: auto;
+        aspect-ratio: 1/1; /* Square on mobile */
+    }
 }
 
 /* --- Mobile Responsive --- */
