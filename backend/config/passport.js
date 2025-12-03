@@ -10,6 +10,10 @@ dotenv.config();
 
 const generateToken = () => crypto.randomBytes(32).toString("hex");
 
+// Default image URL (Used to check if user has changed their pic)
+const DEFAULT_PROFILE_PIC =
+    "https://res.cloudinary.com/dx28uxwrg/image/upload/v1762799986/default_dlizpg.jpg";
+
 const authCallback = async (_accessToken, _refreshToken, profile, done) => {
     try {
         // 1. Check if user exists
@@ -22,24 +26,38 @@ const authCallback = async (_accessToken, _refreshToken, profile, done) => {
         });
 
         const newToken = generateToken();
-        // Get the photo URL from the provider (Google/GitHub)
-        const socialPicture =
-            profile.photos && profile.photos.length > 0
-                ? profile.photos[0].value
-                : null;
+
+        // --- Get HD Photo from Provider ---
+        let socialPicture = null;
+        if (profile.photos && profile.photos.length > 0) {
+            socialPicture = profile.photos[0].value;
+            // Google: Replace s96-c (small) with s1024-c (HD)
+            if (profile.provider === "google") {
+                socialPicture = socialPicture.replace("=s96-c", "=s1024-c");
+            }
+        }
 
         if (user) {
-            // 2. USER EXISTS: Update Token & Info
+            // 2. USER EXISTS: Update Token & IDs
             user.token = newToken;
             if (profile.provider === "google" && !user.googleId)
                 user.googleId = profile.id;
             if (profile.provider === "github" && !user.githubId)
                 user.githubId = profile.id;
 
-            // --- FORCE PHOTO SYNC ---
-            // Always update the photo to the latest one from Google/GitHub
-            // This fixes broken images automatically on next login
-            if (socialPicture) {
+            // --- SMART PHOTO SYNC LOGIC ---
+            // Only overwrite if:
+            // A. The current picture is the DEFAULT placeholder.
+            // B. OR The current picture is NOT from Cloudinary (meaning it's an old/expired social link).
+            // This PRESERVES custom pictures uploaded by the user (which are on Cloudinary).
+
+            const currentPic = user.profilePicture;
+            const isDefault = currentPic === DEFAULT_PROFILE_PIC;
+            const isCustomUpload =
+                currentPic && currentPic.includes("cloudinary") && !isDefault;
+
+            // If we have a new social picture AND the current one is NOT a custom upload
+            if (socialPicture && !isCustomUpload) {
                 user.profilePicture = socialPicture;
             }
 
@@ -57,10 +75,8 @@ const authCallback = async (_accessToken, _refreshToken, profile, done) => {
                 name: profile.displayName || profile.username,
                 email: profile.emails[0].value,
                 username: uniqueUsername,
-                // Use social picture directly
-                profilePicture:
-                    socialPicture ||
-                    "https://res.cloudinary.com/dx28uxwrg/image/upload/v1762799986/default_dlizpg.jpg",
+                // Use social picture if available, otherwise default
+                profilePicture: socialPicture || DEFAULT_PROFILE_PIC,
                 token: newToken,
                 googleId:
                     profile.provider === "google" ? profile.id : undefined,

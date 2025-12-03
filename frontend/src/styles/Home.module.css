@@ -14,12 +14,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 10%;
+    padding: 80px 10% 40px;
     position: relative;
+    /* Use variables for gradient so it adapts or stays subtle */
     background: radial-gradient(
         circle at 20% 50%,
-        rgba(139, 92, 246, 0.15) 0%,
-        transparent 50%
+        var(--holo-border) 0%,
+        /* Uses border color for subtle tint */ transparent 50%
     );
     z-index: 1;
 }
@@ -28,11 +29,12 @@
     max-width: 600px;
     z-index: 2;
 }
+
 .heroBadge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(15, 255, 198, 0.1);
+    background: var(--holo-glass); /* Adaptive glass background */
     border: 1px solid var(--neon-teal);
     color: var(--neon-teal);
     padding: 6px 16px;
@@ -40,7 +42,9 @@
     font-family: "Orbitron", sans-serif;
     font-size: 0.8rem;
     margin-bottom: 20px;
+    letter-spacing: 1px;
 }
+
 .pulseDot {
     width: 8px;
     height: 8px;
@@ -49,20 +53,23 @@
     box-shadow: 0 0 10px var(--neon-teal);
     animation: pulse 2s infinite;
 }
+
 .heroTitle {
     font-family: "Orbitron", sans-serif;
-    font-size: 4rem;
+    font-size: 3.8rem;
     line-height: 1.1;
     margin-bottom: 20px;
     font-weight: 800;
     color: var(--text-primary);
 }
+
 .gradientText {
     background: linear-gradient(90deg, var(--neon-violet), var(--neon-teal));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
 }
+
 .heroSubtitle {
     color: var(--text-secondary);
     font-size: 1.1rem;
@@ -70,10 +77,12 @@
     margin-bottom: 40px;
     max-width: 480px;
 }
+
 .heroButtons {
     display: flex;
     gap: 16px;
 }
+
 .primaryBtn {
     background: var(--neon-violet);
     color: white;
@@ -85,11 +94,16 @@
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: var(--glow-primary);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
 }
+
 .primaryBtn:hover {
-    background: #7c3aed;
+    filter: brightness(1.15); /* Universal hover effect */
     transform: translateY(-2px);
 }
+
 .secondaryBtn {
     background: transparent;
     border: 1px solid var(--holo-border);
@@ -100,10 +114,15 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
 }
+
 .secondaryBtn:hover {
     border-color: var(--neon-teal);
     color: var(--neon-teal);
+    background: var(--holo-glass);
 }
 
 /* --- HOLOGRAM FRAME --- */
@@ -112,13 +131,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    perspective: 1000px;
 }
 
 .hologramFrame {
     position: relative;
     width: 100%;
     max-width: 500px;
-    perspective: 1000px;
 }
 
 .imageWrapper {
@@ -127,7 +146,7 @@
     overflow: hidden;
     border: 1px solid var(--holo-border);
     box-shadow: var(--shadow-card);
-    background: #000;
+    background: #000; /* Main image bg stays dark for contrast */
 }
 
 .heroImg {
@@ -135,10 +154,6 @@
     height: auto;
     display: block;
     opacity: 0.9;
-    transition: transform 0.5s ease;
-}
-.hologramFrame:hover .heroImg {
-    transform: scale(1.03);
 }
 
 .scanline {
@@ -146,24 +161,15 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.1);
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     opacity: 0.5;
     animation: scan 3s linear infinite;
     z-index: 2;
     pointer-events: none;
 }
 
-@keyframes scan {
-    0% {
-        top: -10%;
-    }
-    100% {
-        top: 110%;
-    }
-}
-
-/* Floating Cards */
 .floatCard {
     position: absolute;
     background: var(--holo-panel);
@@ -177,7 +183,6 @@
     box-shadow: var(--shadow-card);
     z-index: 10;
     min-width: 180px;
-    animation: float 4s ease-in-out infinite;
     color: var(--text-primary);
     font-size: 0.9rem;
 }
@@ -186,6 +191,7 @@
     width: 36px;
     height: 36px;
     background: var(--neon-violet);
+    color: white;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -197,13 +203,12 @@
     top: 10%;
     right: -30px;
     border-left: 3px solid var(--neon-violet);
-    animation-delay: 0s;
 }
+
 .cardBottomLeft {
     bottom: 15%;
     left: -30px;
     border-left: 3px solid var(--neon-teal);
-    animation-delay: 2s;
 }
 
 /* --- MARQUEE --- */
@@ -214,81 +219,138 @@
     border-bottom: 1px solid var(--holo-border);
     overflow: hidden;
     white-space: nowrap;
+    position: relative;
 }
+/* Fading edges */
+.marqueeContainer::before,
+.marqueeContainer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 100px;
+    height: 100%;
+    z-index: 2;
+}
+.marqueeContainer::before {
+    left: 0;
+    background: linear-gradient(to right, var(--holo-panel), transparent);
+}
+.marqueeContainer::after {
+    right: 0;
+    background: linear-gradient(to left, var(--holo-panel), transparent);
+}
+
 .marqueeContent {
     display: inline-block;
-    animation: scroll 20s linear infinite;
+    animation: scroll 30s linear infinite;
 }
+
 .techItem {
     font-family: "Orbitron", sans-serif;
     font-weight: 700;
     color: var(--text-secondary);
     opacity: 0.5;
-    font-size: 1.5rem;
-    margin: 0 30px;
+    font-size: 1.2rem;
+    margin: 0 40px;
     letter-spacing: 2px;
 }
 
 /* --- FEATURES --- */
 .featureSection {
-    padding: 80px 10%;
+    padding: 100px 10%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 60px;
+    border-bottom: 1px solid var(--holo-border);
 }
+
 .reverse {
     flex-direction: row-reverse;
-    background: var(--holo-glass);
+    background: linear-gradient(to right, var(--holo-bg), var(--holo-panel));
 }
+
 .featureText {
     flex: 1;
     max-width: 500px;
 }
+
 .featureTitle {
     font-family: "Orbitron", sans-serif;
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     margin-bottom: 20px;
     color: var(--text-primary);
+    line-height: 1.2;
 }
+
 .featureDesc {
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     line-height: 1.7;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
+
 .featureList {
     list-style: none;
     padding: 0;
 }
+
 .featureList li {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-size: 1rem;
     color: var(--text-primary);
+    font-weight: 500;
 }
+
 .featureDemo {
     flex: 1;
     display: flex;
     justify-content: center;
 }
 
-/* --- MOCK UIs --- */
+/* --- INTERACTIVE DEMOS (Designed for Light & Dark) --- */
 .mockDoc {
-    width: 300px;
-    height: 380px;
-    background: #fff; /* Keep doc white */
-    border-radius: 4px;
+    width: 320px;
+    height: 400px;
+    background: #ffffff; /* Doc is always white paper */
+    border-radius: 8px;
     padding: 30px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-card);
     position: relative;
-    transform: rotate(-5deg);
+    transform: rotate(-3deg);
     transition: transform 0.3s;
+    border: 1px solid #e5e7eb;
 }
 .mockDoc:hover {
-    transform: rotate(0deg) scale(1.05);
+    transform: rotate(0deg) scale(1.02);
 }
-.docHeader {
-    margin-bottom: 20px;
+.docInputWrapper {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+.docInputWrapper label {
+    display: block;
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.demoInput {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #333;
+    outline: none;
+}
+.docName {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #333;
+    text-transform: uppercase;
 }
 .docLine {
     background: #e2e8f0;
@@ -298,8 +360,8 @@
 }
 .docRow {
     background: #f1f5f9;
-    height: 40px;
-    margin-bottom: 10px;
+    height: 20px;
+    margin-bottom: 15px;
     border-radius: 4px;
 }
 .docBtn {
@@ -313,11 +375,14 @@
     border-radius: 20px;
     display: flex;
     gap: 8px;
+    align-items: center;
     font-size: 0.8rem;
     font-weight: 600;
-    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
+    cursor: default;
 }
 
+/* Post Demo */
 .mockPost {
     width: 350px;
     background: var(--holo-panel);
@@ -326,6 +391,10 @@
     padding: 20px;
     transform: rotate(3deg);
     box-shadow: var(--shadow-card);
+    transition: transform 0.3s;
+}
+.mockPost:hover {
+    transform: rotate(0deg) scale(1.02);
 }
 .mockPostHeader {
     display: flex;
@@ -337,30 +406,72 @@
     height: 40px;
     border-radius: 50%;
     background: var(--neon-violet);
+    border: 2px solid var(--holo-border);
 }
 .mockMeta {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
 }
 .mockLine {
     background: var(--text-secondary);
     opacity: 0.2;
-    height: 10px;
+    height: 8px;
     border-radius: 4px;
-    margin-bottom: 4px;
 }
 .mockContent {
-    height: 120px;
     background: var(--holo-glass);
     border-radius: 8px;
     margin-bottom: 16px;
+    padding: 15px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+}
+.typingText {
+    font-family: monospace;
+    color: var(--neon-teal);
+    font-size: 0.9rem;
 }
 .mockActions {
     display: flex;
-    gap: 20px;
+    gap: 12px;
+}
+.demoActionBtn {
+    background: var(--holo-glass);
+    border: 1px solid var(--holo-border);
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+.demoActionBtn:hover {
+    border-color: var(--neon-violet);
+    color: var(--text-primary);
+}
+.demoActionBtn.liked {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+    animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes heartPop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
+/* Connect Demo */
 .mockChat {
     width: 320px;
     background: var(--holo-panel);
@@ -369,31 +480,24 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 0 30px rgba(15, 255, 198, 0.2);
+    gap: 15px;
+    box-shadow: var(--shadow-card);
 }
 .chatBubbleLeft {
     align-self: flex-start;
     background: var(--holo-glass);
     color: var(--text-primary);
-    padding: 10px;
+    padding: 10px 14px;
     border-radius: 12px 12px 12px 0;
     font-size: 0.9rem;
-}
-.chatBubbleRight {
-    align-self: flex-end;
-    background: var(--neon-teal);
-    color: #000;
-    padding: 10px;
-    border-radius: 12px 12px 0 12px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    border: 1px solid var(--holo-border);
 }
 .videoCallBtn {
     margin-top: 10px;
-    background: var(--neon-pink);
-    color: white;
-    padding: 12px;
+    background: rgba(236, 72, 153, 0.1);
+    border: 1px solid var(--neon-pink);
+    color: var(--text-primary);
+    padding: 14px;
     border-radius: 12px;
     text-align: center;
     font-weight: 700;
@@ -401,26 +505,44 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
+    transition: all 0.3s;
+}
+.videoCallBtn:hover {
+    background: var(--neon-pink);
+    color: white;
 }
 .camIcon {
-    width: 12px;
-    height: 12px;
-    background: white;
-    border-radius: 2px;
+    width: 10px;
+    height: 10px;
+    background: currentColor;
+    border-radius: 50%;
+    animation: pulseRed 2s infinite;
+}
+@keyframes pulseRed {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 /* --- STATS --- */
 .statsSection {
-    padding: 60px 10%;
+    padding: 80px 10%;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    gap: 30px;
     background: var(--holo-panel);
+    border-bottom: 1px solid var(--holo-border);
 }
 .statCard {
     background: var(--holo-glass);
     border: 1px solid var(--holo-border);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 30px;
     text-align: center;
     transition: transform 0.3s;
@@ -434,28 +556,26 @@
     font-family: "Orbitron";
     font-size: 2.5rem;
     color: var(--text-primary);
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 .statCard p {
     color: var(--neon-violet);
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     letter-spacing: 1px;
 }
 
 /* --- DEVELOPER SECTION --- */
 .developerSection {
-    padding: 80px 0;
-    position: relative;
-    z-index: 2;
+    padding: 100px 0;
     display: flex;
     justify-content: center;
 }
 .devContentWrapper {
     width: 100%;
     max-width: 800px;
-    text-align: center;
+    padding: 0 20px;
 }
 .sectionTitle {
     text-align: center;
@@ -464,13 +584,13 @@
     color: var(--text-primary);
     margin-bottom: 0.5rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 .sectionSubtitle {
     text-align: center;
     color: var(--text-secondary);
-    margin-bottom: 3rem;
-    font-size: 1rem;
+    margin-bottom: 40px;
+    font-size: 1.1rem;
 }
 .devCard {
     background: var(--holo-panel);
@@ -481,20 +601,13 @@
     display: flex;
     align-items: center;
     gap: 40px;
-    margin-top: 20px;
-    text-align: left;
     box-shadow: var(--shadow-card);
     transition: transform 0.3s ease;
 }
-.devCard:hover {
-    transform: translateY(-5px);
-    border-color: var(--neon-blue);
-    box-shadow: var(--glow-primary);
-}
 .devAvatarWrapper {
     position: relative;
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
     flex-shrink: 0;
 }
 .devAvatar {
@@ -508,15 +621,15 @@
 }
 .avatarRing {
     position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
     border-radius: 50%;
     border: 2px solid var(--neon-teal);
     border-top-color: transparent;
     border-left-color: transparent;
-    animation: spin 4s linear infinite;
+    animation: spin 6s linear infinite;
     z-index: 1;
 }
 .devInfo {
@@ -530,9 +643,9 @@
 }
 .devRole {
     color: var(--neon-teal);
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    margin: 4px 0 12px 0;
+    margin: 4px 0 15px 0;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -540,7 +653,7 @@
     color: var(--text-secondary);
     font-size: 1rem;
     line-height: 1.6;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 .socialRow {
     display: flex;
@@ -569,66 +682,11 @@
     height: 22px;
 }
 
-/* --- TESTIMONIALS --- */
-.testimonialsSection {
-    padding: 80px 10%;
-    background: var(--holo-bg);
-}
-.sectionHeader {
-    text-align: center;
-    font-family: "Orbitron";
-    font-size: 2.5rem;
-    color: var(--text-primary);
-    margin-bottom: 50px;
-}
-.testiGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-}
-.testimonialCard {
-    background: var(--holo-panel);
-    border: 1px solid var(--holo-border);
-    padding: 30px;
-    border-radius: 16px;
-    position: relative;
-}
-.testiHeader {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-.testiAvatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    border: 2px solid var(--neon-teal);
-}
-.testiHeader h4 {
-    color: var(--text-primary);
-    margin: 0;
-    font-size: 1.1rem;
-}
-.testiHeader span {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-}
-.testimonialCard p {
-    color: var(--text-secondary);
-    font-style: italic;
-    line-height: 1.6;
-}
-.stars {
-    color: #fbbf24;
-    margin-top: 15px;
-    font-size: 1.2rem;
-}
-
 /* --- CTA --- */
 .ctaSection {
     text-align: center;
-    padding: 100px 20px;
+    padding: 120px 20px;
+    /* Uses background variables to ensure light mode has correct white/grey gradient */
     background: linear-gradient(to bottom, var(--holo-bg), var(--holo-panel));
 }
 .ctaSection h2 {
@@ -639,46 +697,42 @@
 }
 .ctaSection p {
     color: var(--text-secondary);
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     font-size: 1.2rem;
 }
 .glowBtn {
     background: var(--neon-teal);
     color: #000;
     border: none;
-    padding: 16px 40px;
+    padding: 18px 48px;
     border-radius: 50px;
     font-size: 1.1rem;
     font-weight: 800;
     cursor: pointer;
     box-shadow: var(--glow-teal);
     transition: transform 0.2s;
+    font-family: "Orbitron", sans-serif;
+    letter-spacing: 1px;
 }
 .glowBtn:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 50px rgba(15, 255, 198, 0.5);
 }
 
-/* --- UTILS --- */
-.tagContainer {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-}
-.techTag {
-    background: rgba(15, 255, 198, 0.1);
-    color: var(--neon-teal);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    border: 1px solid var(--neon-teal);
-}
+/* --- ANIMATIONS --- */
 @keyframes scroll {
     0% {
         transform: translateX(0);
     }
     100% {
         transform: translateX(-50%);
+    }
+}
+@keyframes scan {
+    0% {
+        top: -10%;
+    }
+    100% {
+        top: 110%;
     }
 }
 @keyframes spin {
@@ -692,21 +746,15 @@
 @keyframes pulse {
     0% {
         opacity: 1;
+        transform: scale(1);
     }
     50% {
         opacity: 0.5;
+        transform: scale(1.2);
     }
     100% {
         opacity: 1;
-    }
-}
-@keyframes float {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-20px);
+        transform: scale(1);
     }
 }
 
@@ -720,34 +768,26 @@
     .heroButtons {
         justify-content: center;
     }
+    .heroTitle {
+        font-size: 2.5rem;
+    }
+    .hologramFrame {
+        margin-top: 50px;
+    }
     .featureSection {
         flex-direction: column;
         text-align: center;
+        padding: 60px 20px;
     }
     .reverse {
         flex-direction: column;
     }
-    .hologramFrame {
-        max-width: 350px;
-        margin-top: 40px;
-    }
-    .cardTopRight {
-        right: -10px;
-    }
-    .cardBottomLeft {
-        left: -10px;
-    }
     .statsSection {
         grid-template-columns: 1fr 1fr;
-    }
-    .testiGrid {
-        grid-template-columns: 1fr;
     }
     .devCard {
         flex-direction: column;
         text-align: center;
-        gap: 20px;
-        padding: 30px;
     }
     .socialRow {
         justify-content: center;

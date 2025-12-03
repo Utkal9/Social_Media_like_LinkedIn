@@ -3,8 +3,11 @@ import Head from "next/head";
 import styles from "@/styles/Home.module.css";
 import { useRouter } from "next/router";
 import UserLayout from "@/layout/UserLayout";
+import { useEffect, useState, useRef } from "react";
+import { useSelector } from "react-redux";
+import { motion, useInView } from "framer-motion";
 
-// --- Tech Stack Data ---
+// --- Tech Stack Icons ---
 const techStack = [
     "REACT",
     "NEXT.JS",
@@ -16,7 +19,6 @@ const techStack = [
     "WEBRTC",
     "CLOUDINARY",
     "JWT",
-    "PASSPORT.JS",
 ];
 
 // --- Icons ---
@@ -31,32 +33,204 @@ const LinkedInIcon = () => (
     </svg>
 );
 
-const TestimonialCard = ({ name, role, text, img }) => (
-    <div className={styles.testimonialCard}>
-        <div className={styles.testiHeader}>
-            <img src={img} alt={name} className={styles.testiAvatar} />
-            <div>
-                <h4>{name}</h4>
-                <span>{role}</span>
+// --- ANIMATED COUNTER COMPONENT ---
+const AnimatedCounter = ({ end, suffix = "" }) => {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true });
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        if (isInView) {
+            let start = 0;
+            const duration = 2000;
+            const increment = end / (duration / 16);
+
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= end) {
+                    setCount(end);
+                    clearInterval(timer);
+                } else {
+                    setCount(Math.floor(start));
+                }
+            }, 16);
+            return () => clearInterval(timer);
+        }
+    }, [isInView, end]);
+
+    return (
+        <span ref={ref}>
+            {count}
+            {suffix}
+        </span>
+    );
+};
+
+// --- INTERACTIVE DEMO COMPONENTS ---
+
+// 1. Resume Builder Demo (Interactive Input)
+const ResumeDemo = () => {
+    const [name, setName] = useState("John Doe");
+    return (
+        <div className={styles.mockDoc}>
+            <div className={styles.docInputWrapper}>
+                <label>Input Identity:</label>
+                <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={18}
+                    className={styles.demoInput}
+                    placeholder="Type name..."
+                />
+            </div>
+            {/* The Document Preview */}
+            <div className={styles.docHeader}>
+                <div className={styles.docName}>{name || "Anonymous"}</div>
+                <div
+                    className={styles.docLine}
+                    style={{ width: "40%", height: "8px", marginTop: "5px" }}
+                ></div>
+            </div>
+            <div className={styles.docBody}>
+                <div className={styles.docRow}></div>
+                <div className={styles.docRow} style={{ width: "80%" }}></div>
+                <div className={styles.docRow} style={{ width: "60%" }}></div>
+                <div className={styles.docBtn}>
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                    >
+                        <path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z" />
+                    </svg>
+                    Download .DOCX
+                </div>
             </div>
         </div>
-        <p>"{text}"</p>
-        <div className={styles.stars}>★★★★★</div>
-    </div>
-);
+    );
+};
+
+// 2. Social Feed Like Demo (Interactive Button)
+const PostDemo = () => {
+    const [likes, setLikes] = useState(124);
+    const [liked, setLiked] = useState(false);
+
+    const handleLike = () => {
+        if (liked) {
+            setLikes((prev) => prev - 1);
+            setLiked(false);
+        } else {
+            setLikes((prev) => prev + 1);
+            setLiked(true);
+        }
+    };
+
+    return (
+        <div className={styles.mockPost}>
+            <div className={styles.mockPostHeader}>
+                <div className={styles.mockAvatar}></div>
+                <div className={styles.mockMeta}>
+                    <div
+                        className={styles.mockLine}
+                        style={{ width: "80px" }}
+                    ></div>
+                    <div
+                        className={styles.mockLine}
+                        style={{ width: "50px", opacity: 0.5 }}
+                    ></div>
+                </div>
+            </div>
+            <div className={styles.mockContent}>
+                <div className={styles.typingText}>
+                    "Just deployed the new neural protocol!" 🚀
+                </div>
+            </div>
+            <div className={styles.mockActions}>
+                <button
+                    onClick={handleLike}
+                    className={`${styles.demoActionBtn} ${
+                        liked ? styles.liked : ""
+                    }`}
+                >
+                    ❤️ {likes}
+                </button>
+                <button className={styles.demoActionBtn}>💬 Comment</button>
+            </div>
+        </div>
+    );
+};
+
+// 3. Connection Demo (Simulated Connection)
+const ConnectDemo = () => {
+    const [status, setStatus] = useState("idle"); // idle, connecting, connected
+
+    const handleConnect = () => {
+        setStatus("connecting");
+        setTimeout(() => setStatus("connected"), 1500);
+    };
+
+    return (
+        <div className={styles.mockChat}>
+            <div className={styles.chatBubbleLeft}>
+                Incoming Video Request...
+            </div>
+            <div
+                className={styles.videoCallBtn}
+                onClick={handleConnect}
+                style={{
+                    cursor: "pointer",
+                    background:
+                        status === "connected" ? "var(--neon-teal)" : undefined,
+                    color: status === "connected" ? "#000" : undefined,
+                }}
+            >
+                {status === "idle" && (
+                    <>
+                        <div className={styles.camIcon}></div> Accept Uplink
+                    </>
+                )}
+                {status === "connecting" && "Establishing Secure Line..."}
+                {status === "connected" && (
+                    <span>● Secure Connection Active</span>
+                )}
+            </div>
+        </div>
+    );
+};
 
 export default function Home() {
     const router = useRouter();
+    const { isTokenThere } = useSelector((state) => state.auth);
+
+    // Dynamic Navigation Logic
+    const handleMainAction = () => {
+        if (isTokenThere || localStorage.getItem("token")) {
+            router.push("/dashboard");
+        } else {
+            router.push("/login");
+        }
+    };
 
     return (
         <div className={styles.landingWrapper}>
             <Head>
                 <title>LinkUps | The Professional Neural Network</title>
+                <meta
+                    name="description"
+                    content="Connect, Collaborate, Evolve. The next-gen professional network."
+                />
             </Head>
 
             {/* --- HERO SECTION --- */}
             <section className={styles.heroSection}>
-                <div className={styles.heroContent}>
+                <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className={styles.heroContent}
+                >
                     <div className={styles.heroBadge}>
                         <span className={styles.pulseDot}></span> v2.0 System
                         Online
@@ -72,10 +246,12 @@ export default function Home() {
                     </p>
                     <div className={styles.heroButtons}>
                         <button
-                            onClick={() => router.push("/login")}
+                            onClick={handleMainAction}
                             className={styles.primaryBtn}
                         >
-                            Initialize Protocol
+                            {isTokenThere
+                                ? "Enter Dashboard"
+                                : "Initialize Protocol"}
                         </button>
                         <button
                             onClick={() => router.push("/discover")}
@@ -84,14 +260,19 @@ export default function Home() {
                             Explore Nodes
                         </button>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* --- RESTORED: ORIGINAL HERO VISUAL --- */}
-                <div className={styles.heroVisual}>
+                {/* --- MAIN VISUAL --- */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className={styles.heroVisual}
+                >
                     <div className={styles.hologramFrame}>
-                        {/* Main Image with Glass Effect */}
                         <div className={styles.imageWrapper}>
                             <div className={styles.scanline}></div>
+                            {/* Main Image Preserved */}
                             <img
                                 src="/images/homemain_connection.jpg"
                                 alt="Connecting People"
@@ -99,8 +280,14 @@ export default function Home() {
                             />
                         </div>
 
-                        {/* Floating UI Cards (Decorative) */}
-                        <div
+                        {/* Floating Notifications */}
+                        <motion.div
+                            animate={{ y: [0, -15, 0] }}
+                            transition={{
+                                repeat: Infinity,
+                                duration: 4,
+                                ease: "easeInOut",
+                            }}
                             className={`${styles.floatCard} ${styles.cardTopRight}`}
                         >
                             <div className={styles.cardIcon}>🚀</div>
@@ -108,22 +295,32 @@ export default function Home() {
                                 <small
                                     style={{
                                         display: "block",
-                                        color: "#94a3b8",
+                                        color: "var(--text-secondary)",
                                         fontSize: "0.75rem",
                                     }}
                                 >
-                                    Updates
+                                    Status
                                 </small>
                                 <strong>Network Growth</strong>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div
+                        <motion.div
+                            animate={{ y: [0, 15, 0] }}
+                            transition={{
+                                repeat: Infinity,
+                                duration: 5,
+                                ease: "easeInOut",
+                                delay: 1,
+                            }}
                             className={`${styles.floatCard} ${styles.cardBottomLeft}`}
                         >
                             <div
                                 className={styles.cardIcon}
-                                style={{ background: "var(--neon-teal)" }}
+                                style={{
+                                    background: "var(--neon-teal)",
+                                    color: "#000",
+                                }}
                             >
                                 💬
                             </div>
@@ -131,7 +328,7 @@ export default function Home() {
                                 <small
                                     style={{
                                         display: "block",
-                                        color: "#94a3b8",
+                                        color: "var(--text-secondary)",
                                         fontSize: "0.75rem",
                                     }}
                                 >
@@ -139,26 +336,35 @@ export default function Home() {
                                 </small>
                                 <strong>Alex connected!</strong>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
-                </div>
+                </motion.div>
             </section>
 
             {/* --- TECH MARQUEE --- */}
             <div className={styles.marqueeContainer}>
                 <div className={styles.marqueeContent}>
-                    {[...techStack, ...techStack, ...techStack].map(
-                        (tech, i) => (
-                            <span key={i} className={styles.techItem}>
-                                {tech}
-                            </span>
-                        )
-                    )}
+                    {[
+                        ...techStack,
+                        ...techStack,
+                        ...techStack,
+                        ...techStack,
+                    ].map((tech, i) => (
+                        <span key={i} className={styles.techItem}>
+                            {tech}
+                        </span>
+                    ))}
                 </div>
             </div>
 
             {/* --- FEATURE 1: PROFILE & RESUME --- */}
-            <section className={styles.featureSection}>
+            <motion.section
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+                className={styles.featureSection}
+            >
                 <div className={styles.featureText}>
                     <h2 className={styles.featureTitle}>
                         Smart Identity & Resume
@@ -172,76 +378,51 @@ export default function Home() {
                     <ul className={styles.featureList}>
                         <li>✅ One-Click Download</li>
                         <li>✅ ATS Optimized Layout</li>
-                        <li>✅ Auto-Synced with Profile</li>
+                        <li>✅ Real-time Preview Logic</li>
                     </ul>
                 </div>
                 <div className={styles.featureDemo}>
-                    <div className={styles.mockDoc}>
-                        <div className={styles.docHeader}>
-                            <div
-                                className={styles.docLine}
-                                style={{ width: "40%", height: "20px" }}
-                            ></div>
-                            <div
-                                className={styles.docLine}
-                                style={{ width: "20%" }}
-                            ></div>
-                        </div>
-                        <div className={styles.docBody}>
-                            <div className={styles.docRow}></div>
-                            <div className={styles.docRow}></div>
-                            <div className={styles.docRow}></div>
-                            <div className={styles.docBtn}>Download .DOCX</div>
-                        </div>
-                    </div>
+                    <ResumeDemo />
                 </div>
-            </section>
+            </motion.section>
 
             {/* --- FEATURE 2: SOCIAL FEED --- */}
-            <section className={`${styles.featureSection} ${styles.reverse}`}>
+            <motion.section
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+                className={`${styles.featureSection} ${styles.reverse}`}
+            >
                 <div className={styles.featureText}>
                     <h2 className={styles.featureTitle}>Live Data Stream</h2>
                     <p className={styles.featureDesc}>
                         Share updates, images, and videos with your network.
-                        Engage with 5 unique reaction types and real-time
-                        comments. Your professional voice, amplified.
+                        Engage with unique reaction types and real-time
+                        comments. Try the interactive demo to the left!
                     </p>
                 </div>
                 <div className={styles.featureDemo}>
-                    <div className={styles.mockPost}>
-                        <div className={styles.mockPostHeader}>
-                            <div className={styles.mockAvatar}></div>
-                            <div className={styles.mockMeta}>
-                                <div
-                                    className={styles.mockLine}
-                                    style={{ width: "80px" }}
-                                ></div>
-                                <div
-                                    className={styles.mockLine}
-                                    style={{ width: "50px", opacity: 0.5 }}
-                                ></div>
-                            </div>
-                        </div>
-                        <div className={styles.mockContent}></div>
-                        <div className={styles.mockActions}>
-                            <span>❤️ Like</span>
-                            <span>💬 Comment</span>
-                        </div>
-                    </div>
+                    <PostDemo />
                 </div>
-            </section>
+            </motion.section>
 
             {/* --- FEATURE 3: CONNECT & CHAT --- */}
-            <section className={styles.featureSection}>
+            <motion.section
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+                className={styles.featureSection}
+            >
                 <div className={styles.featureText}>
                     <h2 className={styles.featureTitle}>
                         Encrypted Communication
                     </h2>
                     <p className={styles.featureDesc}>
                         Connect with developers and creators. Start secure
-                        1-on-1 chats or launch an instant{" "}
-                        <strong>Video Uplink</strong> meeting directly from your
-                        dashboard.
+                        1-on-1 chats or launch an instant
+                        <strong> Video Uplink</strong> meeting.
                     </p>
                     <div className={styles.tagContainer}>
                         <span className={styles.techTag}>Socket.io</span>
@@ -250,28 +431,22 @@ export default function Home() {
                     </div>
                 </div>
                 <div className={styles.featureDemo}>
-                    <div className={styles.mockChat}>
-                        <div className={styles.chatBubbleLeft}>
-                            Hey, are you available?
-                        </div>
-                        <div className={styles.chatBubbleRight}>
-                            Yes, let's start a video call.
-                        </div>
-                        <div className={styles.videoCallBtn}>
-                            <div className={styles.camIcon}></div> Join Meeting
-                        </div>
-                    </div>
+                    <ConnectDemo />
                 </div>
-            </section>
+            </motion.section>
 
             {/* --- LIVE STATS --- */}
             <section className={styles.statsSection}>
                 <div className={styles.statCard}>
-                    <h3>10k+</h3>
+                    <h3>
+                        <AnimatedCounter end={10000} suffix="+" />
+                    </h3>
                     <p>Active Nodes</p>
                 </div>
                 <div className={styles.statCard}>
-                    <h3>500TB</h3>
+                    <h3>
+                        <AnimatedCounter end={500} suffix="TB" />
+                    </h3>
                     <p>Data Transmitted</p>
                 </div>
                 <div className={styles.statCard}>
@@ -287,12 +462,15 @@ export default function Home() {
             {/* --- MEET THE DEVELOPER --- */}
             <section className={styles.developerSection}>
                 <div className={styles.devContentWrapper}>
-                    <h2 className={styles.sectionTitle}>Meet the Developer</h2>
+                    <h2 className={styles.sectionTitle}>Meet the Architect</h2>
                     <p className={styles.sectionSubtitle}>
-                        The engineer behind LinkUps.
+                        Engineered for scalability.
                     </p>
 
-                    <div className={styles.devCard}>
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        className={styles.devCard}
+                    >
                         <div className={styles.devAvatarWrapper}>
                             <img
                                 src="https://github.com/utkal9.png"
@@ -309,9 +487,9 @@ export default function Home() {
                             <p className={styles.devBio}>
                                 Passionate about building scalable web
                                 applications and connecting people through
-                                technology.
+                                technology. Built LinkUps to solve the friction
+                                in professional networking.
                             </p>
-
                             <div className={styles.socialRow}>
                                 <a
                                     href="mailto:utkalbehera59@gmail.com"
@@ -331,32 +509,7 @@ export default function Home() {
                                 </a>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* --- TESTIMONIALS --- */}
-            <section className={styles.testimonialsSection}>
-                <h2 className={styles.sectionHeader}>User Logs</h2>
-                <div className={styles.testiGrid}>
-                    <TestimonialCard
-                        name="Alex Chen"
-                        role="Full Stack Dev"
-                        img="https://randomuser.me/api/portraits/men/32.jpg"
-                        text="LinkUps changed how I connect. The Resume Builder alone saved me hours of work."
-                    />
-                    <TestimonialCard
-                        name="Sarah Jenkins"
-                        role="Product Designer"
-                        img="https://randomuser.me/api/portraits/women/44.jpg"
-                        text="The UI is incredibly smooth. It feels like using a tool from the future."
-                    />
-                    <TestimonialCard
-                        name="David Kim"
-                        role="DevOps Engineer"
-                        img="https://randomuser.me/api/portraits/men/86.jpg"
-                        text="Finally, a networking platform that doesn't feel cluttered. Pure signal, no noise."
-                    />
+                    </motion.div>
                 </div>
             </section>
 

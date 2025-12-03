@@ -587,7 +587,7 @@ export default function Profilepage() {
                 </div>
             )}
 
-            {/* --- Image Preview Modal (Lightbox) --- */}
+            {/* --- NEW: HD Image Preview Modal (Lightbox) --- */}
             {showImageModal && (
                 <div
                     className={styles.imageModalOverlay}
@@ -599,7 +599,7 @@ export default function Profilepage() {
                     >
                         <img
                             src={userProfile.userId.profilePicture}
-                            alt="Profile Large"
+                            alt="HD Profile View"
                         />
                         <button
                             className={styles.closeImageBtn}
@@ -703,15 +703,20 @@ export default function Profilepage() {
                     {/* --- UPDATED: Avatar Click Logic --- */}
                     <div
                         className={styles.avatarContainer}
-                        onClick={() => !isEditing && setShowImageModal(true)}
-                        style={{ cursor: !isEditing ? "pointer" : "default" }}
-                        title={!isEditing ? "View Profile Picture" : ""}
+                        onClick={() => {
+                            // Only show preview if NOT in editing mode
+                            if (!isEditing) setShowImageModal(true);
+                        }}
+                        style={{ cursor: !isEditing ? "zoom-in" : "default" }}
+                        title={!isEditing ? "View HD Picture" : "Edit Picture"}
                     >
                         <img
                             src={userProfile.userId.profilePicture}
                             alt="Avatar"
                             className={styles.avatarImg}
                         />
+
+                        {/* Edit Button overlay (Only shows when isEditing is true) */}
                         {isEditing && (
                             <>
                                 <label

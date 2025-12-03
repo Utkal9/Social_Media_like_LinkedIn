@@ -215,7 +215,7 @@ export default function MessagingPage() {
     const [inputText, setInputText] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [showMobileChat, setShowMobileChat] = useState(false);
-    const messagesEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
     const [isMounted, setIsMounted] = useState(false);
 
     // UI States
@@ -456,9 +456,11 @@ export default function MessagingPage() {
     }, [socket, activeChat]);
 
     const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
+        if (chatContainerRef.current) {
+            // This scrolls ONLY the chat div, not the whole page
+            chatContainerRef.current.scrollTop =
+                chatContainerRef.current.scrollHeight;
+        }
     };
 
     const handleSelectChat = (user) => {
@@ -941,7 +943,10 @@ export default function MessagingPage() {
                                     </div>
                                 </div>
 
-                                <div className={styles.messagesContainer}>
+                                <div
+                                    className={styles.messagesContainer}
+                                    ref={chatContainerRef}
+                                >
                                     {messages.map((msg, index) => {
                                         const isMe =
                                             msg.sender ===
@@ -1190,7 +1195,6 @@ export default function MessagingPage() {
                                             </div>
                                         );
                                     })}
-                                    <div ref={messagesEndRef} />
                                 </div>
 
                                 <div className={styles.inputArea}>
