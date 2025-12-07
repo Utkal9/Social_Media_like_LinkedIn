@@ -574,11 +574,19 @@ export const updateProfileData = async (req, res) => {
 
 export const getAllUserProfile = async (req, res) => {
     try {
-        const profiles = await Profile.find().populate(
-            "userId",
-            "name username email profilePicture backgroundPicture isOnline lastSeen"
+        // Populate ONLY users who are 'active: true' (Verified)
+        const profiles = await Profile.find().populate({
+            path: "userId",
+            select: "name username email profilePicture backgroundPicture isOnline lastSeen",
+            match: { active: true }, // <--- Filter condition
+        });
+
+        // Filter out any profiles where the user document is null (because they weren't active)
+        const activeProfiles = profiles.filter(
+            (profile) => profile.userId !== null
         );
-        return res.json({ profiles });
+
+        return res.json({ profiles: activeProfiles });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

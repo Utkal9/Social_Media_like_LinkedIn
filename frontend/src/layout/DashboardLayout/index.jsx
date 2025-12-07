@@ -1,5 +1,5 @@
 // frontend/src/layout/DashboardLayout/index.jsx
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./index.module.css";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
@@ -70,6 +70,7 @@ export default function DashboardLayout({ children }) {
     const user = authState.user?.userId;
     const userFallback = user?.name ? user.name.charAt(0).toUpperCase() : "?";
     const backgroundPic = user?.backgroundPicture || DEFAULT_BG;
+    const [imgError, setImgError] = useState(false);
 
     const isUserOnline = (uid, defaultStatus) => {
         return onlineStatuses && onlineStatuses[uid]
@@ -151,17 +152,19 @@ export default function DashboardLayout({ children }) {
                                     }}
                                 ></div>
                                 <div className={styles.avatarWrapper}>
-                                    {user?.profilePicture ? (
+                                    {user?.profilePicture && !imgError ? (
                                         <img
                                             src={user.profilePicture}
                                             alt="Profile"
                                             className={styles.profilePic}
+                                            onError={() => setImgError(true)} // <--- Triggers fallback on broken link
                                         />
                                     ) : (
                                         <div className={styles.profileFallback}>
                                             {userFallback}
                                         </div>
                                     )}
+                                    {/* Online dot logic... */}
                                     {user && isUserOnline(user._id, true) && (
                                         <span
                                             className={styles.onlineDot}

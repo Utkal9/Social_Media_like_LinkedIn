@@ -8,7 +8,7 @@ import { getAboutUser } from "@/config/redux/action/authAction";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 import { useTheme } from "@/context/ThemeContext";
-
+import { FileText } from "lucide-react"; // Import icon
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (
     <svg
@@ -257,6 +257,18 @@ export default function NavbarComponent() {
             icon: DiscoverIcon,
             label: "Discover",
             protected: false,
+        },
+        {
+            path: "/resume-builder",
+            // Create a wrapper component for the Lucide icon to match props
+            icon: ({ isActive }) => (
+                <FileText
+                    size={24}
+                    color={isActive ? "currentColor" : "currentColor"}
+                />
+            ),
+            label: "Resume",
+            protected: true,
         },
         { path: "/meet", icon: MeetIcon, label: "Meet", protected: false },
         {

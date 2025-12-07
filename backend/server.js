@@ -15,6 +15,7 @@ import { Server } from "socket.io";
 import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
 import Notification from "./models/notification.model.js";
+import resumeRoutes from "./routes/resume.routes.js";
 
 // --- SWAGGER IMPORTS ---
 import swaggerUi from "swagger-ui-express";
@@ -146,6 +147,7 @@ app.use(postRoutes);
 app.use(userRoutes);
 app.use(messagingRoutes);
 app.use(notificationRoutes);
+app.use(resumeRoutes);
 
 io.on("connection", (socket) => {
     console.log(`Socket Connected: ${socket.id}`);

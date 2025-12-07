@@ -1,0 +1,292 @@
+/* frontend/src/pages/resume-builder/index.module.css */
+
+.container {
+    padding: 20px 0 60px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pageTitle {
+    font-family: "Orbitron", sans-serif;
+    color: var(--text-primary);
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.pageSubtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 5px 0 30px 0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+}
+
+/* Cards */
+.card {
+    height: 260px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(10px);
+}
+
+.createCard {
+    border: 2px dashed var(--neon-teal);
+    color: var(--neon-teal);
+}
+.createCard:hover {
+    background: rgba(15, 255, 198, 0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(15, 255, 198, 0.15);
+}
+
+/* Resume Item */
+.resumeCard {
+    height: 260px;
+    background: var(--holo-panel);
+    border: 1px solid var(--holo-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+.resumeCard::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--neon-blue);
+    opacity: 0.7;
+}
+.resumeCard:hover {
+    border-color: var(--text-primary);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.fileIconBox {
+    color: var(--text-secondary);
+    background: var(--holo-glass);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.cardBody h4 {
+    margin: 0 0 5px 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.cardBody span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.deleteBtn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.deleteBtn:hover {
+    background: rgba(236, 72, 153, 0.1);
+    color: var(--neon-pink);
+}
+
+.iconWrapper {
+    margin-bottom: 15px;
+    transform: scale(1.2);
+}
+
+/* --- Modals --- */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modalContent {
+    background: var(--holo-panel);
+    border: 1px solid var(--holo-border);
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    transform: scale(1);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--holo-border);
+    padding-bottom: 15px;
+}
+.modalHeader h3 {
+    margin: 0;
+    font-family: "Orbitron", sans-serif;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+.closeBtn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+}
+.closeBtn:hover {
+    color: var(--text-primary);
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.inputLabel {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: -10px;
+}
+.inputField {
+    width: 100%;
+    padding: 14px;
+    background: var(--holo-bg);
+    border: 1px solid var(--holo-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.inputField:focus {
+    border-color: var(--neon-teal);
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.1);
+}
+
+.primaryBtn {
+    background: var(--neon-teal);
+    color: #000;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: "Orbitron", sans-serif;
+    transition: transform 0.1s;
+    margin-top: 10px;
+}
+.primaryBtn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(15, 255, 198, 0.4);
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.secondaryBtn {
+    background: transparent;
+    border: 1px solid var(--holo-border);
+    color: var(--text-secondary);
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.secondaryBtn:hover {
+    background: var(--holo-glass);
+    color: var(--text-primary);
+}
+
+.dangerBtn {
+    background: var(--neon-pink);
+    border: none;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+}
+.dangerBtn:hover {
+    background: #db2777;
+    transform: translateY(-2px);
+}
+
+.warningIconWrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(236, 72, 153, 0.1);
+    color: var(--neon-pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--neon-pink);
+}

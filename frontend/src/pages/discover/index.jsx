@@ -15,6 +15,8 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 
+const DEFAULT_IMAGE =
+    "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"; // Or your own uploaded default
 // --- Icons ---
 const SearchIcon = () => (
     <svg
@@ -313,8 +315,18 @@ export default function DiscoverPage() {
                                     <div className={styles.cardContent}>
                                         <div className={styles.avatarWrapper}>
                                             <img
-                                                src={user.userId.profilePicture}
+                                                src={
+                                                    user.userId
+                                                        .profilePicture ||
+                                                    DEFAULT_IMAGE
+                                                }
                                                 alt={user.userId.name}
+                                                onError={(e) => {
+                                                    // This replaces the broken image with the default one instantly
+                                                    e.target.onerror = null;
+                                                    e.target.src =
+                                                        DEFAULT_IMAGE;
+                                                }}
                                             />
                                             {isUserOnline(
                                                 user.userId._id,
