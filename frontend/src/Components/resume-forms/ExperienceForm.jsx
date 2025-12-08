@@ -1,14 +1,14 @@
-import React, { useState } from "react";
 import { Briefcase, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import clientServer from "@/config";
 import toast from "react-hot-toast";
-import styles from "@/styles/ResumeBuilder.module.css";
 
 const ExperienceForm = ({ data, onChange }) => {
+    const { token } = useSelector((state) => state.auth);
     const [generatingIndex, setGeneratingIndex] = useState(-1);
 
-    // ... addExperience, removeExperience, updateExperience logic remains same ...
-    const addExperience = () =>
+    const addExperience = () => {
         onChange([
             ...data,
             {
@@ -20,8 +20,12 @@ const ExperienceForm = ({ data, onChange }) => {
                 is_current: false,
             },
         ]);
-    const removeExperience = (index) =>
+    };
+
+    const removeExperience = (index) => {
         onChange(data.filter((_, i) => i !== index));
+    };
+
     const updateExperience = (index, field, value) => {
         const updated = [...data];
         updated[index] = { ...updated[index], [field]: value };
@@ -32,90 +36,96 @@ const ExperienceForm = ({ data, onChange }) => {
         setGeneratingIndex(index);
         const experience = data[index];
         const prompt = `enhance this job description ${experience.description} for the position of ${experience.position} at ${experience.company}.`;
-        const token = localStorage.getItem("token");
-
         try {
-            // EXACT LOGIC: Using specific endpoint
             const { data: resData } = await clientServer.post(
                 "/resume/ai/enhance-job",
                 { userContent: prompt },
-                { headers: { Authorization: token } }
+                { headers: { Authorization: `Bearer ${token}` } }
             );
             updateExperience(index, "description", resData.enhancedContent);
             toast.success("Description enhanced!");
         } catch (error) {
-            toast.error(error.message);
+            toast.error("AI generation failed");
         } finally {
             setGeneratingIndex(-1);
         }
     };
 
     return (
-        <div className={styles.formSection}>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "20px",
-                }}
-            >
+        <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h3 className={styles.sectionTitle}>
-                        Professional Experience
+                    <h3
+                        className="flex items-center gap-2 text-lg font-semibold"
+                        style={{ color: "var(--text-primary)" }}
+                    >
+                        {" "}
+                        Professional Experience{" "}
                     </h3>
-                    <p className={styles.sectionDesc}>
+                    <p
+                        className="text-sm"
+                        style={{ color: "var(--text-secondary)" }}
+                    >
                         Add your job experience
                     </p>
                 </div>
                 <button
                     onClick={addExperience}
-                    className={styles.navBtn}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors"
                     style={{
+                        borderColor: "var(--holo-border)",
                         color: "var(--neon-teal)",
-                        borderColor: "var(--neon-teal)",
+                        backgroundColor: "var(--holo-glass)",
                     }}
                 >
-                    <Plus size={14} /> Add Experience
+                    <Plus className="w-4 h-4" /> Add Experience
                 </button>
             </div>
 
             {data.length === 0 ? (
                 <div
+                    className="text-center py-12 rounded-lg border-2 border-dashed"
                     style={{
-                        textAlign: "center",
-                        padding: "40px",
-                        color: "var(--text-secondary)",
+                        borderColor: "var(--holo-border)",
+                        backgroundColor: "var(--holo-bg)",
                     }}
                 >
                     <Briefcase
-                        size={40}
-                        style={{ margin: "0 auto 10px", opacity: 0.5 }}
+                        className="w-12 h-12 mx-auto mb-3"
+                        style={{ color: "var(--text-secondary)" }}
                     />
-                    <p>No work experience added yet.</p>
+                    <p style={{ color: "var(--text-secondary)" }}>
+                        No work experience added yet.
+                    </p>
                 </div>
             ) : (
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "20px",
-                    }}
-                >
+                <div className="space-y-4">
                     {data.map((experience, index) => (
-                        <div key={index} className={styles.card}>
-                            <div className={styles.cardHeader}>
-                                <span className={styles.cardTitleText}>
+                        <div
+                            key={index}
+                            className="p-5 border rounded-xl shadow-sm transition-shadow"
+                            style={{
+                                backgroundColor: "var(--holo-panel)",
+                                borderColor: "var(--holo-border)",
+                            }}
+                        >
+                            <div className="flex justify-between items-start mb-4">
+                                <h4
+                                    className="font-medium"
+                                    style={{ color: "var(--text-primary)" }}
+                                >
                                     Experience #{index + 1}
-                                </span>
+                                </h4>
                                 <button
                                     onClick={() => removeExperience(index)}
-                                    className={styles.deleteBtn}
+                                    className="p-1 hover:text-red-500 transition-colors"
+                                    style={{ color: "var(--text-secondary)" }}
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            <div className={styles.grid2}>
+                            <div className="grid md:grid-cols-2 gap-4 mb-4">
                                 <input
                                     value={experience.company || ""}
                                     onChange={(e) =>
@@ -127,7 +137,12 @@ const ExperienceForm = ({ data, onChange }) => {
                                     }
                                     type="text"
                                     placeholder="Company Name"
-                                    className={styles.input}
+                                    className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2"
+                                    style={{
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
+                                    }}
                                 />
                                 <input
                                     value={experience.position || ""}
@@ -140,7 +155,12 @@ const ExperienceForm = ({ data, onChange }) => {
                                     }
                                     type="text"
                                     placeholder="Job Title"
-                                    className={styles.input}
+                                    className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2"
+                                    style={{
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
+                                    }}
                                 />
                                 <input
                                     value={experience.start_date || ""}
@@ -152,7 +172,12 @@ const ExperienceForm = ({ data, onChange }) => {
                                         )
                                     }
                                     type="month"
-                                    className={styles.input}
+                                    className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2"
+                                    style={{
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
+                                    }}
                                 />
                                 <input
                                     value={experience.end_date || ""}
@@ -165,23 +190,16 @@ const ExperienceForm = ({ data, onChange }) => {
                                     }
                                     type="month"
                                     disabled={experience.is_current}
-                                    className={styles.input}
+                                    className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:ring-2 disabled:opacity-50"
                                     style={{
-                                        opacity: experience.is_current
-                                            ? 0.5
-                                            : 1,
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
                                     }}
                                 />
                             </div>
-                            <label
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    fontSize: "0.9rem",
-                                    color: "var(--text-primary)",
-                                }}
-                            >
+
+                            <label className="flex items-center gap-2 mb-4 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     checked={experience.is_current || false}
@@ -192,20 +210,23 @@ const ExperienceForm = ({ data, onChange }) => {
                                             e.target.checked
                                         )
                                     }
-                                    style={{ accentColor: "var(--neon-teal)" }}
+                                    className="w-4 h-4 rounded focus:ring-2"
                                 />
-                                Currently working here
-                            </label>
-                            <div className={styles.inputGroup}>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                    }}
+                                <span
+                                    className="text-sm"
+                                    style={{ color: "var(--text-primary)" }}
                                 >
-                                    <label className={styles.label}>
-                                        Description
+                                    Currently working here
+                                </span>
+                            </label>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label
+                                        className="text-sm font-medium"
+                                        style={{ color: "var(--text-primary)" }}
+                                    >
+                                        Job Description
                                     </label>
                                     <button
                                         onClick={() =>
@@ -216,17 +237,18 @@ const ExperienceForm = ({ data, onChange }) => {
                                             !experience.position ||
                                             !experience.company
                                         }
-                                        className={styles.aiBtn}
+                                        className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium border rounded transition-colors disabled:opacity-50"
+                                        style={{
+                                            borderColor: "var(--neon-violet)",
+                                            color: "var(--neon-violet)",
+                                        }}
                                     >
                                         {generatingIndex === index ? (
-                                            <Loader2
-                                                size={12}
-                                                className="animate-spin"
-                                            />
+                                            <Loader2 className="w-3 h-3 animate-spin" />
                                         ) : (
-                                            <Sparkles size={12} />
-                                        )}{" "}
-                                        Enhance
+                                            <Sparkles className="w-3 h-3" />
+                                        )}
+                                        Enhance with AI
                                     </button>
                                 </div>
                                 <textarea
@@ -239,8 +261,13 @@ const ExperienceForm = ({ data, onChange }) => {
                                         )
                                     }
                                     rows={4}
-                                    className={styles.textarea}
-                                    placeholder="Describe responsibilities..."
+                                    className="w-full text-sm px-3 py-2 border rounded-lg outline-none resize-none"
+                                    placeholder="Describe your key responsibilities..."
+                                    style={{
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
+                                    }}
                                 />
                             </div>
                         </div>

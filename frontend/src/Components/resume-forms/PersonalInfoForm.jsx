@@ -1,14 +1,15 @@
-import React from "react";
 import {
-    BriefcaseBusiness,
+    Briefcase,
     Globe,
     Linkedin,
     Mail,
     MapPin,
     Phone,
     User,
+    Code,
+    Github,
 } from "lucide-react";
-import styles from "@/styles/ResumeBuilder.module.css";
+import React from "react";
 
 const PersonalInfoForm = ({
     data,
@@ -38,31 +39,25 @@ const PersonalInfoForm = ({
         { key: "phone", label: "Phone Number", icon: Phone, type: "tel" },
         { key: "location", label: "Location", icon: MapPin, type: "text" },
         {
-            key: "profession",
-            label: "Profession",
-            icon: BriefcaseBusiness,
-            type: "text",
-        },
-        {
             key: "linkedin",
             label: "LinkedIn Profile",
             icon: Linkedin,
             type: "url",
         },
-        { key: "website", label: "Personal Website", icon: Globe, type: "url" },
+        { key: "github", label: "GitHub Profile", icon: Github, type: "url" },
+        { key: "leetcode", label: "LeetCode Profile", icon: Code, type: "url" }, // [ADDED]
+        {
+            key: "website",
+            label: "Portfolio / Website",
+            icon: Globe,
+            type: "url",
+        },
     ];
 
     return (
-        <div className={styles.formSection}>
-            <div style={{ marginBottom: "20px" }}>
-                <h3 className={styles.sectionTitle}>Personal Information</h3>
-                <p className={styles.sectionDesc}>
-                    Get Started with the personal information
-                </p>
-            </div>
-
-            <div className={styles.imageUploadSection}>
-                <label style={{ cursor: "pointer" }}>
+        <div className="animate-fade-in space-y-6">
+            <div className="flex items-center gap-4">
+                <label className="relative group cursor-pointer">
                     {data.image ? (
                         <img
                             src={
@@ -70,67 +65,68 @@ const PersonalInfoForm = ({
                                     ? data.image
                                     : URL.createObjectURL(data.image)
                             }
-                            alt="user-image"
-                            className={styles.previewImage}
+                            alt="Profile"
+                            className="w-20 h-20 rounded-full object-cover ring-4 transition-opacity"
+                            style={{ ringColor: "var(--holo-border)" }}
                         />
                     ) : (
-                        <div className={styles.uploadPlaceholder}>
-                            <div className={styles.uploadIconBox}>
-                                <User size={24} />
-                            </div>
-                            <span>upload user image</span>
+                        <div
+                            className="w-20 h-20 rounded-full flex items-center justify-center transition-colors border"
+                            style={{
+                                backgroundColor: "var(--holo-bg)",
+                                borderColor: "var(--holo-border)",
+                                color: "var(--text-secondary)",
+                            }}
+                        >
+                            <User className="w-8 h-8" />
                         </div>
                     )}
                     <input
                         type="file"
                         accept="image/jpeg, image/png"
                         className="hidden"
-                        style={{ display: "none" }}
                         onChange={(e) =>
                             handleChange("image", e.target.files[0])
                         }
                     />
                 </label>
 
-                {/* EXACT LOGIC: Show toggle only if image is an object (newly uploaded) */}
                 {typeof data.image === "object" && (
-                    <div className={styles.toggleContainer}>
-                        <p className={styles.toggleText}>Remove Background</p>
-                        <label className={styles.toggleLabel}>
-                            <input
-                                type="checkbox"
-                                className={`${styles.toggleInput} ${styles.srOnly}`}
-                                onChange={() =>
-                                    setRemoveBackground((prev) => !prev)
-                                }
-                                checked={removeBackground}
-                            />
-                            <div className={styles.toggleTrack}>
-                                <span className={styles.toggleDot}></span>
-                            </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="removeBg"
+                            checked={removeBackground}
+                            onChange={() =>
+                                setRemoveBackground((prev) => !prev)
+                            }
+                            className="w-4 h-4 rounded focus:ring-2"
+                            style={{ borderColor: "var(--holo-border)" }}
+                        />
+                        <label
+                            htmlFor="removeBg"
+                            className="text-sm cursor-pointer select-none"
+                            style={{ color: "var(--text-primary)" }}
+                        >
+                            Remove Background
                         </label>
                     </div>
                 )}
             </div>
 
-            <div className={styles.grid2}>
+            <div className="grid gap-5">
                 {fields.map((field) => {
                     const Icon = field.icon;
                     return (
-                        <div
-                            key={field.key}
-                            className={styles.inputGroup}
-                            style={
-                                field.key === "linkedin" ||
-                                field.key === "website"
-                                    ? { gridColumn: "1 / -1" }
-                                    : {}
-                            }
-                        >
-                            <label className={styles.label}>
-                                <Icon size={14} /> {field.label}
+                        <div key={field.key} className="space-y-1.5">
+                            <label
+                                className="flex items-center gap-2 text-sm font-medium"
+                                style={{ color: "var(--text-secondary)" }}
+                            >
+                                <Icon className="w-4 h-4" />
+                                {field.label}
                                 {field.required && (
-                                    <span className={styles.required}>*</span>
+                                    <span className="text-red-500">*</span>
                                 )}
                             </label>
                             <input
@@ -139,7 +135,12 @@ const PersonalInfoForm = ({
                                 onChange={(e) =>
                                     handleChange(field.key, e.target.value)
                                 }
-                                className={styles.input}
+                                className="w-full px-4 py-2 text-sm border rounded-lg outline-none focus:ring-2 transition-all"
+                                style={{
+                                    backgroundColor: "var(--holo-bg)",
+                                    borderColor: "var(--holo-border)",
+                                    color: "var(--text-primary)",
+                                }}
                                 placeholder={`Enter your ${field.label.toLowerCase()}`}
                                 required={field.required}
                             />

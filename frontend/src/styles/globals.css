@@ -1,5 +1,7 @@
 /* frontend/src/styles/globals.css */
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 :root {
     /* --- DEFAULT (DARK / HOLO MODE) --- */
     --holo-bg: #020410;

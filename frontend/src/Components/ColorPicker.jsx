@@ -1,66 +1,67 @@
+import { Check } from "lucide-react";
 import React, { useState } from "react";
-import { Check, Palette } from "lucide-react";
-import styles from "@/styles/ResumeBuilder.module.css";
 
 const ColorPicker = ({ selectedColor, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const colors = [
         { name: "Blue", value: "#3B82F6" },
-        { name: "Indigo", value: "#6366F1" },
         { name: "Purple", value: "#8B5CF6" },
         { name: "Green", value: "#10B981" },
         { name: "Red", value: "#EF4444" },
-        { name: "Orange", value: "#F97316" },
-        { name: "Teal", value: "#14B8A6" },
-        { name: "Pink", value: "#EC4899" },
-        { name: "Gray", value: "#6B7280" },
         { name: "Black", value: "#1F2937" },
+        { name: "Teal", value: "#14B8A6" },
     ];
 
     return (
-        <div className={styles.dropdownContainer}>
+        <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`${styles.dropdownTrigger} ${styles.btnColor}`}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium border rounded-lg transition-all"
+                style={{
+                    backgroundColor: "var(--holo-bg)",
+                    borderColor: "var(--holo-border)",
+                    color: "var(--text-primary)",
+                }}
             >
-                <Palette size={14} /> <span>Accent</span>
+                <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ background: selectedColor }}
+                />
+                <span className="max-sm:hidden">Color</span>
             </button>
+
             {isOpen && (
-                <div className={styles.dropdownMenu}>
-                    <div className={styles.colorGrid}>
-                        {colors.map((color) => (
-                            <div
-                                key={color.value}
-                                className={styles.colorOption}
+                <>
+                    <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setIsOpen(false)}
+                    />
+                    <div
+                        className="absolute top-full left-0 mt-2 w-48 border rounded-lg shadow-xl z-20 p-3 grid grid-cols-4 gap-2"
+                        style={{
+                            backgroundColor: "var(--holo-panel)",
+                            borderColor: "var(--holo-border)",
+                        }}
+                    >
+                        {colors.map((c) => (
+                            <button
+                                key={c.value}
                                 onClick={() => {
-                                    onChange(color.value);
+                                    onChange(c.value);
                                     setIsOpen(false);
                                 }}
+                                className="w-8 h-8 rounded-full border border-gray-200 hover:scale-110 transition-transform relative flex items-center justify-center"
+                                style={{ background: c.value }}
                             >
-                                <div
-                                    className={styles.colorCircle}
-                                    style={{ backgroundColor: color.value }}
-                                >
-                                    {selectedColor === color.value && (
-                                        <Check size={16} color="white" />
-                                    )}
-                                </div>
-                                <span
-                                    style={{
-                                        fontSize: "0.7rem",
-                                        color: "var(--text-secondary)",
-                                        marginTop: "4px",
-                                    }}
-                                >
-                                    {color.name}
-                                </span>
-                            </div>
+                                {selectedColor === c.value && (
+                                    <Check className="w-4 h-4 text-white" />
+                                )}
+                            </button>
                         ))}
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
 };
-
 export default ColorPicker;
