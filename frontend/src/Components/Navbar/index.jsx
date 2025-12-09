@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 import { useTheme } from "@/context/ThemeContext";
 import { FileText } from "lucide-react"; // Import icon
+
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (
     <svg
@@ -173,7 +174,7 @@ export default function NavbarComponent() {
     const router = useRouter();
     const dispatch = useDispatch();
     const authState = useSelector((state) => state.auth);
-    const notificationState = useSelector((state) => state.notification); // Assuming you have this from previous steps
+    const notificationState = useSelector((state) => state.notification);
     const {
         socket,
         onlineStatuses,
@@ -260,7 +261,6 @@ export default function NavbarComponent() {
         },
         {
             path: "/resume-builder",
-            // Create a wrapper component for the Lucide icon to match props
             icon: ({ isActive }) => (
                 <FileText
                     size={24}
@@ -279,7 +279,6 @@ export default function NavbarComponent() {
             hasBadge: true,
             count: chatUnreadCount,
         },
-        // Notifications added here for Desktop loop, usually we might want to filter it for mobile bottom nav
         {
             path: "/notifications",
             icon: BellIcon,
@@ -298,33 +297,61 @@ export default function NavbarComponent() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
         >
-            <div className={styles.dropdownHeader}>
-                <p className={styles.userName}>{authState.user.userId.name}</p>
-                <p className={styles.userHandle}>
-                    @{authState.user.userId.username}
-                </p>
-            </div>
-            <div className={styles.dropdownBody}>
-                <button onClick={() => handleNavigation("/profile")}>
-                    <span>View Profile</span>
-                    <UserIcon />
-                </button>
-                <button onClick={toggleTheme}>
-                    <span>Theme</span>
-                    {mounted && (theme === "dark" ? <SunIcon /> : <MoonIcon />)}
-                </button>
-                <button onClick={handleLogout} className={styles.logoutBtn}>
-                    <span>Disconnect</span>
-                    <LogoutIcon />
-                </button>
-            </div>
+            {isTokenFound && authState.user ? (
+                <>
+                    <div className={styles.dropdownHeader}>
+                        <p className={styles.userName}>
+                            {authState.user.userId.name}
+                        </p>
+                        <p className={styles.userHandle}>
+                            @{authState.user.userId.username}
+                        </p>
+                    </div>
+                    <div className={styles.dropdownBody}>
+                        <button onClick={() => handleNavigation("/profile")}>
+                            <span>View Profile</span>
+                            <UserIcon />
+                        </button>
+                        <button onClick={toggleTheme}>
+                            <span>Theme</span>
+                            {mounted &&
+                                (theme === "dark" ? <SunIcon /> : <MoonIcon />)}
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className={styles.logoutBtn}
+                        >
+                            <span>Disconnect</span>
+                            <LogoutIcon />
+                        </button>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div className={styles.dropdownHeader}>
+                        <p className={styles.userName}>Guest</p>
+                        <p className={styles.userHandle}>Welcome!</p>
+                    </div>
+                    <div className={styles.dropdownBody}>
+                        <button onClick={toggleTheme}>
+                            <span>Theme</span>
+                            {mounted &&
+                                (theme === "dark" ? <SunIcon /> : <MoonIcon />)}
+                        </button>
+                        <button onClick={() => handleNavigation("/login")}>
+                            <span>Login / Sign Up</span>
+                            <UserIcon />
+                        </button>
+                    </div>
+                </>
+            )}
         </motion.div>
     );
 
     // Profile Picture Component
     const ProfileTrigger = () => (
         <div className={styles.avatarContainer}>
-            {authState.user.userId.profilePicture ? (
+            {authState.user?.userId?.profilePicture ? (
                 <img
                     src={authState.user.userId.profilePicture}
                     alt="Profile"
@@ -337,7 +364,9 @@ export default function NavbarComponent() {
                     {userFallback}
                 </div>
             )}
-            {isMyOnline && <span className={styles.onlineDot}></span>}
+            {isMyOnline && isTokenFound && (
+                <span className={styles.onlineDot}></span>
+            )}
         </div>
     );
 
@@ -348,25 +377,16 @@ export default function NavbarComponent() {
             {/* --- TOP NAV (DESKTOP & MOBILE) --- */}
             <nav className={styles.container}>
                 <div className={styles.navbar}>
-                    {/* 1. MOBILE TOP HEADER (Left: Profile, Center: Logo, Right: Notification) */}
+                    {/* 1. MOBILE TOP HEADER */}
                     <div className={styles.mobileHeader}>
-                        {/* Left: Profile Dropdown */}
+                        {/* Left: Profile Dropdown (ALWAYS VISIBLE) */}
                         <div
                             className={styles.mobileProfileWrapper}
                             ref={dropdownRef}
                         >
-                            {isTokenFound &&
-                                authState.profileFetched &&
-                                authState.user && (
-                                    <div
-                                        onClick={() =>
-                                            setDropdownOpen(!dropdownOpen)
-                                        }
-                                    >
-                                        <ProfileTrigger />
-                                    </div>
-                                )}
-                            {/* Dropdown needs specific mobile positioning in CSS */}
+                            <div onClick={() => setDropdownOpen(!dropdownOpen)}>
+                                <ProfileTrigger />
+                            </div>
                             <AnimatePresence>
                                 {dropdownOpen && <ProfileDropdownMenu />}
                             </AnimatePresence>
@@ -380,29 +400,63 @@ export default function NavbarComponent() {
                             <LogoIcon />
                         </div>
 
-                        {/* Right: Notification Bell */}
-                        <div
-                            className={styles.mobileNotif}
-                            onClick={() => handleNavigation("/notifications")}
-                        >
-                            <div className={styles.iconGlow}>
-                                <BellIcon
-                                    isActive={
-                                        router.pathname === "/notifications"
-                                    }
-                                />
-                                {notifUnreadCount > 0 && (
-                                    <span className={styles.badge}>
-                                        {notifUnreadCount > 99
-                                            ? "99+"
-                                            : notifUnreadCount}
-                                    </span>
-                                )}
-                            </div>
+                        {/* Right: Icons (Chat + Notification) - Only if Logged In */}
+                        <div className={styles.mobileRightIcons}>
+                            {isTokenFound && (
+                                <>
+                                    {/* Messaging Icon */}
+                                    <div
+                                        className={styles.mobileNotif}
+                                        onClick={() =>
+                                            handleNavigation("/messaging")
+                                        }
+                                    >
+                                        <div className={styles.iconGlow}>
+                                            <MessagingIcon
+                                                isActive={
+                                                    router.pathname ===
+                                                    "/messaging"
+                                                }
+                                            />
+                                            {chatUnreadCount > 0 && (
+                                                <span className={styles.badge}>
+                                                    {chatUnreadCount > 99
+                                                        ? "99+"
+                                                        : chatUnreadCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Notification Icon */}
+                                    <div
+                                        className={styles.mobileNotif}
+                                        onClick={() =>
+                                            handleNavigation("/notifications")
+                                        }
+                                    >
+                                        <div className={styles.iconGlow}>
+                                            <BellIcon
+                                                isActive={
+                                                    router.pathname ===
+                                                    "/notifications"
+                                                }
+                                            />
+                                            {notifUnreadCount > 0 && (
+                                                <span className={styles.badge}>
+                                                    {notifUnreadCount > 99
+                                                        ? "99+"
+                                                        : notifUnreadCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    {/* 2. DESKTOP LAYOUT (Logo Left, Links Center, Profile Right) */}
+                    {/* 2. DESKTOP LAYOUT (Unchanged) */}
                     <div
                         className={`${styles.desktopNavLeft} ${styles.desktopOnly}`}
                         onClick={() => handleNavigation("/")}
@@ -477,7 +531,10 @@ export default function NavbarComponent() {
                                     Login
                                 </button>
                                 <button
-                                    onClick={() => handleNavigation("/login")}
+                                    // --- FIX: Pass view query param to open Sign Up ---
+                                    onClick={() =>
+                                        handleNavigation("/login?view=register")
+                                    }
                                     className={styles.buttonJoin}
                                 >
                                     Sign Up
@@ -489,11 +546,14 @@ export default function NavbarComponent() {
             </nav>
 
             {/* --- BOTTOM NAV (Mobile Only) --- */}
-            {/* Exclude 'Notifications' from bottom because it's on top right now */}
             {isTokenFound && (
                 <div className={styles.bottomNav}>
                     {navItems
-                        .filter((item) => item.path !== "/notifications")
+                        .filter(
+                            (item) =>
+                                item.path !== "/notifications" &&
+                                item.path !== "/messaging"
+                        )
                         .map((item) => (
                             <div
                                 key={item.path}

@@ -47,6 +47,69 @@ const isVideo = (fileType, fileNameOrUrl) => {
     return false;
 };
 
+// --- LINK SHORTENER HELPER (Theme Engine) ---
+const generateShortCode = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash).toString(36).substring(0, 8); // Deterministic short code
+};
+
+const renderPostBody = (text) => {
+    if (!text) return null;
+
+    // Regex to find URLs (http/https)
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    return text.split(urlRegex).map((part, index) => {
+        if (part.match(urlRegex)) {
+            const shortCode = generateShortCode(part);
+            const shortUrlDisplay = `https://lnk.up/${shortCode}`;
+
+            return (
+                <a
+                    key={index}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        color: "var(--neon-blue)",
+                        fontWeight: "500",
+                        textDecoration: "none",
+                        backgroundColor: "rgba(59, 130, 246, 0.1)",
+                        padding: "0px 4px",
+                        borderRadius: "4px",
+                        transition: "all 0.2s ease",
+                        cursor: "pointer",
+                        borderBottom: "1px solid transparent",
+                    }}
+                    onMouseOver={(e) => {
+                        e.currentTarget.style.color = "var(--neon-teal)";
+                        e.currentTarget.style.borderBottom =
+                            "1px solid var(--neon-teal)";
+                        e.currentTarget.style.backgroundColor =
+                            "rgba(15, 255, 198, 0.1)";
+                    }}
+                    onMouseOut={(e) => {
+                        e.currentTarget.style.color = "var(--neon-blue)";
+                        e.currentTarget.style.borderBottom =
+                            "1px solid transparent";
+                        e.currentTarget.style.backgroundColor =
+                            "rgba(59, 130, 246, 0.1)";
+                    }}
+                    title={part} // Show full URL on hover
+                >
+                    {shortUrlDisplay}
+                </a>
+            );
+        }
+        return part;
+    });
+};
+
 const getReactionIcon = (type) => {
     const map = {
         Like: "👍",
@@ -192,7 +255,7 @@ const ErrorIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20">
         <path
             fillRule="evenodd"
-            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z"
             clipRule="evenodd"
         />
     </svg>
@@ -706,9 +769,11 @@ export default function Dashboard() {
                                 )}
                             </div>
 
-                            {/* ... (Rest of the post card content) ... */}
+                            {/* --- POST BODY WITH CUSTOM LINKS --- */}
                             <div className={styles.postCardBody}>
-                                <p>{post.body}</p>
+                                <p style={{ whiteSpace: "pre-wrap" }}>
+                                    {renderPostBody(post.body)}
+                                </p>
                                 {post.media && (
                                     <div
                                         className={

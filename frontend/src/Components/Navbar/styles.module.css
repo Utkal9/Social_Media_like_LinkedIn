@@ -296,6 +296,14 @@
 .mobileLogo {
     /* Centered implicitly by flex space-between */
 }
+
+/* Right Icons Container for Mobile */
+.mobileRightIcons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .mobileNotif {
     cursor: pointer;
     color: var(--text-secondary);

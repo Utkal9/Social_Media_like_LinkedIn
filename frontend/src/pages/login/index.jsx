@@ -60,6 +60,8 @@ export default function LoginComponent() {
 
     // --- 1. HANDLE REDIRECT AFTER SOCIAL LOGIN & EMAIL VERIFICATION ---
     useEffect(() => {
+        if (!router.isReady) return; // Ensure query is available
+
         if (router.query.token) {
             localStorage.setItem("token", router.query.token);
             localStorage.setItem("tokenTimestamp", Date.now().toString());
@@ -76,7 +78,12 @@ export default function LoginComponent() {
             setUrlMessage(router.query.message);
             router.replace("/login", undefined, { shallow: true });
         }
-    }, [router.query]);
+
+        // --- NEW: HANDLE VIEW SWITCHING ---
+        if (router.query.view === "register") {
+            setViewState("register");
+        }
+    }, [router.isReady, router.query]);
 
     useEffect(() => {
         if (
