@@ -11,6 +11,7 @@ import {
     enhanceProfessionalSummary,
     enhanceJobDescription,
     createResumeFromText,
+    enhanceProjectDescription,
 } from "../controllers/ai.controller.js";
 import multer from "multer";
 import upload from "../config/cloudinary.config.js";
@@ -30,5 +31,6 @@ router.get("/resume/download/docx", downloadResumeDocx);
 router.post("/resume/ai/enhance-summary", enhanceProfessionalSummary);
 router.post("/resume/ai/enhance-job", enhanceJobDescription);
 router.post("/resume/ai/parse-text", createResumeFromText);
+router.post("/resume/ai/enhance-project", enhanceProjectDescription);
 
 export default router;
