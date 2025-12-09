@@ -20,6 +20,7 @@ import {
     User,
     Award,
     Trophy,
+    Calendar,
 } from "lucide-react";
 
 // Components
@@ -51,13 +52,51 @@ export default function ResumeBuilder() {
     const sections = [
         { id: "personal", name: "Personal", icon: User },
         { id: "skills", name: "Skills", icon: Sparkles },
-        { id: "projects", name: "Projects", icon: Folder },
         { id: "experience", name: "Experience", icon: Briefcase },
-        { id: "education", name: "Education", icon: GraduationCap },
-        { id: "certificates", name: "Certificates", icon: Award },
+        { id: "projects", name: "Projects", icon: Folder },
         { id: "achievements", name: "Achievements", icon: Trophy },
+        { id: "certificates", name: "Certificates", icon: Award },
+        { id: "education", name: "Education", icon: GraduationCap },
+        // Summary is optional/last for LPU
         { id: "summary", name: "Summary", icon: FileText },
     ];
+    const validateForDownload = () => {
+        if (resumeData.template !== "lpu") return true; // Only enforce for LPU template
+
+        const hasExperience =
+            resumeData.experience && resumeData.experience.length > 0;
+        const projectCount = resumeData.project ? resumeData.project.length : 0;
+
+        // Constraint: If No Experience, MUST have 3 Projects
+        if (!hasExperience) {
+            if (projectCount < 3) {
+                toast.error(
+                    "LPU CV Requirement: Since you have no Experience, you must add at least 3 Projects."
+                );
+                setActiveSectionIndex(3); // Jump to Projects section
+                return false;
+            }
+
+            // Constraint: 3-4 bullet points per project
+            const weakProjects = resumeData.project.filter((p) => {
+                const lines = p.description
+                    ? p.description
+                          .split("\n")
+                          .filter((l) => l.trim().length > 0)
+                    : [];
+                return lines.length < 3;
+            });
+
+            if (weakProjects.length > 0) {
+                toast.error(
+                    `Project "${weakProjects[0].name}" needs at least 3-4 bullet points in description.`
+                );
+                setActiveSectionIndex(3);
+                return false;
+            }
+        }
+        return true;
+    };
     const activeSection = sections[activeSectionIndex];
 
     useEffect(() => {
@@ -155,33 +194,29 @@ export default function ResumeBuilder() {
         }
     };
 
-    // --- UPDATED: DOCX DOWNLOAD ---
     const downloadDocx = async () => {
+        if (!validateForDownload()) return; // Stop if invalid
+
         setIsDownloading(true);
         const toastId = toast.loading("Generating DOCX...");
         try {
             const token = getToken();
-            // Call the backend endpoint to generate the file
             const response = await clientServer.get("/resume/download/docx", {
-                params: { resumeId: id, token },
-                responseType: "blob", // Important: Expect a file blob
+                params: { resumeId: id, token, template: resumeData.template },
+                responseType: "blob",
             });
-
-            // Create a temporary link to trigger download
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
             link.href = url;
             link.setAttribute(
                 "download",
-                `${resumeData.personal_info?.full_name || "Resume"}_CV.docx`
+                `${resumeData.personal_info?.full_name || "Resume"}.docx`
             );
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
-
             toast.success("Downloaded!", { id: toastId });
         } catch (error) {
-            console.error("Download Error:", error);
             toast.error("Download failed.", { id: toastId });
         } finally {
             setIsDownloading(false);

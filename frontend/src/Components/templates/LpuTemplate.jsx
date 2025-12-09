@@ -2,7 +2,6 @@ import React from "react";
 import { ExternalLink } from "lucide-react";
 
 const LpuTemplate = ({ data, accentColor }) => {
-    // Exact Blue from your CV
     const themeColor = accentColor || "#2E74B5";
 
     const formatDate = (dateStr) => {
@@ -23,7 +22,7 @@ const LpuTemplate = ({ data, accentColor }) => {
                 target="_blank"
                 rel="noreferrer"
                 className="text-blue-700 hover:underline font-bold inline-flex items-center gap-0.5 ml-1"
-                style={{ fontSize: "9pt" }}
+                style={{ fontSize: "8pt" }}
             >
                 Link <ExternalLink size={8} />
             </a>
@@ -32,11 +31,11 @@ const LpuTemplate = ({ data, accentColor }) => {
 
     const SectionHeader = ({ title }) => (
         <div
-            className="mb-1.5 border-b-[1px] pb-0.5"
+            className="mb-1 border-b-[1px] pb-0.5"
             style={{ borderColor: "#BFBFBF" }}
         >
             <h2
-                className="text-[10.5pt] font-bold uppercase tracking-wide"
+                className="text-[10pt] font-bold uppercase tracking-wide"
                 style={{ color: themeColor, fontFamily: "Arial, sans-serif" }}
             >
                 {title}
@@ -49,27 +48,26 @@ const LpuTemplate = ({ data, accentColor }) => {
             className="w-full h-full bg-white text-black box-border"
             style={{
                 fontFamily: "Arial, sans-serif",
-                fontSize: "9.5pt", // Base font size reduced
-                lineHeight: "1.25", // Tighter lines
-                padding: "0.4in 0.5in", // Exact margins from your doc
-                minHeight: "297mm", // Ensure A4 height visual
+                fontSize: "9pt",
+                lineHeight: "1.2",
+                padding: "0.3in 0.4in",
+                minHeight: "297mm",
             }}
         >
             {/* --- HEADER --- */}
-            <header className="mb-3">
+            <header className="mb-2">
                 <h1
-                    className="text-[20pt] font-bold mb-1.5 text-left leading-none"
+                    className="text-[18pt] font-bold mb-1 text-left leading-none"
                     style={{ color: themeColor }}
                 >
-                    {data.personal_info?.full_name || "UTKAL BEHERA"}
+                    {data.personal_info?.full_name || "YOUR NAME"}
                 </h1>
 
-                <div className="grid grid-cols-[1.3fr_1fr] gap-x-2 text-[9pt] leading-tight">
-                    {/* Left Column */}
+                <div className="grid grid-cols-[1.4fr_1fr] gap-x-2 text-[9pt] leading-tight">
                     <div>
                         {data.personal_info?.linkedin && (
                             <div className="flex">
-                                <span className="font-bold w-[70px]">
+                                <span className="font-bold w-[65px]">
                                     LinkedIn:
                                 </span>
                                 <a
@@ -85,7 +83,7 @@ const LpuTemplate = ({ data, accentColor }) => {
                         )}
                         {data.personal_info?.github && (
                             <div className="flex">
-                                <span className="font-bold w-[70px]">
+                                <span className="font-bold w-[65px]">
                                     GitHub:
                                 </span>
                                 <a
@@ -101,7 +99,7 @@ const LpuTemplate = ({ data, accentColor }) => {
                         )}
                         {data.personal_info?.leetcode && (
                             <div className="flex">
-                                <span className="font-bold w-[70px]">
+                                <span className="font-bold w-[65px]">
                                     LeetCode:
                                 </span>
                                 <a
@@ -116,22 +114,16 @@ const LpuTemplate = ({ data, accentColor }) => {
                             </div>
                         )}
                     </div>
-
-                    {/* Right Column */}
-                    <div>
+                    <div className="text-right">
                         {data.personal_info?.email && (
-                            <div className="flex">
-                                <span className="font-bold w-[55px]">
-                                    Email:
-                                </span>
+                            <div className="flex justify-end">
+                                <span className="font-bold mr-1">Email:</span>
                                 <span>{data.personal_info.email}</span>
                             </div>
                         )}
                         {data.personal_info?.phone && (
-                            <div className="flex">
-                                <span className="font-bold w-[55px]">
-                                    Mobile:
-                                </span>
+                            <div className="flex justify-end">
+                                <span className="font-bold mr-1">Mobile:</span>
                                 <span>{data.personal_info.phone}</span>
                             </div>
                         )}
@@ -141,9 +133,9 @@ const LpuTemplate = ({ data, accentColor }) => {
 
             {/* --- SKILLS --- */}
             {data.skills && (
-                <section className="mb-3">
+                <section className="mb-2">
                     <SectionHeader title="SKILLS" />
-                    <div className="grid grid-cols-[135px_1fr] gap-y-0.5 text-[9.5pt]">
+                    <div className="grid grid-cols-[130px_1fr] gap-y-0 text-[9pt] leading-snug">
                         {data.skillLanguages && (
                             <>
                                 <div className="font-bold">Languages :</div>
@@ -180,14 +172,66 @@ const LpuTemplate = ({ data, accentColor }) => {
                 </section>
             )}
 
+            {/* --- EXPERIENCE (Added this back!) --- */}
+            {data.experience && data.experience.length > 0 && (
+                <section className="mb-2">
+                    <SectionHeader title="EXPERIENCE" />
+                    <div className="space-y-1.5">
+                        {data.experience.map((exp, index) => (
+                            <div key={index}>
+                                <div className="flex justify-between items-baseline leading-none mb-0.5">
+                                    <div className="text-[10pt]">
+                                        <span className="font-bold">
+                                            {exp.company}
+                                        </span>
+                                        {exp.location && (
+                                            <span className="font-normal text-gray-900">
+                                                , {exp.location}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="text-[9pt] font-bold text-gray-900 whitespace-nowrap ml-2">
+                                        {exp.start_date || exp.end_date
+                                            ? `${exp.start_date || ""} - ${
+                                                  exp.is_current
+                                                      ? "Present"
+                                                      : exp.end_date || ""
+                                              }`
+                                            : ""}
+                                    </div>
+                                </div>
+                                <div className="text-[9pt] font-medium italic mb-0.5">
+                                    {exp.position}
+                                </div>
+                                {exp.description && (
+                                    <ul className="list-disc list-outside ml-4 text-[9pt] text-justify leading-[1.25] text-gray-800">
+                                        {exp.description
+                                            .split("\n")
+                                            .filter((line) => line.trim())
+                                            .map((line, i) => (
+                                                <li key={i} className="pl-1">
+                                                    {line.replace(
+                                                        /^[-•]\s*/,
+                                                        ""
+                                                    )}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* --- PROJECTS --- */}
             {data.project && data.project.length > 0 && (
-                <section className="mb-3">
+                <section className="mb-2">
                     <SectionHeader title="PROJECTS" />
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         {data.project.map((proj, index) => (
                             <div key={index}>
-                                <div className="flex justify-between items-baseline leading-tight">
+                                <div className="flex justify-between items-baseline leading-none mb-0.5">
                                     <div className="text-[10pt]">
                                         <span className="font-bold">
                                             {proj.name}
@@ -204,13 +248,12 @@ const LpuTemplate = ({ data, accentColor }) => {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="text-[9pt] font-medium text-gray-900 whitespace-nowrap ml-2">
+                                    <div className="text-[9pt] font-bold text-gray-900 whitespace-nowrap ml-2">
                                         {proj.duration}
                                     </div>
                                 </div>
-
                                 {proj.live_link && (
-                                    <div className="text-[9pt] mb-0.5">
+                                    <div className="text-[8.5pt] mb-0.5 text-gray-700">
                                         <span className="font-bold">
                                             Live Demo:{" "}
                                         </span>
@@ -224,9 +267,8 @@ const LpuTemplate = ({ data, accentColor }) => {
                                         </a>
                                     </div>
                                 )}
-
                                 {proj.description && (
-                                    <ul className="list-disc list-outside ml-4 text-[9.5pt] text-justify leading-[1.3]">
+                                    <ul className="list-disc list-outside ml-4 text-[9pt] text-justify leading-[1.25] text-gray-800">
                                         {proj.description
                                             .split("\n")
                                             .filter((line) => line.trim())
@@ -248,13 +290,13 @@ const LpuTemplate = ({ data, accentColor }) => {
 
             {/* --- CERTIFICATES --- */}
             {data.certificates && data.certificates.length > 0 && (
-                <section className="mb-3">
+                <section className="mb-2">
                     <SectionHeader title="CERTIFICATES" />
-                    <div className="space-y-0.5">
+                    <div className="space-y-0">
                         {data.certificates.map((cert, index) => (
                             <div
                                 key={index}
-                                className="flex justify-between items-baseline text-[9.5pt]"
+                                className="flex justify-between items-baseline text-[9pt] leading-snug"
                             >
                                 <div className="flex-1">
                                     <span>{cert.name}</span>
@@ -265,7 +307,7 @@ const LpuTemplate = ({ data, accentColor }) => {
                                         </span>
                                     )}
                                 </div>
-                                <div className="whitespace-nowrap ml-4 text-gray-900 font-medium">
+                                <div className="whitespace-nowrap ml-4 text-gray-900 font-bold">
                                     {cert.date}
                                 </div>
                             </div>
@@ -276,12 +318,12 @@ const LpuTemplate = ({ data, accentColor }) => {
 
             {/* --- ACHIEVEMENTS --- */}
             {data.achievements && data.achievements.length > 0 && (
-                <section className="mb-3">
+                <section className="mb-2">
                     <SectionHeader title="ACHIEVEMENTS" />
                     <div className="space-y-1">
                         {data.achievements.map((ach, index) => (
                             <div key={index}>
-                                <div className="flex justify-between items-baseline text-[9.5pt]">
+                                <div className="flex justify-between items-baseline text-[9pt] leading-none mb-0.5">
                                     <div>
                                         <span className="font-bold">
                                             {ach.title}
@@ -293,12 +335,12 @@ const LpuTemplate = ({ data, accentColor }) => {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="whitespace-nowrap ml-4 text-gray-900 font-medium">
+                                    <div className="whitespace-nowrap ml-4 text-gray-900 font-bold">
                                         {ach.date}
                                     </div>
                                 </div>
                                 {ach.description && (
-                                    <p className="text-[9.5pt] leading-tight pl-0.5">
+                                    <p className="text-[9pt] leading-tight pl-0.5 text-gray-800">
                                         {ach.description}
                                     </p>
                                 )}
@@ -310,19 +352,19 @@ const LpuTemplate = ({ data, accentColor }) => {
 
             {/* --- EDUCATION --- */}
             {data.education && data.education.length > 0 && (
-                <section className="mb-2">
+                <section className="mb-1">
                     <SectionHeader title="EDUCATION" />
                     <div className="space-y-1.5">
                         {data.education.map((edu, index) => (
                             <div key={index}>
-                                <div className="flex justify-between items-baseline font-bold text-[10pt]">
+                                <div className="flex justify-between items-baseline font-bold text-[9.5pt] leading-none mb-0.5">
                                     <span>{edu.institution}</span>
                                     <span className="text-[9pt]">
                                         {edu.location || "India"}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-baseline text-[9.5pt]">
-                                    <div>
+                                <div className="flex justify-between items-baseline text-[9pt] leading-none">
+                                    <div className="text-gray-800">
                                         <span>
                                             {edu.degree}{" "}
                                             {edu.field ? `- ${edu.field}` : ""}
@@ -330,13 +372,13 @@ const LpuTemplate = ({ data, accentColor }) => {
                                         {edu.gpa && (
                                             <span>
                                                 ;{" "}
-                                                <span className="font-medium">
+                                                <span className="font-bold">
                                                     CGPA/Percentage: {edu.gpa}
                                                 </span>
                                             </span>
                                         )}
                                     </div>
-                                    <div className="whitespace-nowrap ml-4 font-medium">
+                                    <div className="whitespace-nowrap ml-4 font-bold text-gray-900">
                                         {edu.graduation_date
                                             ? `Since ${formatDate(
                                                   edu.graduation_date
