@@ -64,7 +64,7 @@ export default function ResumeBuilder() {
     const [removeBackground, setRemoveBackground] = useState(false);
     const [completion, setCompletion] = useState(0);
     const [isDownloading, setIsDownloading] = useState(false);
-    const printRef = React.useRef(null);  // hidden A4 target for PDF capture
+
 
     const sections = [
         { id: "personal", name: "Personal", icon: User },
@@ -182,61 +182,42 @@ export default function ResumeBuilder() {
         }
     };
 
-    // --- DOWNLOAD PDF (pixel-perfect match to live preview) ---
+    // --- DOWNLOAD PDF (Server-side Puppeteer) ---
     const downloadPdf = async () => {
-        if (completion < 100) {
-            toast.error("Fill all sections to reach 100% before downloading!");
+        if (completion < 50) {
+            toast.error("Please fill at least 50% of your resume before downloading.");
             return;
         }
-        if (!printRef.current) {
-            toast.error("Preview not ready — please wait a moment.");
-            return;
-        }
+
+        // Auto-save first to ensure PDF has latest changes
+        await saveResume();
 
         setIsDownloading(true);
-        const toastId = toast.loading("Generating PDF...");
+        const toastId = toast.loading("Generating PDF on server...");
         try {
-            const html2canvas = (await import("html2canvas")).default;
-            const jsPDF = (await import("jspdf")).default;
-
-            // Capture the full content of the hidden div (no height clipping)
-            const canvas = await html2canvas(printRef.current, {
-                scale: 2,                   // 2× for crisp output
-                useCORS: true,
-                allowTaint: true,
-                logging: false,
-                backgroundColor: "#ffffff",
-                width: 794,
-                // NO fixed height — capture whatever the template naturally produces
+            const response = await clientServer.get(`/resume/export/pdf/${id}`, {
+                responseType: 'blob', // Important: tell axios to expect a binary blob
             });
 
-            const imgData = canvas.toDataURL("image/jpeg", 0.98);
+            // Create a blob URL and trigger download
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Resume_${resumeData.title || id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
 
-            const pdf = new jsPDF({
-                orientation: "portrait",
-                unit: "mm",
-                format: "a4",  // 210mm × 297mm
-            });
-
-            // Scale to fit A4 width (210mm), preserve aspect ratio
-            const pdfW = 210;
-            const pdfH = (canvas.height / canvas.width) * pdfW;
-
-            if (pdfH <= 297) {
-                // Everything fits on 1 page — place at top
-                pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH);
-            } else {
-                // Content taller than A4 — scale down to fit exactly 1 page
-                pdf.addImage(imgData, "JPEG", 0, 0, pdfW, 297);
-            }
-
-            const name = (resumeData.personal_info?.full_name || "Resume").replace(/\s+/g, "_");
-            pdf.save(`${name}_CV.pdf`);
-
-            toast.success("PDF Downloaded! 🎉", { id: toastId });
-        } catch (err) {
-            console.error("PDF Error:", err);
-            toast.error("PDF generation failed.", { id: toastId });
+            toast.dismiss(toastId);
+            toast.success("PDF Downloaded!");
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+            toast.dismiss(toastId);
+            toast.error("Failed to generate PDF.");
         } finally {
             setIsDownloading(false);
         }
@@ -605,7 +586,6 @@ export default function ResumeBuilder() {
                                 template={resumeData.template || "general"}
                                 accentColor={resumeData.accent_color}
                                 fontSize={resumeData.font_size || "default"}
-                                printRef={printRef}
                             />
                         </div>
                     </div>

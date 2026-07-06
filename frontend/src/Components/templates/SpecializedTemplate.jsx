@@ -51,23 +51,27 @@ const DR = ({ left, right, sz, bold = true }) => (
     </div>
 );
 
-/* ─── Regular bullet (description lines) ──────────────────────────────── */
+/* ─── Regular bullet (description lines) ──────────────────────────────────────── */
 const Bullet = ({ text, sz }) => {
     if (!text) return null;
+    // Support both array (new) and string (legacy) descriptions
+    const lines = Array.isArray(text)
+        ? text.filter(Boolean)
+        : text.split("\n")
+            .map(l => l.replace(/^[-•*]\s*/, "").trim())
+            .filter(Boolean);
+    if (!lines.length) return null;
     return (
         <>
-            {text.split("\n")
-                .map(l => l.replace(/^[-•*]\s*/, "").trim())
-                .filter(Boolean)
-                .map((l, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start",
-                                          lineHeight: sz.lineH }}>
-                        <span style={{ fontFamily: FONT, fontSize: sz.body, flexShrink: 0,
-                                       width: "14px", paddingTop: "0.5px", color: "#000" }}>•</span>
-                        <span style={{ fontFamily: FONT, fontSize: sz.body, color: "#1a1a1a",
-                                       flex: 1, textAlign: "justify" }}>{l}</span>
-                    </div>
-                ))}
+            {lines.map((l, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start",
+                                      lineHeight: sz.lineH }}>
+                    <span style={{ fontFamily: FONT, fontSize: sz.body, flexShrink: 0,
+                                   width: "14px", paddingTop: "0.5px", color: "#000" }}>•</span>
+                    <span style={{ fontFamily: FONT, fontSize: sz.body, color: "#1a1a1a",
+                                   flex: 1, textAlign: "justify" }}>{l}</span>
+                </div>
+            ))}
         </>
     );
 };

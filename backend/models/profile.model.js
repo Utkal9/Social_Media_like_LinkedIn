@@ -61,12 +61,20 @@ const ProfileSchema = new mongoose.Schema({
 
     skills: { type: [String], default: [] },
 
-    // --- NEW: Categorized Skills for Resume ---
+    // --- Categorized Skills for GENERAL CV (7 rows) ---
     skillLanguages: { type: String, default: "" },
+    skillFrontend: { type: String, default: "" },      // was "skillFrameworks" — mapped to General's Frontend
+    skillBackend: { type: String, default: "" },
     skillCloudDevOps: { type: String, default: "" },
-    skillFrameworks: { type: String, default: "" },
+    skillFrameworks: { type: String, default: "" },    // kept for backward compat
     skillTools: { type: String, default: "" },
+    skillCoreConcepts: { type: String, default: "" },
     skillSoft: { type: String, default: "" },
+
+    // --- Categorized Skills for SPECIALIZED CV (3 rows) ---
+    specLanguages: { type: String, default: "" },
+    specTechFrameworks: { type: String, default: "" },
+    specDomainSkills: { type: String, default: "" },
 });
 
 const Profile = mongoose.model("Profile", ProfileSchema);

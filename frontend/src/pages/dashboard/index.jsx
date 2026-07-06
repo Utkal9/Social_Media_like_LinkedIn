@@ -298,9 +298,12 @@ export default function Dashboard() {
 
     const commentInputRef = useRef(null);
 
+    const [page, setPage] = useState(1);
+    const loaderRef = useRef(null);
+
     useEffect(() => {
         if (authState.isTokenThere) {
-            dispatch(getAllPosts());
+            dispatch(getAllPosts(1)); // Initial load
             dispatch(getAboutUser({ token: localStorage.getItem("token") }));
         }
         if (!authState.all_profiles_fetched) {
@@ -313,6 +316,27 @@ export default function Dashboard() {
         document.addEventListener("click", closeMenu);
         return () => document.removeEventListener("click", closeMenu);
     }, [authState.isTokenThere, dispatch]);
+
+    // IntersectionObserver for Infinite Scroll
+    useEffect(() => {
+        if (!loaderRef.current) return;
+        
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && postState.hasMore && !postState.isLoading) {
+                setPage((prevPage) => {
+                    const nextPage = prevPage + 1;
+                    dispatch(getAllPosts(nextPage));
+                    return nextPage;
+                });
+            }
+        }, {
+            threshold: 0.1,
+            rootMargin: "0px 0px -100px 0px", // only fire when 100px above bottom of viewport
+        });
+
+        observer.observe(loaderRef.current);
+        return () => observer.disconnect();
+    }, [postState.hasMore, postState.isLoading, dispatch]);
 
     // --- NOTIFICATION HELPER ---
     const showToast = (msg, type = "success") => {
@@ -950,6 +974,15 @@ export default function Dashboard() {
                         </div>
                     ))
                 )}
+                {/* Loader sentinel for Infinite Scroll — always rendered so the observer ref is valid */}
+                <div ref={loaderRef} style={{ height: '50px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    {postState.isLoading && postState.hasMore
+                        ? <span className={styles.loadingText}>Loading more posts...</span>
+                        : !postState.hasMore
+                            ? <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', opacity: 0.5 }}>You're all caught up ✓</span>
+                            : null
+                    }
+                </div>
             </div>
 
             {/* --- Comments Modal --- */}

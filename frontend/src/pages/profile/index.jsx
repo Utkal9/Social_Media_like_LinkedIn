@@ -1,5 +1,5 @@
 // frontend/src/pages/profile/index.jsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import styles from "./index.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -12,6 +12,8 @@ import UserLayout from "@/layout/UserLayout";
 import DashboardLayout from "@/layout/DashboardLayout";
 import { getAllPosts } from "@/config/redux/action/postAction";
 import { useRouter } from "next/router";
+import GeneralTemplate from "@/Components/templates/GeneralTemplate";
+import SpecializedTemplate from "@/Components/templates/SpecializedTemplate";
 
 const DEFAULT_BG =
     "https://img.freepik.com/free-photo/3d-rendering-hexagonal-texture-background_23-2150796421.jpg?semt=ais_hybrid&w=740&q=80";
@@ -56,21 +58,6 @@ const AddIcon = () => (
 const DeleteIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" width="16">
         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-    </svg>
-);
-const DownloadIcon = () => (
-    <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        width="20"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-        />
     </svg>
 );
 const CloseIcon = () => (
@@ -243,6 +230,12 @@ export default function Profilepage() {
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+    // --- PDF Download States ---
+    const [isDownloadingGeneral, setIsDownloadingGeneral] = useState(false);
+    const [isDownloadingSpecialized, setIsDownloadingSpecialized] = useState(false);
+    const generalPrintRef = useRef(null);
+    const specializedPrintRef = useRef(null);
+
     // --- NEW: Image Preview Modal State ---
     const [showImageModal, setShowImageModal] = useState(false);
 
@@ -375,27 +368,178 @@ export default function Profilepage() {
         if (!isEditing) syncProfileToBackend(updatedProfile);
     };
 
-    const handleDownloadResume = async () => {
-        if (completionStats.percentage < 90) return;
-        if (!userProfile?.userId?._id) return;
+    /* ═══════════════════════════════════════════════════════════════════
+       Profile → Template Data Mapping
+       ═══════════════════════════════════════════════════════════════════ */
+    const mapProfileToGeneralData = () => {
+        const p = userProfile;
+        return {
+            personal_info: {
+                full_name: p.userId?.name || "",
+                email: p.userId?.email || "",
+                phone: p.phoneNumber || "",
+                linkedin: p.linkedin || "",
+                github: p.github || "",
+                leetcode: p.leetcode || "",
+                location: "",
+            },
+            professional_summary: "",
+            // General template uses these 7 skill fields:
+            skillLanguages: p.skillLanguages || "",
+            skillFrontend: p.skillFrontend || p.skillFrameworks || "",
+            skillBackend: p.skillBackend || "",
+            skillCloudDevOps: p.skillCloudDevOps || "",
+            skillTools: p.skillTools || "",
+            skillCoreConcepts: p.skillCoreConcepts || "",
+            skillSoft: p.skillSoft || "",
+            experience: (p.pastWork || []).map(w => ({
+                company: w.company || "",
+                position: w.position || "",
+                start_date: "",
+                end_date: w.years || "",
+                description: w.description || "",
+                location: "",
+            })),
+            project: (p.projects || []).map(pr => ({
+                name: pr.title || "",
+                type: "",
+                description: pr.description || "",
+                tech_stack: "",
+                link: pr.link || "",
+                live_link: "",
+                duration: pr.duration || "",
+            })),
+            education: (p.education || []).map(ed => ({
+                institution: ed.school || "",
+                degree: ed.degree || "",
+                field: ed.fieldOfStudy || "",
+                start_date: "",
+                graduation_date: ed.years || "",
+                gpa: ed.grade || "",
+                location: ed.location || "",
+            })),
+            certificates: (p.certificates || []).map(c => ({
+                name: c.name || "",
+                issuer: "",
+                link: c.link || "",
+                date: c.date || "",
+            })),
+            achievements: (p.achievements || []).map(a => ({
+                title: a.title || "",
+                description: a.description || "",
+                link: "",
+                date: a.date || "",
+            })),
+            section_order: ["skills", "experience", "projects", "certificates", "achievements", "education"],
+        };
+    };
+
+    const mapProfileToSpecializedData = () => {
+        const p = userProfile;
+        return {
+            personal_info: {
+                full_name: p.userId?.name || "",
+                email: p.userId?.email || "",
+                phone: p.phoneNumber || "",
+                linkedin: p.linkedin || "",
+                github: p.github || "",
+                location: "",
+            },
+            professional_summary: "",
+            // Specialized template uses these 3 skill fields:
+            specLanguages: p.specLanguages || "",
+            specTechFrameworks: p.specTechFrameworks || "",
+            specDomainSkills: p.specDomainSkills || "",
+            experience: (p.pastWork || []).map(w => ({
+                company: w.company || "",
+                position: w.position || "",
+                start_date: "",
+                end_date: w.years || "",
+                description: w.description || "",
+                location: "",
+            })),
+            project: (p.projects || []).map(pr => ({
+                name: pr.title || "",
+                type: "",
+                description: pr.description || "",
+                tech_stack: "",
+                link: pr.link || "",
+                live_link: "",
+                duration: pr.duration || "",
+            })),
+            education: (p.education || []).map(ed => ({
+                institution: ed.school || "",
+                degree: ed.degree || "",
+                field: ed.fieldOfStudy || "",
+                start_date: "",
+                graduation_date: ed.years || "",
+                gpa: ed.grade || "",
+                location: ed.location || "",
+            })),
+            certificates: (p.certificates || []).map(c => ({
+                name: c.name || "",
+                issuer: "",
+                link: c.link || "",
+                date: c.date || "",
+            })),
+            achievements: (p.achievements || []).map(a => ({
+                title: a.title || "",
+                description: a.description || "",
+                link: "",
+                date: a.date || "",
+            })),
+            section_order: ["skills", "experience", "projects", "certificates", "achievements", "education"],
+        };
+    };
+
+    /* ═══════════════════════════════════════════════════════════════════
+       PDF Download Handlers
+       ═══════════════════════════════════════════════════════════════════ */
+    const downloadPdf = async (type) => {
+        const isGeneral = type === "general";
+        const printRef = isGeneral ? generalPrintRef : specializedPrintRef;
+        const setLoading = isGeneral ? setIsDownloadingGeneral : setIsDownloadingSpecialized;
+
+        if (!printRef.current) {
+            showToast("Preview not ready — please wait.", "error");
+            return;
+        }
+
+        setLoading(true);
         try {
-            const response = await clientServer.get(
-                `/user/download_resume?id=${userProfile.userId._id}`,
-                { responseType: "blob" }
-            );
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute(
-                "download",
-                `${userProfile.userId.username}_resume.docx`
-            );
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-            showToast("Resume generated successfully", "success");
-        } catch (error) {
-            showToast("Generation failed", "error");
+            const html2canvas = (await import("html2canvas")).default;
+            const jsPDF = (await import("jspdf")).default;
+
+            const canvas = await html2canvas(printRef.current, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: "#ffffff",
+                width: 794,
+            });
+
+            const imgData = canvas.toDataURL("image/jpeg", 0.98);
+            const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+            const pdfW = 210;
+            const pdfH = (canvas.height / canvas.width) * pdfW;
+
+            if (pdfH <= 297) {
+                pdf.addImage(imgData, "JPEG", 0, 0, pdfW, pdfH);
+            } else {
+                pdf.addImage(imgData, "JPEG", 0, 0, pdfW, 297);
+            }
+
+            const name = (userProfile.userId?.name || "Resume").replace(/\s+/g, "_");
+            const suffix = isGeneral ? "General_CV" : "Specialized_CV";
+            pdf.save(`${name}_${suffix}.pdf`);
+
+            showToast(`${isGeneral ? "General" : "Specialized"} CV downloaded! 🎉`, "success");
+        } catch (err) {
+            console.error("PDF Error:", err);
+            showToast("PDF generation failed.", "error");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -476,11 +620,6 @@ export default function Profilepage() {
 
     if (!userProfile)
         return <div className={styles.loading}>Loading Identity...</div>;
-
-    const strokeColor =
-        completionStats.percentage >= 90
-            ? "var(--neon-teal)"
-            : "var(--neon-pink)";
 
     return (
         <div className={styles.profilePage}>
@@ -622,25 +761,30 @@ export default function Profilepage() {
                     }}
                 >
                     <div className={styles.resumeActionWrapper}>
-                        <svg viewBox="0 0 36 36" className={styles.progressSvg}>
-                            <path
-                                className={styles.circleBg}
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                            <path
-                                className={styles.circleFg}
-                                strokeDasharray={`${completionStats.percentage}, 100`}
-                                stroke={strokeColor}
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            />
-                        </svg>
+                        {/* General CV Download (Blue) */}
                         <button
-                            onClick={handleDownloadResume}
-                            className={styles.downloadResumeBtn}
-                            disabled={completionStats.percentage < 90}
+                            onClick={() => downloadPdf("general")}
+                            className={styles.downloadBtnGeneral}
+                            disabled={isDownloadingGeneral || completionStats.percentage < 90}
+                            title="Download General CV (PDF)"
                         >
-                            <DownloadIcon />
+                            {isDownloadingGeneral
+                                ? <span className={styles.btnSpinner} />
+                                : <span className={styles.downloadLabel}>G</span>}
                         </button>
+
+                        {/* Specialized CV Download (Dark) */}
+                        <button
+                            onClick={() => downloadPdf("specialized")}
+                            className={styles.downloadBtnSpecialized}
+                            disabled={isDownloadingSpecialized || completionStats.percentage < 90}
+                            title="Download Specialized CV (PDF)"
+                        >
+                            {isDownloadingSpecialized
+                                ? <span className={styles.btnSpinner} />
+                                : <span className={styles.downloadLabel}>S</span>}
+                        </button>
+
                         <div className={styles.completionTooltip}>
                             <h5>
                                 {completionStats.percentage}% Ready{" "}
@@ -666,14 +810,8 @@ export default function Profilepage() {
                                     )}
                                 </ul>
                             ) : (
-                                <p
-                                    style={{
-                                        fontSize: "0.8rem",
-                                        color: "#aaa",
-                                        margin: 0,
-                                    }}
-                                >
-                                    Profile complete!
+                                <p style={{ fontSize: "0.8rem", color: "#aaa", margin: 0 }}>
+                                    Profile complete! Click G (General) or S (Specialized) to download.
                                 </p>
                             )}
                         </div>
@@ -1242,33 +1380,51 @@ export default function Profilepage() {
                             Tech Stack (Resume)
                         </div>
                         <div className={styles.stackList}>
+                            {/* ── General CV Skills (7 rows) ── */}
+                            <div className={styles.skillGroupLabel}>General CV Skills</div>
                             {[
-                                "skillLanguages",
-                                "skillCloudDevOps",
-                                "skillFrameworks",
-                                "skillTools",
-                                "skillSoft",
-                            ].map((field) => (
+                                ["skillLanguages", "Languages"],
+                                ["skillFrontend", "Frontend"],
+                                ["skillBackend", "Backend"],
+                                ["skillCloudDevOps", "Databases & Cloud"],
+                                ["skillTools", "Tools & Platforms"],
+                                ["skillCoreConcepts", "Core Concepts"],
+                                ["skillSoft", "Soft Skills"],
+                            ].map(([field, label]) => (
                                 <div key={field} className={styles.stackItem}>
-                                    <label>
-                                        {
-                                            {
-                                                skillLanguages: "Languages",
-                                                skillCloudDevOps:
-                                                    "Cloud/DevOps",
-                                                skillFrameworks: "Frameworks",
-                                                skillTools: "Tools",
-                                                skillSoft: "Soft Skills",
-                                            }[field]
-                                        }
-                                    </label>
+                                    <label>{label}</label>
                                     {isEditing ? (
                                         <textarea
                                             name={field}
                                             className={styles.editTextarea}
                                             value={userProfile[field] || ""}
                                             onChange={handleProfileChange}
-                                            placeholder="e.g. Item 1, Item 2..."
+                                            placeholder={`e.g. ${label}...`}
+                                        />
+                                    ) : (
+                                        <p className={styles.viewStackText}>
+                                            {userProfile[field] || "—"}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* ── Specialized CV Skills (3 rows) ── */}
+                            <div className={styles.skillGroupLabel}>Specialized CV Skills</div>
+                            {[
+                                ["specLanguages", "Languages"],
+                                ["specTechFrameworks", "Technologies / Frameworks"],
+                                ["specDomainSkills", "Domain Skills"],
+                            ].map(([field, label]) => (
+                                <div key={field} className={styles.stackItem}>
+                                    <label>{label}</label>
+                                    {isEditing ? (
+                                        <textarea
+                                            name={field}
+                                            className={styles.editTextarea}
+                                            value={userProfile[field] || ""}
+                                            onChange={handleProfileChange}
+                                            placeholder={`e.g. ${label}...`}
                                         />
                                     ) : (
                                         <p className={styles.viewStackText}>
@@ -1633,6 +1789,45 @@ export default function Profilepage() {
                     </div>
                 </div>
             )}
+            {/* ═══ HIDDEN OFF-SCREEN DIVS FOR PDF CAPTURE ═══ */}
+            <div
+                ref={generalPrintRef}
+                aria-hidden="true"
+                style={{
+                    position: "fixed",
+                    top: 0,
+                    left: "-9999px",
+                    width: "794px",
+                    backgroundColor: "#fff",
+                    pointerEvents: "none",
+                    zIndex: -1,
+                }}
+            >
+                <GeneralTemplate
+                    data={mapProfileToGeneralData()}
+                    accentColor="#2E74B5"
+                    fontSize="default"
+                />
+            </div>
+            <div
+                ref={specializedPrintRef}
+                aria-hidden="true"
+                style={{
+                    position: "fixed",
+                    top: 0,
+                    left: "-9999px",
+                    width: "794px",
+                    backgroundColor: "#fff",
+                    pointerEvents: "none",
+                    zIndex: -1,
+                }}
+            >
+                <SpecializedTemplate
+                    data={mapProfileToSpecializedData()}
+                    accentColor="#000000"
+                    fontSize="default"
+                />
+            </div>
         </div>
     );
 }

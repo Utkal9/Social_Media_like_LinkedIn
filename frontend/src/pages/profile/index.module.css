@@ -164,68 +164,90 @@
     background: linear-gradient(to bottom, transparent, var(--holo-panel));
 }
 
-/* --- UNIFIED RESUME WRAPPER --- */
+/* --- UNIFIED RESUME WRAPPER (two buttons) --- */
 .resumeActionWrapper {
     position: absolute;
-    top: 16px;
-    left: 16px;
-    width: 56px;
-    height: 56px;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    gap: 10px;
     z-index: 20;
-    cursor: pointer;
+    cursor: default;
 }
 
-/* Progress Ring */
-.progressSvg {
+/* --- Individual Download Button --- */
+.downloadBtnGeneral,
+.downloadBtnSpecialized {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(4px);
+    flex-shrink: 0;
+}
+
+.downloadBtnGeneral {
+    background: rgba(46, 116, 181, 0.85);
+    border-color: rgba(46, 116, 181, 0.5);
+    color: #fff;
+}
+.downloadBtnGeneral:hover:not(:disabled) {
+    background: #2E74B5;
+    box-shadow: 0 0 14px rgba(46, 116, 181, 0.6);
+    transform: scale(1.08);
+}
+
+.downloadBtnSpecialized {
+    background: rgba(30, 30, 30, 0.85);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+.downloadBtnSpecialized:hover:not(:disabled) {
+    background: #1a1a1a;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.25);
+    transform: scale(1.08);
+}
+
+.downloadBtnGeneral:disabled,
+.downloadBtnSpecialized:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.downloadLabel {
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+/* Spinner overlay */
+.btnSpinner {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg);
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    border-top-color: var(--neon-teal);
+    animation: spinBtn 0.7s linear infinite;
     pointer-events: none;
 }
-.circleBg {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.2);
-    stroke-width: 3;
-}
-.circleFg {
-    fill: none;
-    stroke-width: 3;
-    transition: stroke-dasharray 0.5s ease;
+
+@keyframes spinBtn {
+    to { transform: rotate(360deg); }
 }
 
-/* Inner Button */
-.downloadResumeBtn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 21;
-}
-.downloadResumeBtn:hover:not(:disabled) {
-    background: var(--neon-violet);
-    box-shadow: var(--glow-primary);
-}
-.downloadResumeBtn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-/* --- Tooltip --- */
+/* --- Tooltip (appears on hover of wrapper) --- */
 .resumeActionWrapper:hover .completionTooltip {
     display: block;
     opacity: 1;
@@ -284,6 +306,22 @@
     line-height: 1.4;
     color: var(--neon-pink);
     font-size: 0.8rem;
+}
+
+/* --- Skill Section Sub-Headers --- */
+.skillGroupLabel {
+    font-family: "Orbitron", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    margin: 16px 0 8px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--holo-border);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.skillGroupLabel:first-child {
+    margin-top: 0;
 }
 
 /* --- Upload Buttons --- */

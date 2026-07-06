@@ -59,7 +59,7 @@ const ResumeSchema = new mongoose.Schema({
             position: { type: String, default: "" },
             start_date: { type: String, default: "" },
             end_date: { type: String, default: "" },
-            description: { type: String, default: "" },
+            description: [{ type: String }],              // Array of bullet points
             location: { type: String, default: "" },
             tech_stack: { type: String, default: "" },    // Tech stack used in internship
             cert_link: { type: String, default: "" },     // Certificate link for internship
@@ -85,7 +85,7 @@ const ResumeSchema = new mongoose.Schema({
         {
             name: { type: String, default: "" },
             type: { type: String, default: "" },
-            description: { type: String, default: "" },
+            description: [{ type: String }],              // Array of bullet points
             tech_stack: { type: String, default: "" },    // "Tech Stack:" line in Specialized
             link: { type: String, default: "" },
             live_link: { type: String, default: "" },

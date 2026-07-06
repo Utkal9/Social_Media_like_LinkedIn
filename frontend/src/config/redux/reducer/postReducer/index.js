@@ -10,6 +10,7 @@ const initialState = {
     message: "",
     comments: [],
     postId: "",
+    hasMore: true,
 };
 const postSlice = createSlice({
     name: "post",
@@ -30,7 +31,20 @@ const postSlice = createSlice({
                 state.isLoading = false;
                 state.isError = false;
                 state.postFetched = true;
-                state.posts = action.payload.posts.reverse();
+
+                const newPosts = action.payload.posts; // Backend now returns newest first, so no .reverse() needed
+                const fetchedPage = action.payload.fetchedPage;
+
+                if (fetchedPage === 1) {
+                    state.posts = newPosts;
+                } else {
+                    // Append new posts, but avoid duplicates based on _id
+                    const existingIds = new Set(state.posts.map(p => p._id));
+                    const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p._id));
+                    state.posts = [...state.posts, ...uniqueNewPosts];
+                }
+
+                state.hasMore = action.payload.hasMore;
             })
             .addCase(getAllPosts.rejected, (state, action) => {
                 state.isLoading = false;
@@ -43,5 +57,5 @@ const postSlice = createSlice({
             });
     },
 });
-export const { resetPostId } = postSlice.actions;
+export const { resetPostId, reset: resetPosts } = postSlice.actions;
 export default postSlice.reducer;

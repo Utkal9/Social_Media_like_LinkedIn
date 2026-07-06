@@ -57,13 +57,28 @@ const deleteFromCloudinary = async (url) => {
 
 export const getAllPosts = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
         const posts = await Post.find()
+            .sort({ createdAt: -1 }) // Newest first
+            .skip(skip)
+            .limit(limit)
             .populate(
                 "userId",
                 "name username email profilePicture isOnline lastSeen"
             )
             .populate("reactions.userId", "name username profilePicture");
-        return res.json({ posts });
+
+        const totalPosts = await Post.countDocuments();
+
+        return res.json({ 
+            posts, 
+            currentPage: page, 
+            totalPages: Math.ceil(totalPosts / limit),
+            hasMore: page * limit < totalPosts
+        });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

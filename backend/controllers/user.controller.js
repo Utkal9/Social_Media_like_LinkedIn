@@ -95,7 +95,10 @@ const deleteFromCloudinary = async (url) => {
 const createSmartBullets = (text) => {
     if (!text) return [];
     let points = [];
-    if (text.includes("\n")) {
+    // Handle new array format
+    if (Array.isArray(text)) {
+        points = text.filter((s) => s && s.trim().length > 0).map((s) => s.trim());
+    } else if (text.includes("\n")) {
         points = text
             .split("\n")
             .map((line) => line.trim())

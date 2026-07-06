@@ -24,7 +24,7 @@ const deleteFromCloudinary = async (url) => {
 // --- 1. Create Resume (With Smart Profile Auto-Fill) ---
 export const createResume = async (req, res) => {
     try {
-        const { token, title } = req.body;
+        const { token, title, template } = req.body;
 
         const user = await User.findOne({ token });
         if (!user) return res.status(404).json({ message: "User not found" });
@@ -64,7 +64,9 @@ export const createResume = async (req, res) => {
                 experience = userProfile.pastWork.map((work) => ({
                     company: work.company,
                     position: work.position,
-                    description: work.description,
+                    description: work.description
+                        ? work.description.split("\n").map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)
+                        : [],
                 }));
             }
 
@@ -82,7 +84,9 @@ export const createResume = async (req, res) => {
                 projects = userProfile.projects.map((proj) => ({
                     name: proj.title,
                     link: proj.link,
-                    description: proj.description,
+                    description: proj.description
+                        ? proj.description.split("\n").map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)
+                        : [],
                     duration: proj.duration,
                 }));
             }
@@ -118,7 +122,7 @@ export const createResume = async (req, res) => {
         const newResume = new Resume({
             userId: user._id,
             title: title || "Untitled Resume",
-            template: "general",   // default = LPU blue style
+            template: template || "general",   // chosen by user in the picker modal
             personal_info: personalInfo,
             professional_summary: summary,
             section_order: ["experience", "projects", "achievements", "certificates", "skills", "education"],
@@ -185,6 +189,27 @@ export const getPublicResume = async (req, res) => {
         
         if (!resume.public) {
             return res.status(403).json({ message: "This resume is private" });
+        }
+
+        return res.json({ resume });
+    } catch (error) {
+        return res.status(500).json({ message: "Invalid Resume ID" });
+    }
+};
+
+// --- 3c. Get Resume for Server-Side Printing (Puppeteer Only) ---
+export const getPrintResume = async (req, res) => {
+    try {
+        const { resumeId, printToken } = req.query;
+        const expectedToken = process.env.SESSION_SECRET || "default_secret";
+        
+        if (printToken !== expectedToken) {
+            return res.status(403).json({ message: "Unauthorized print request" });
+        }
+
+        const resume = await Resume.findById(resumeId);
+        if (!resume) {
+            return res.status(404).json({ message: "Resume not found" });
         }
 
         return res.json({ resume });

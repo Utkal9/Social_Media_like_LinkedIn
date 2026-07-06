@@ -41,9 +41,9 @@ const L = ({ href, children }) =>
 const Hdr = ({ title, sz }) => (
     <div style={{
         borderBottom: "1px solid #BFBFBF",
-        marginTop: "6px",
-        paddingBottom: "3px",    // ← tiny gap between text and underline
-        marginBottom: "1px",    // ← minimal gap after the line (before first item)
+        marginTop: "3px",        // ← gap above section title
+        paddingBottom: "1px",    // ← gap between title text and underline
+        marginBottom: "1px",     // ← gap after the underline, before first item
     }}>
         <span style={{
             fontFamily: "Arial, sans-serif",
@@ -85,9 +85,13 @@ const DR = ({ left, right, bold = true, lh, fsz }) => (
    and html2canvas — no CSS text-indent tricks needed.                     */
 const B = ({ text, sz }) => {
     if (!text) return null;
-    const lines = text.split("\n")
-        .map(l => l.replace(/^[-•*]\s*/, "").trim())
-        .filter(Boolean);
+    // Support both array (new) and string (legacy) descriptions
+    const lines = Array.isArray(text)
+        ? text.filter(Boolean)
+        : text.split("\n")
+            .map(l => l.replace(/^[-•*]\s*/, "").trim())
+            .filter(Boolean);
+    if (!lines.length) return null;
     return (
         <>
             {lines.map((l, i) => (
@@ -168,7 +172,7 @@ const LpuTemplate = ({ data, accentColor, fontSize = "default" }) => {
             <div>
                 <Hdr title="Internship" sz={sz} />
                 {data.experience.map((e, i) => (
-                    <div key={i} style={{ marginBottom: i < data.experience.length - 1 ? "4px" : 0 }}>
+                    <div key={i} style={{ marginBottom: i < data.experience.length - 1 ? "2px" : 0 }}>
                         <DR lh={sz.lineH} fsz={sz.body}
                             left={
                                 <span style={{ ...body, fontWeight: "bold", color: tc, fontSize: sz.title }}>
@@ -201,7 +205,7 @@ const LpuTemplate = ({ data, accentColor, fontSize = "default" }) => {
             <div>
                 <Hdr title="Projects" sz={sz} />
                 {data.project.map((p, i) => (
-                    <div key={i} style={{ marginBottom: i < data.project.length - 1 ? "4px" : 0 }}>
+                    <div key={i} style={{ marginBottom: i < data.project.length - 1 ? "2px" : 0 }}>
                         <DR lh={sz.lineH} fsz={sz.body}
                             left={
                                 <span style={{ ...body, fontWeight: "bold", color: tc, fontSize: sz.title }}>
@@ -298,7 +302,7 @@ const LpuTemplate = ({ data, accentColor, fontSize = "default" }) => {
                     const isPct = (e.gpa || "").toLowerCase().includes("percent")
                                || (e.gpa || "").includes("%");
                     return (
-                        <div key={i} style={{ marginBottom: i < data.education.length - 1 ? "2px" : 0 }}>
+                        <div key={i} style={{ marginBottom: i < data.education.length - 1 ? "1px" : 0 }}>
                             <DR lh={sz.lineH} fsz={sz.body}
                                 left={<span style={{ ...body, fontWeight: "bold", color: tc }}>{e.institution}</span>}
                                 right={e.location}
@@ -368,7 +372,7 @@ const LpuTemplate = ({ data, accentColor, fontSize = "default" }) => {
             {/* ── ORDERED SECTIONS ───────────────────────────────────── */}
             {ord.map(key => {
                 const fn = R[key];
-                return fn ? <div key={key}>{fn()}</div> : null;
+                return fn ? <div key={key} style={{ marginBottom: 0 }}>{fn()}</div> : null;
             })}
         </div>
     );

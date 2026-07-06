@@ -5,11 +5,22 @@ import {
     Sparkles,
     Trash2,
     Calendar,
+    Minus,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import clientServer from "@/config";
 import toast, { Toaster } from "react-hot-toast";
+
+// Helper: normalize description — always return array of strings
+const normalizeDesc = (desc) => {
+    if (!desc) return [""];
+    if (Array.isArray(desc)) return desc.length > 0 ? desc : [""];
+    // Legacy: single string with newlines → split into array
+    return desc.split("\n").map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean).length > 0
+        ? desc.split("\n").map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)
+        : [""];
+};
 
 const ExperienceForm = ({ data, onChange, template = "general" }) => {
     const isSpecialized = template === "specialized";
@@ -24,7 +35,7 @@ const ExperienceForm = ({ data, onChange, template = "general" }) => {
                 position: "",
                 start_date: "",
                 end_date: "",
-                description: "",
+                description: ["", "", ""],
                 location: "",
                 tech_stack: "",
                 cert_link: "",
@@ -39,15 +50,59 @@ const ExperienceForm = ({ data, onChange, template = "general" }) => {
         onChange(updated);
     };
 
+    // Update a single bullet point
+    const updateBullet = (expIndex, bulletIndex, value) => {
+        const updated = [...data];
+        const bullets = [...normalizeDesc(updated[expIndex].description)];
+        bullets[bulletIndex] = value;
+        updated[expIndex] = { ...updated[expIndex], description: bullets };
+        onChange(updated);
+    };
+
+    // Add a bullet point
+    const addBullet = (expIndex) => {
+        const updated = [...data];
+        const bullets = [...normalizeDesc(updated[expIndex].description)];
+        if (bullets.length >= 5) return; // max 5 bullets
+        bullets.push("");
+        updated[expIndex] = { ...updated[expIndex], description: bullets };
+        onChange(updated);
+    };
+
+    // Remove a bullet point
+    const removeBullet = (expIndex, bulletIndex) => {
+        const updated = [...data];
+        const bullets = [...normalizeDesc(updated[expIndex].description)];
+        if (bullets.length <= 1) return; // keep at least 1
+        bullets.splice(bulletIndex, 1);
+        updated[expIndex] = { ...updated[expIndex], description: bullets };
+        onChange(updated);
+    };
+
     const generateDescription = async (index) => {
         setGeneratingIndex(index);
         try {
+            const currentDesc = normalizeDesc(data[index].description).filter(Boolean).join(". ");
             const { data: resData } = await clientServer.post(
                 "/resume/ai/enhance-job",
-                { userContent: `enhance: ${data[index].description}` },
+                { userContent: `enhance: ${currentDesc}` },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            updateExperience(index, "description", resData.enhancedContent);
+            // Backend now returns an array of bullet strings
+            const enhanced = resData.enhancedContent;
+            if (Array.isArray(enhanced) && enhanced.length > 0) {
+                updateExperience(index, "description", enhanced.slice(0, 4));
+            } else if (typeof enhanced === "string") {
+                // Fallback for legacy string response
+                const bullets = enhanced
+                    .split("\n")
+                    .map(s => s.replace(/^[-•*]\s*/, "").trim())
+                    .filter(s => s.length > 10)
+                    .slice(0, 4);
+                if (bullets.length > 0) {
+                    updateExperience(index, "description", bullets);
+                }
+            }
             toast.success("Enhanced!");
         } catch {
             toast.error("AI Failed");
@@ -269,13 +324,15 @@ const ExperienceForm = ({ data, onChange, template = "general" }) => {
                             Currently working here
                         </span>
                     </label>
+
+                    {/* ── BULLET POINT DESCRIPTION FIELDS ── */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label
                                 className="text-sm font-medium"
                                 style={{ color: "var(--text-primary)" }}
                             >
-                                Job Description
+                                Description Bullet Points
                             </label>
                             <button
                                 onClick={() => generateDescription(index)}
@@ -294,23 +351,53 @@ const ExperienceForm = ({ data, onChange, template = "general" }) => {
                                 Enhance
                             </button>
                         </div>
-                        <textarea
-                            value={experience.description}
-                            onChange={(e) =>
-                                updateExperience(
-                                    index,
-                                    "description",
-                                    e.target.value
-                                )
-                            }
-                            rows={4}
-                            className="w-full text-sm px-3 py-2 border rounded-lg resize-none"
-                            style={{
-                                backgroundColor: "var(--holo-bg)",
-                                borderColor: "var(--holo-border)",
-                                color: "var(--text-primary)",
-                            }}
-                        />
+
+                        {normalizeDesc(experience.description).map((bullet, bIdx) => (
+                            <div key={bIdx} className="flex items-start gap-2">
+                                <span
+                                    className="text-sm font-bold mt-2 flex-shrink-0"
+                                    style={{ color: "var(--neon-teal)", width: "18px" }}
+                                >
+                                    •
+                                </span>
+                                <input
+                                    value={bullet}
+                                    onChange={(e) => updateBullet(index, bIdx, e.target.value)}
+                                    type="text"
+                                    placeholder={`Bullet point ${bIdx + 1} (e.g. Developed a full-stack web app using React and Node.js)`}
+                                    className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2"
+                                    style={{
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
+                                    }}
+                                />
+                                {normalizeDesc(experience.description).length > 1 && (
+                                    <button
+                                        onClick={() => removeBullet(index, bIdx)}
+                                        className="mt-2 flex-shrink-0 hover:text-red-500 transition-colors"
+                                        style={{ color: "var(--text-secondary)" }}
+                                        title="Remove bullet"
+                                    >
+                                        <Minus className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+
+                        {normalizeDesc(experience.description).length < 5 && (
+                            <button
+                                onClick={() => addBullet(index)}
+                                className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border transition-colors"
+                                style={{
+                                    borderColor: "var(--holo-border)",
+                                    color: "var(--text-secondary)",
+                                    backgroundColor: "var(--holo-glass)",
+                                }}
+                            >
+                                <Plus className="w-3 h-3" /> Add Bullet Point
+                            </button>
+                        )}
                     </div>
                 </div>
             ))}

@@ -3,10 +3,11 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const getAllPosts = createAsyncThunk(
     "post/getAllPosts",
-    async (_, thunkAPI) => {
+    async (page = 1, thunkAPI) => {
         try {
-            const response = await clientServer.get("/posts");
-            return thunkAPI.fulfillWithValue(response.data);
+            const response = await clientServer.get(`/posts?page=${page}&limit=5`);
+            // Attach the page number to the payload so the reducer knows whether to replace or append
+            return thunkAPI.fulfillWithValue({ ...response.data, fetchedPage: page });
         } catch (error) {
             return thunkAPI.rejectWithValue(error.response.data);
         }

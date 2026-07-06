@@ -8,7 +8,7 @@ import { getAboutUser } from "@/config/redux/action/authAction";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 import { useTheme } from "@/context/ThemeContext";
-import { FileText } from "lucide-react"; // Import icon
+import { FileText, Sparkles } from "lucide-react"; // Import icons
 
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (
@@ -268,6 +268,17 @@ export default function NavbarComponent() {
                 />
             ),
             label: "Resume",
+            protected: true,
+        },
+        {
+            path: "/ai-tools",
+            icon: ({ isActive }) => (
+                <Sparkles
+                    size={24}
+                    color={isActive ? "currentColor" : "currentColor"}
+                />
+            ),
+            label: "AI Tools",
             protected: true,
         },
         { path: "/meet", icon: MeetIcon, label: "Meet", protected: false },

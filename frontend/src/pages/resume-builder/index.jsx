@@ -16,6 +16,7 @@ import {
     X,
     AlertTriangle,
     MoreVertical,
+    Sparkles,
 } from "lucide-react";
 
 const ResumeDashboard = () => {
@@ -32,6 +33,8 @@ const ResumeDashboard = () => {
 
     // --- MODAL & MENU STATES ---
     const [showCreateResume, setShowCreateResume] = useState(false);
+    const [createStep, setCreateStep] = useState(1);         // 1 = pick template, 2 = enter title
+    const [selectedTemplate, setSelectedTemplate] = useState("general"); // "general" | "specialized"
     const [showUploadResume, setShowUploadResume] = useState(false);
     const [editResumeId, setEditResumeId] = useState("");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -60,9 +63,12 @@ const ResumeDashboard = () => {
             const { data } = await clientServer.post("/resume/create", {
                 title,
                 token,
+                template: selectedTemplate,
             });
             setAllResumes([...allResumes, data.resume]);
             setTitle("");
+            setCreateStep(1);
+            setSelectedTemplate("general");
             setShowCreateResume(false);
             router.push(`/resume-builder/${data.resume._id}`);
         } catch (error) {
@@ -219,6 +225,29 @@ const ResumeDashboard = () => {
                             Upload Existing
                         </p>
                     </button>
+
+                    <button
+                        onClick={() => router.push('/ai-tools')}
+                        className="w-full sm:max-w-48 h-48 flex flex-col items-center justify-center rounded-xl gap-3 border-2 border-dashed transition-all duration-300 cursor-pointer group hover:scale-105"
+                        style={{
+                            backgroundColor: "var(--holo-glass)",
+                            borderColor: "var(--holo-border)",
+                            color: "var(--text-secondary)",
+                        }}
+                    >
+                        <div
+                            className="p-3 rounded-full shadow-sm"
+                            style={{
+                                background: "var(--holo-panel)",
+                                color: "#f59e0b",
+                            }}
+                        >
+                            <Sparkles className="w-8 h-8" />
+                        </div>
+                        <p className="font-medium group-hover:text-[#f59e0b] transition-colors">
+                            AI Career Tools
+                        </p>
+                    </button>
                 </div>
 
                 <hr
@@ -334,24 +363,34 @@ const ResumeDashboard = () => {
                                     </p>
                                 </div>
 
-                                {/* 3. Simple Footer (Date Only) */}
+                                {/* 3. Footer: template badge + date */}
                                 <div
-                                    className="px-4 py-3 border-t flex items-center justify-center"
+                                    className="px-4 py-3 border-t flex items-center justify-between"
                                     style={{
                                         borderColor: "var(--holo-border)",
                                         backgroundColor: "var(--holo-glass)",
                                     }}
                                 >
+                                    {/* Template badge */}
                                     <span
-                                        className="text-xs font-medium opacity-70"
+                                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
                                         style={{
-                                            color: "var(--text-secondary)",
+                                            background: resume.template === "specialized"
+                                                ? "rgba(139,92,246,0.15)"
+                                                : "rgba(15,255,198,0.12)",
+                                            color: resume.template === "specialized"
+                                                ? "var(--neon-violet)"
+                                                : "var(--neon-teal)",
+                                            border: `1px solid ${ resume.template === "specialized" ? "rgba(139,92,246,0.3)" : "rgba(15,255,198,0.3)" }`,
                                         }}
                                     >
-                                        Edited{" "}
-                                        {new Date(
-                                            resume.updatedAt
-                                        ).toLocaleDateString()}
+                                        {resume.template === "specialized" ? "Specialized" : "General"}
+                                    </span>
+                                    <span
+                                        className="text-xs font-medium opacity-70"
+                                        style={{ color: "var(--text-secondary)" }}
+                                    >
+                                        {new Date(resume.updatedAt).toLocaleDateString()}
                                     </span>
                                 </div>
                             </div>
@@ -365,55 +404,192 @@ const ResumeDashboard = () => {
                 {showCreateResume && (
                     <div
                         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={() => setShowCreateResume(false)}
+                        onClick={() => { setShowCreateResume(false); setCreateStep(1); setTitle(""); }}
                     >
                         <div
                             onClick={(e) => e.stopPropagation()}
-                            className="relative rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-200"
+                            className="relative rounded-2xl shadow-2xl w-full animate-in fade-in zoom-in duration-200"
                             style={{
                                 backgroundColor: "var(--holo-panel)",
                                 border: "1px solid var(--holo-border)",
+                                maxWidth: createStep === 1 ? "640px" : "420px",
+                                transition: "max-width 0.3s ease",
                             }}
                         >
-                            <div className="flex justify-between items-center mb-6">
-                                <h2
-                                    className="text-2xl font-bold"
-                                    style={{ color: "var(--text-primary)" }}
-                                >
-                                    Create Resume
-                                </h2>
+                            {/* Header */}
+                            <div className="flex justify-between items-center px-8 pt-8 pb-6">
+                                <div>
+                                    {createStep === 2 && (
+                                        <button
+                                            onClick={() => setCreateStep(1)}
+                                            className="flex items-center gap-1.5 text-sm mb-2 transition-opacity hover:opacity-70"
+                                            style={{ color: "var(--text-secondary)" }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                                            Back
+                                        </button>
+                                    )}
+                                    <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+                                        {createStep === 1 ? "Choose a Template" : "Name your Resume"}
+                                    </h2>
+                                    <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+                                        {createStep === 1
+                                            ? "Pick the layout that fits your style. You can switch it later."
+                                            : `Using ${ selectedTemplate === "specialized" ? "Specialized" : "General" } template`
+                                        }
+                                    </p>
+                                </div>
                                 <button
-                                    onClick={() => setShowCreateResume(false)}
+                                    onClick={() => { setShowCreateResume(false); setCreateStep(1); setTitle(""); }}
                                     style={{ color: "var(--text-secondary)" }}
+                                    className="ml-4 shrink-0"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
-                            <form onSubmit={createResume}>
-                                <input
-                                    autoFocus
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    value={title}
-                                    type="text"
-                                    placeholder="Ex: Full Stack Developer"
-                                    className="w-full px-4 py-3 rounded-xl mb-6 outline-none transition-all focus:ring-2 focus:ring-[var(--neon-teal)]"
-                                    style={{
-                                        backgroundColor: "var(--holo-bg)",
-                                        border: "1px solid var(--holo-border)",
-                                        color: "var(--text-primary)",
-                                    }}
-                                    required
-                                />
-                                <button
-                                    className="w-full py-3 font-medium rounded-xl transition-colors shadow-lg"
-                                    style={{
-                                        backgroundColor: "var(--neon-teal)",
-                                        color: "#000",
-                                    }}
-                                >
-                                    Create Now
-                                </button>
-                            </form>
+
+                            <div className="px-8 pb-8">
+                                {/* ── STEP 1: Template Picker ── */}
+                                {createStep === 1 && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* General Card */}
+                                        <button
+                                            onClick={() => { setSelectedTemplate("general"); setCreateStep(2); }}
+                                            className="group text-left rounded-xl p-5 border-2 transition-all duration-200 hover:scale-[1.02]"
+                                            style={{
+                                                backgroundColor: "var(--holo-bg)",
+                                                borderColor: "rgba(15,255,198,0.25)",
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--neon-teal)"}
+                                            onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(15,255,198,0.25)"}
+                                        >
+                                            {/* Mini preview */}
+                                            <div className="rounded-lg mb-4 overflow-hidden" style={{ background: "#fff", padding: "10px", height: "120px" }}>
+                                                <div style={{ width: "70%", height: "8px", background: "#1a1a1a", borderRadius: "4px", marginBottom: "5px" }} />
+                                                <div style={{ width: "100%", height: "1px", background: "#BFBFBF", marginBottom: "4px" }} />
+                                                <div style={{ display: "flex", gap: "4px", marginBottom: "3px" }}>
+                                                    <div style={{ width: "40px", height: "6px", background: "#2E74B5", borderRadius: "3px" }} />
+                                                    <div style={{ flex: 1, height: "6px", background: "#e5e7eb", borderRadius: "3px" }} />
+                                                </div>
+                                                {[1,2,3,4].map(i => (
+                                                    <div key={i} style={{ display: "flex", gap: "4px", marginBottom: "2px" }}>
+                                                        <div style={{ width: "50px", height: "5px", background: "#374151", borderRadius: "2px", fontWeight: "bold" }} />
+                                                        <div style={{ flex: 1, height: "5px", background: "#e5e7eb", borderRadius: "2px" }} />
+                                                    </div>
+                                                ))}
+                                                <div style={{ width: "100%", height: "1px", background: "#BFBFBF", marginTop: "6px" }} />
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-base font-bold" style={{ color: "var(--neon-teal)" }}>📄</span>
+                                                <span className="font-bold text-base" style={{ color: "var(--text-primary)" }}>General</span>
+                                            </div>
+                                            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                                                Classic LPU-style with 7 skill categories. Best for technical roles with detailed skill breakdown.
+                                            </p>
+                                            <div className="mt-3 flex flex-wrap gap-1">
+                                                {["Languages","Frontend","Backend","DB & Cloud"].map(t => (
+                                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full"
+                                                        style={{ background: "rgba(15,255,198,0.1)", color: "var(--neon-teal)", border: "1px solid rgba(15,255,198,0.2)" }}>
+                                                        {t}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </button>
+
+                                        {/* Specialized Card */}
+                                        <button
+                                            onClick={() => { setSelectedTemplate("specialized"); setCreateStep(2); }}
+                                            className="group text-left rounded-xl p-5 border-2 transition-all duration-200 hover:scale-[1.02]"
+                                            style={{
+                                                backgroundColor: "var(--holo-bg)",
+                                                borderColor: "rgba(139,92,246,0.25)",
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--neon-violet)"}
+                                            onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)"}
+                                        >
+                                            {/* Mini preview */}
+                                            <div className="rounded-lg mb-4 overflow-hidden" style={{ background: "#fff", padding: "10px", height: "120px" }}>
+                                                <div style={{ textAlign: "center", marginBottom: "4px" }}>
+                                                    <div style={{ width: "60%", height: "8px", background: "#111", borderRadius: "4px", margin: "0 auto 4px" }} />
+                                                    <div style={{ width: "80%", height: "5px", background: "#9ca3af", borderRadius: "3px", margin: "0 auto" }} />
+                                                </div>
+                                                <div style={{ width: "100%", height: "1.5px", background: "#111", margin: "5px 0 3px" }} />
+                                                <div style={{ width: "40px", height: "6px", background: "#111", borderRadius: "3px", fontWeight: 900, marginBottom: "3px" }} />
+                                                {[1,2,3].map(i => (
+                                                    <div key={i} style={{ display: "flex", gap: "4px", marginBottom: "2px" }}>
+                                                        <div style={{ width: "55px", height: "5px", background: "#374151", borderRadius: "2px" }} />
+                                                        <div style={{ flex: 1, height: "5px", background: "#e5e7eb", borderRadius: "2px" }} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-base font-bold" style={{ color: "var(--neon-violet)" }}>⭐</span>
+                                                <span className="font-bold text-base" style={{ color: "var(--text-primary)" }}>Specialized</span>
+                                            </div>
+                                            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                                                Modern centered header with 3 broad skill groups. Best for showcasing domain expertise.
+                                            </p>
+                                            <div className="mt-3 flex flex-wrap gap-1">
+                                                {["Languages","Tech/Frameworks","Domain Skills"].map(t => (
+                                                    <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full"
+                                                        style={{ background: "rgba(139,92,246,0.1)", color: "var(--neon-violet)", border: "1px solid rgba(139,92,246,0.2)" }}>
+                                                        {t}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* ── STEP 2: Title Input ── */}
+                                {createStep === 2 && (
+                                    <form onSubmit={createResume}>
+                                        {/* Chosen template indicator */}
+                                        <div className="flex items-center gap-2 mb-5 px-3 py-2 rounded-lg"
+                                            style={{ background: "var(--holo-bg)", border: "1px solid var(--holo-border)" }}>
+                                            <span className="text-sm font-bold px-2 py-0.5 rounded-full"
+                                                style={{
+                                                    background: selectedTemplate === "specialized" ? "rgba(139,92,246,0.15)" : "rgba(15,255,198,0.12)",
+                                                    color: selectedTemplate === "specialized" ? "var(--neon-violet)" : "var(--neon-teal)",
+                                                    border: `1px solid ${ selectedTemplate === "specialized" ? "rgba(139,92,246,0.3)" : "rgba(15,255,198,0.3)" }`,
+                                                }}
+                                            >
+                                                {selectedTemplate === "specialized" ? "⭐ Specialized" : "📄 General"}
+                                            </span>
+                                            <span className="text-xs" style={{ color: "var(--text-secondary)" }}>template selected</span>
+                                        </div>
+
+                                        <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+                                            Resume Title
+                                        </label>
+                                        <input
+                                            autoFocus
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            value={title}
+                                            type="text"
+                                            placeholder="Ex: Full Stack Developer"
+                                            className="w-full px-4 py-3 rounded-xl mb-5 outline-none transition-all focus:ring-2 focus:ring-[var(--neon-teal)]"
+                                            style={{
+                                                backgroundColor: "var(--holo-bg)",
+                                                border: "1px solid var(--holo-border)",
+                                                color: "var(--text-primary)",
+                                            }}
+                                            required
+                                        />
+                                        <button
+                                            className="w-full py-3 font-semibold rounded-xl transition-all shadow-lg hover:opacity-90"
+                                            style={{
+                                                background: selectedTemplate === "specialized"
+                                                    ? "var(--neon-violet)"
+                                                    : "var(--neon-teal)",
+                                                color: selectedTemplate === "specialized" ? "#fff" : "#000",
+                                            }}
+                                        >
+                                            Create Resume →
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

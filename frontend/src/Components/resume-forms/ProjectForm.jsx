@@ -6,12 +6,23 @@ import {
     X,
     AlertCircle,
     RefreshCw,
+    Minus,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 // Adjust this URL if your setup differs
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9090";
+
+// Helper: normalize description — always return array of strings
+const normalizeDesc = (desc) => {
+    if (!desc) return [""];
+    if (Array.isArray(desc)) return desc.length > 0 ? desc : [""];
+    // Legacy: single string with newlines → split into array
+    return desc.split("\n").map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean).length > 0
+        ? desc.split("\n").map(l => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean)
+        : [""];
+};
 
 /**
  * Custom Modal Component (Portal Version)
@@ -137,7 +148,7 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
             {
                 name: "",
                 type: "",
-                description: "",
+                description: ["", "", ""],
                 tech_stack: "",
                 link: "",
                 live_link: "",
@@ -156,6 +167,35 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
         onChange(updated);
     };
 
+    // Update a single bullet point
+    const updateBullet = (projIndex, bulletIndex, value) => {
+        const updated = [...data];
+        const bullets = [...normalizeDesc(updated[projIndex].description)];
+        bullets[bulletIndex] = value;
+        updated[projIndex] = { ...updated[projIndex], description: bullets };
+        onChange(updated);
+    };
+
+    // Add a bullet point
+    const addBullet = (projIndex) => {
+        const updated = [...data];
+        const bullets = [...normalizeDesc(updated[projIndex].description)];
+        if (bullets.length >= 5) return; // max 5 bullets
+        bullets.push("");
+        updated[projIndex] = { ...updated[projIndex], description: bullets };
+        onChange(updated);
+    };
+
+    // Remove a bullet point
+    const removeBullet = (projIndex, bulletIndex) => {
+        const updated = [...data];
+        const bullets = [...normalizeDesc(updated[projIndex].description)];
+        if (bullets.length <= 1) return; // keep at least 1
+        bullets.splice(bulletIndex, 1);
+        updated[projIndex] = { ...updated[projIndex], description: bullets };
+        onChange(updated);
+    };
+
     const handleAIEnhance = async (index, project) => {
         if (!project.name) {
             showAlert(
@@ -164,7 +204,7 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
             return;
         }
 
-        if (!project.link && !project.description) {
+        if (!project.link && normalizeDesc(project.description).filter(Boolean).length === 0) {
             showAlert(
                 "Please provide a GitHub link (recommended) OR a rough description for the AI to work with."
             );
@@ -174,6 +214,7 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
         setLoadingIndex(index);
 
         try {
+            const currentDesc = normalizeDesc(project.description).join(". ");
             const res = await fetch(
                 `${API_BASE_URL}/resume/ai/enhance-project`,
                 {
@@ -181,7 +222,7 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         projectName: project.name,
-                        projectDescription: project.description, // Sending current description for regeneration
+                        projectDescription: currentDesc,
                         githubLink: project.link,
                     }),
                 }
@@ -190,11 +231,16 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
             const responseData = await res.json();
 
             if (res.ok) {
-                updateProject(
-                    index,
-                    "description",
-                    responseData.enhancedContent
-                );
+                // AI returns lines — split into array bullets
+                const enhanced = responseData.enhancedContent || "";
+                const bullets = enhanced
+                    .split("\n")
+                    .map(s => s.replace(/^[-•*]\s*/, "").trim())
+                    .filter(s => s.length > 5)
+                    .slice(0, 4);
+                if (bullets.length > 0) {
+                    updateProject(index, "description", bullets);
+                }
             } else {
                 showAlert(
                     responseData.message ||
@@ -374,15 +420,15 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
                         </div>
                     </div>
 
-                    {/* AI Enhancement Section */}
+                    {/* ── BULLET POINT DESCRIPTION FIELDS ── */}
                     <div className="relative space-y-2">
                         <div className="flex justify-between items-end">
-                            <span className="text-xs text-gray-500 italic pb-1">
-                                {project.link &&
-                                project.link.toLowerCase().includes("github")
-                                    ? "✨ AI will analyze your GitHub code to generate description."
-                                    : "💡 For best results, add a GitHub link so AI can read your code."}
-                            </span>
+                            <label
+                                className="text-sm font-medium"
+                                style={{ color: "var(--text-primary)" }}
+                            >
+                                Description Bullet Points
+                            </label>
 
                             <button
                                 onClick={() => handleAIEnhance(index, project)}
@@ -390,18 +436,18 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-all hover:shadow-md hover:scale-105 active:scale-95"
                                 style={{
                                     background:
-                                        project.description &&
-                                        project.description.length > 10
+                                        normalizeDesc(project.description).filter(Boolean).length > 0 &&
+                                        normalizeDesc(project.description).some(b => b.length > 10)
                                             ? "var(--holo-glass)" // Subtler style for Regenerate
                                             : "linear-gradient(90deg, #6366f1 0%, #a855f7 100%)",
                                     border:
-                                        project.description &&
-                                        project.description.length > 10
+                                        normalizeDesc(project.description).filter(Boolean).length > 0 &&
+                                        normalizeDesc(project.description).some(b => b.length > 10)
                                             ? "1px solid var(--neon-teal)"
                                             : "none",
                                     color:
-                                        project.description &&
-                                        project.description.length > 10
+                                        normalizeDesc(project.description).filter(Boolean).length > 0 &&
+                                        normalizeDesc(project.description).some(b => b.length > 10)
                                             ? "var(--neon-teal)"
                                             : "white",
                                     opacity: loadingIndex === index ? 0.7 : 1,
@@ -415,9 +461,7 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
                                     "Generating..."
                                 ) : (
                                     <>
-                                        {/* Toggle Icon based on State */}
-                                        {project.description &&
-                                        project.description.length > 10 ? (
+                                        {normalizeDesc(project.description).some(b => b.length > 10) ? (
                                             <>
                                                 <RefreshCw className="w-3 h-3" />{" "}
                                                 Regenerate
@@ -433,20 +477,59 @@ const ProjectForm = ({ data, onChange, template = "general" }) => {
                             </button>
                         </div>
 
-                        <textarea
-                            rows={4}
-                            value={project.description || ""}
-                            onChange={(e) =>
-                                updateProject(index, "description", e.target.value)
-                            }
-                            placeholder="Description (Bullet points — one per line)"
-                            className="w-full p-2 text-sm border rounded resize-none outline-none focus:ring-2"
-                            style={{
-                                backgroundColor: "var(--holo-bg)",
-                                borderColor: "var(--holo-border)",
-                                color: "var(--text-primary)",
-                            }}
-                        />
+                        <span className="text-xs text-gray-500 italic block">
+                            {project.link &&
+                            project.link.toLowerCase().includes("github")
+                                ? "✨ AI will analyze your GitHub code to generate description."
+                                : "💡 For best results, add a GitHub link so AI can read your code."}
+                        </span>
+
+                        {normalizeDesc(project.description).map((bullet, bIdx) => (
+                            <div key={bIdx} className="flex items-start gap-2">
+                                <span
+                                    className="text-sm font-bold mt-2 flex-shrink-0"
+                                    style={{ color: "var(--neon-teal)", width: "18px" }}
+                                >
+                                    •
+                                </span>
+                                <input
+                                    value={bullet}
+                                    onChange={(e) => updateBullet(index, bIdx, e.target.value)}
+                                    type="text"
+                                    placeholder={`Bullet point ${bIdx + 1} (e.g. Developed a real-time chat system using Socket.io)`}
+                                    className="flex-1 px-3 py-2 text-sm border rounded-lg focus:ring-2"
+                                    style={{
+                                        backgroundColor: "var(--holo-bg)",
+                                        borderColor: "var(--holo-border)",
+                                        color: "var(--text-primary)",
+                                    }}
+                                />
+                                {normalizeDesc(project.description).length > 1 && (
+                                    <button
+                                        onClick={() => removeBullet(index, bIdx)}
+                                        className="mt-2 flex-shrink-0 hover:text-red-500 transition-colors"
+                                        style={{ color: "var(--text-secondary)" }}
+                                        title="Remove bullet"
+                                    >
+                                        <Minus className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+
+                        {normalizeDesc(project.description).length < 5 && (
+                            <button
+                                onClick={() => addBullet(index)}
+                                className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border transition-colors"
+                                style={{
+                                    borderColor: "var(--holo-border)",
+                                    color: "var(--text-secondary)",
+                                    backgroundColor: "var(--holo-glass)",
+                                }}
+                            >
+                                <Plus className="w-3 h-3" /> Add Bullet Point
+                            </button>
+                        )}
 
                         {/* Tech Stack — shows as 'Tech Stack: ...' line in Specialized template */}
                         <input
