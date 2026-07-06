@@ -1,65 +1,85 @@
-# 🚀 LinkUps - Professional Networking Platform
+# 🚀 LinkUps
 
-**LinkUps** is a full-stack social media application designed for professional networking. It goes beyond standard connections by offering real-time communication, a dynamic theme engine, smart resume generation, and a robust security protocol including email verification and account management.
-
-## ✨ Key Features
-
-### 👤 User Experience & Customization
-
--   **Dynamic Theme Engine**: Toggle between **"Neon Cyberpunk" (Dark Mode)** for a futuristic look and **"Clean Professional" (Light Mode)** for a standard corporate feel.
--   **Professional Profile**: Manage bio, experience, education, skills, and projects.
--   **Smart Resume Builder**: One-click generation of a formatted `.docx` resume based on your profile data.
--   **Danger Zone**: Full control over data with secure options to permanently delete your account (includes email confirmation).
-
-### 🔐 Security & Authentication
-
--   **Secure Auth**: JSON Web Tokens (JWT) with Bcrypt password hashing.
--   **OAuth Strategies**: Login via Google and GitHub (Passport.js).
--   **Email Verification**: New users must verify their email (via **Brevo**) before accessing the platform.
--   **Password Reset**: Secure, token-based password recovery flow via email.
-
-### 🌐 Social & Network
-
--   **Social Feed**: Create posts with rich text, images, and videos.
--   **Interactions**: Like (with 5 reaction types: Like, Love, Celebrate, Insightful, Funny) and comment on posts.
--   **Networking**: Send, accept, or withdraw connection requests. View mutual connections.
--   **Discovery**: Find professionals based on skills and recommendations.
-
-### ⚡ Real-time Communication
-
--   **Instant Messaging**: Chat with connections in real-time using **Socket.io**.
--   **Video Meetings**: Create and join secure P2P video rooms.
--   **Live Status**: Real-time online/offline status indicators.
-
-### 🛠️ Developer Tools
-
--   **Live API Documentation**: Integrated **Swagger UI** to visualize and test backend endpoints at `/api-docs`.
+**LinkUps** is an advanced, full-stack professional networking and career development platform. Built with Next.js, Express, and MongoDB, it goes beyond standard social networking by integrating a powerful AI-driven career suite (powered by Google Gemini), a smart resume builder, real-time messaging, and instant video meetings.
 
 ---
 
-## 🛠️ Tech Stack
+## ✨ Features Built into the Code
+
+### 🧠 AI Career Suite (Powered by Google Gemini)
+* **Resume-to-JD Tailoring:** AI automatically rewrites and reorders your resume's summary, experience, and projects to perfectly match a specific Job Description (JD).
+* **ATS Match Scoring:** Calculates a 0-100 match score against a JD, identifying matching skills, missing skills, keyword gaps, and actionable ATS tips.
+* **AI Mock Interviews:** Generates personalized interview questions (Technical, Behavioral, Situational) based on the user's resume and the target JD, including difficulty ratings and hints.
+* **AI Content Enhancer:** One-click enhancement for Professional Summaries, Job Descriptions, and Project Bullet Points to make them ATS-friendly and impactful.
+* **PDF to Resume Parsing:** Upload an existing PDF resume, extract the text, and let the AI parse it directly into the platform's database format.
+
+### 📄 Smart Resume Builder
+* **Multiple Templates:** Choose between "General" (classic LPU-style with 7 skill categories) and "Specialized" (modern layout with 3 broad skill groups).
+* **Dynamic Section Ordering:** Users can customize the exact order of their resume sections (Experience, Projects, Achievements, Certificates, Skills, Education).
+* **Auto-Fill from Profile:** Seamlessly imports existing user profile data (bio, past work, education, projects) into new resumes.
+* **CloudMedia Integration:** Direct integration with Cloudinary for handling profile pictures on the resume.
+
+### 💬 Real-Time Messaging & Networking
+* **Socket.io Chat Engine:** Instant messaging with real-time delivery and read receipts (single tick, double tick, blue ticks).
+* **Message Controls:** Edit sent messages (within a 2-minute window) or delete/clear messages permanently.
+* **Live Status & Presence:** Real-time "Online" dots and formatted "Last Seen / Active X mins ago" timestamps.
+* **Social Feed Reactions:** Interact with posts using 6 distinct reactions (Like, Love, Celebrate, Support, Insightful, Funny).
+
+### 📹 Instant Video Meetings (LinkUps Meet)
+* **Secure WebRTC Rooms:** Generate instant, secure video conferencing rooms.
+* **In-Chat Calling:** Initiate a direct video call right from the messaging window. The system rings the other user if they are online, or sends a "missed call" notification if they are offline.
+
+### 🔐 Authentication & Security
+* **Multi-Strategy Auth:** Support for standard Email/Password, as well as OAuth login via Google and GitHub (via Passport.js).
+* **Secure Sessions:** Managed via JSON Web Tokens (JWT) and Express sessions.
+
+### 🛠️ Developer Experience
+* **Live API Documentation:** Built-in Swagger UI available at `/api-docs` to easily test and visualize all backend routes.
+
+---
+
+## 💻 Tech Stack
 
 ### Frontend
-
--   **Framework**: [Next.js](https://nextjs.org/) (React)
--   **State Management**: Redux Toolkit
--   **Styling**: CSS Modules (with CSS Variables for Dynamic Theming)
--   **Real-time**: Socket.io-client
--   **Animations**: Framer Motion
--   **Icons**: Heroicons / SVGs
+* **Framework:** Next.js 16 / React 19
+* **State Management:** Redux Toolkit
+* **Styling:** Tailwind CSS & Custom CSS Modules (Dynamic Theming / Holo UI)
+* **PDF Handling:** `react-pdftotext`
+* **Real-time:** `socket.io-client`
+* **Icons:** `lucide-react`
 
 ### Backend
-
--   **Runtime**: Node.js
--   **Framework**: Express.js
--   **Database**: MongoDB (Mongoose)
--   **Real-time**: Socket.io
--   **Documentation**: Swagger UI Express & Swagger JSDoc
--   **File Storage**: Cloudinary (via Multer)
--   **Emails**: Brevo (Transactional Emails)
--   **Document Gen**: `docx` library (Resume generation)
+* **Runtime:** Node.js / Express.js v5
+* **Database:** MongoDB (Mongoose)
+* **Real-time:** Socket.io
+* **AI Engine:** Google Gemini API (`generativelanguage.googleapis.com`)
+* **File Storage:** Cloudinary & Multer
+* **Documentation:** Swagger UI Express & Swagger JSDoc
+* **Authentication:** Passport.js (Google/GitHub strategies)
 
 ---
+
+## ⚙️ Local Setup & Installation
+
+### Prerequisites
+* Node.js (v18+ recommended)
+* MongoDB instance (local or Atlas)
+* Google Gemini API Key
+* Cloudinary Account
+* Google/GitHub OAuth Credentials (Optional but recommended)
+
+### 1. Backend Setup
+
+```bash
+# Navigate to backend
+cd backend
+
+# Install dependencies
+npm install
+
+# Start the server (Dev Mode)
+npm run dev
+```
 
 ## 📦 Installation & Setup
 
