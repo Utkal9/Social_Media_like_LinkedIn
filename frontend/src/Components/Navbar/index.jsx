@@ -8,7 +8,7 @@ import { getAboutUser } from "@/config/redux/action/authAction";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 import { useTheme } from "@/context/ThemeContext";
-import { FileText, Sparkles } from "lucide-react"; // Import icons
+import { FileText, Sparkles, Mic2 } from "lucide-react"; // Import icons
 
 // --- SVG Icons ---
 const HomeIcon = ({ isActive }) => (

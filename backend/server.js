@@ -16,6 +16,11 @@ import User from "./models/user.model.js";
 import Message from "./models/message.model.js";
 import Notification from "./models/notification.model.js";
 import resumeRoutes from "./routes/resume.routes.js";
+import skillsRoutes from "./routes/skills.routes.js";
+import { registerAIInterviewHandlers } from "./controllers/ai-interview.controller.js";
+import { startMarketAnalyzer } from "./utils/marketAnalyzer.js";
+import avatarInterviewRoutes from "./routes/avatar-interview.routes.js";
+import { registerAvatarInterviewHandlers } from "./controllers/avatar-interview.controller.js";
 
 // --- SWAGGER IMPORTS ---
 import swaggerUi from "swagger-ui-express";
@@ -148,9 +153,17 @@ app.use(userRoutes);
 app.use(messagingRoutes);
 app.use(notificationRoutes);
 app.use(resumeRoutes);
+app.use(skillsRoutes);
+app.use(avatarInterviewRoutes);
 
 io.on("connection", (socket) => {
     console.log(`Socket Connected: ${socket.id}`);
+
+    // --- AI VOICE INTERVIEW HANDLERS ---
+    registerAIInterviewHandlers(io, socket);
+
+    // --- PHOTOREALISTIC AVATAR INTERVIEW HANDLERS ---
+    registerAvatarInterviewHandlers(io, socket);
 
     socket.on("register-user", async (userId) => {
         if (userId) {
@@ -355,6 +368,10 @@ const start = async () => {
         await mongoose.connect(URL);
         console.log("✅ MongoDB connected");
         console.log(`📄 Swagger Docs available at ${SERVER_URL}/api-docs`);
+
+        // --- START MARKET ANALYZER CRON (after DB is ready) ---
+        startMarketAnalyzer();
+
         httpServer.listen(PORT, () =>
             console.log(`🚀 Server running on port ${PORT}`)
         );

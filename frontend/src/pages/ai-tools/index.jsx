@@ -20,6 +20,7 @@ import {
     ShieldCheck,
     Zap,
     Search,
+    Mic2,
 } from "lucide-react";
 import { diffWords } from "diff";
 import styles from "./index.module.css";
@@ -452,6 +453,94 @@ const AIToolsPage = () => {
                 <p className={styles.pageSubtitle}>
                     Paste any job description — get AI-powered resume analysis, tailoring, and interview prep.
                 </p>
+
+                {/* ── AI FEATURE ENTRY CARDS ── */}
+                <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                    gap: "1rem",
+                    marginBottom: "2rem",
+                }}>
+                    {/* AI Voice Interview Card */}
+                    <div
+                        id="live-ai-interview-card"
+                        onClick={() => router.push("/live-interview")}
+                        style={{
+                            cursor: "pointer",
+                            background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.9) 100%)",
+                            border: "1px solid rgba(99,102,241,0.35)",
+                            borderRadius: "1rem",
+                            padding: "1.5rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
+                            transition: "transform 0.2s, box-shadow 0.2s",
+                            boxShadow: "0 0 30px rgba(99,102,241,0.08)",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(99,102,241,0.25)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(99,102,241,0.08)"; }}
+                    >
+                        <div style={{
+                            width: 52, height: 52,
+                            borderRadius: "50%",
+                            background: "radial-gradient(circle, #6366f1, #0f172a)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0,
+                            boxShadow: "0 0 20px rgba(99,102,241,0.5)",
+                        }}>
+                            <Mic2 size={24} color="#c7d2fe" />
+                        </div>
+                        <div>
+                            <div style={{ fontWeight: 700, color: "#e2e8f0", fontSize: "1rem", marginBottom: 4 }}>
+                                Live AI Interview
+                                <span style={{ marginLeft: 8, fontSize: "0.65rem", background: "rgba(99,102,241,0.2)", color: "#a5b4fc", padding: "2px 8px", borderRadius: 999, fontWeight: 500 }}>NEW</span>
+                            </div>
+                            <div style={{ color: "#64748b", fontSize: "0.82rem", lineHeight: 1.5 }}>
+                                1-on-1 with Priya, your AI HR recruiter. Real voice, photorealistic avatar, adaptive questions.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Market Skill Insights Card */}
+                    <div
+                        id="market-skill-insights-card"
+                        onClick={() => router.push("/skills")}
+                        style={{
+                            cursor: "pointer",
+                            background: "linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(15,23,42,0.9) 100%)",
+                            border: "1px solid rgba(16,185,129,0.3)",
+                            borderRadius: "1rem",
+                            padding: "1.5rem",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
+                            transition: "transform 0.2s, box-shadow 0.2s",
+                            boxShadow: "0 0 30px rgba(16,185,129,0.05)",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(16,185,129,0.2)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(16,185,129,0.05)"; }}
+                    >
+                        <div style={{
+                            width: 52, height: 52,
+                            borderRadius: "50%",
+                            background: "radial-gradient(circle, #10b981, #0f172a)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0,
+                            boxShadow: "0 0 20px rgba(16,185,129,0.4)",
+                        }}>
+                            <BarChart3 size={24} color="#6ee7b7" />
+                        </div>
+                        <div>
+                            <div style={{ fontWeight: 700, color: "#e2e8f0", fontSize: "1rem", marginBottom: 4 }}>
+                                Skill Gap Insights
+                                <span style={{ marginLeft: 8, fontSize: "0.65rem", background: "rgba(16,185,129,0.15)", color: "#34d399", padding: "2px 8px", borderRadius: 999, fontWeight: 500 }}>LIVE</span>
+                            </div>
+                            <div style={{ color: "#64748b", fontSize: "0.82rem", lineHeight: 1.5 }}>
+                                See what skills are trending in the job market and find your personal skill gaps.
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* No resumes guard */}
                 {resumes.length === 0 ? (
