@@ -9,7 +9,8 @@
 ### 🧠 AI Career Suite (Powered by Google Gemini)
 * **Resume-to-JD Tailoring:** AI automatically rewrites and reorders your resume's summary, experience, and projects to perfectly match a specific Job Description (JD).
 * **ATS Match Scoring:** Calculates a 0-100 match score against a JD, identifying matching skills, missing skills, keyword gaps, and actionable ATS tips.
-* **AI Mock Interviews:** Generates personalized interview questions (Technical, Behavioral, Situational) based on the user's resume and the target JD, including difficulty ratings and hints.
+* **Photorealistic AI Interviewer:** A live, real-time virtual interviewer powered by D-ID (for photorealistic avatar streaming and lip-syncing) and ElevenLabs (for natural voice TTS). Gemini AI acts as the brain, adapting follow-up questions dynamically based on speech-recognized user answers.
+* **AI Mock Interviews:** Generates personalized text-based interview questions (Technical, Behavioral, Situational) based on the user's resume and the target JD, including difficulty ratings and hints.
 * **AI Content Enhancer:** One-click enhancement for Professional Summaries, Job Descriptions, and Project Bullet Points to make them ATS-friendly and impactful.
 * **PDF to Resume Parsing:** Upload an existing PDF resume, extract the text, and let the AI parse it directly into the platform's database format.
 
@@ -53,6 +54,7 @@
 * **Database:** MongoDB (Mongoose)
 * **Real-time:** Socket.io
 * **AI Engine:** Google Gemini API (`generativelanguage.googleapis.com`)
+* **Avatar & Voice:** D-ID Streaming API (WebRTC) & ElevenLabs API
 * **File Storage:** Cloudinary & Multer
 * **Documentation:** Swagger UI Express & Swagger JSDoc
 * **Authentication:** Passport.js (Google/GitHub strategies)
@@ -65,6 +67,8 @@
 * Node.js (v18+ recommended)
 * MongoDB instance (local or Atlas)
 * Google Gemini API Key
+* D-ID API Key (for live avatar streaming)
+* ElevenLabs API Key (for natural TTS voice)
 * Cloudinary Account
 * Google/GitHub OAuth Credentials (Optional but recommended)
 
@@ -102,6 +106,9 @@ SESSION_SECRET=your_random_secret
 
 # AI Configuration
 GEMINI_API_KEY=your_google_gemini_api_key
+DID_API_KEY=your_d_id_api_key
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+ELEVENLABS_VOICE_ID=your_elevenlabs_voice_id
 
 # URLs
 FRONTEND_URL=http://localhost:3000
